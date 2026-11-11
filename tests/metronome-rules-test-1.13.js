@@ -109,6 +109,62 @@ async function run(opts, bars) {
   c = MET.counted(at(100, 6), 100); ok(c.bpm === 100, 'the last four taps are the count');
   ok(MET.counted([5, 5, 6, 7], 100) === null, 'two taps at once are no count');
   const cu = MET.upgrade({ v: 2, count: { on: true, from: 200, to: 80 } }).count; ok(cu.on && cu.from === 80 && cu.to === 200, 'count it off settings kept in order');
+  // at-tempo chunking
+  for (const n of [1, 2, 4, 7, 16]) {
+    const ch = MET.interleave({ kind: 'chunking', chunks: n, start: 60, goal: 120, by: 5 });
+    ok(ch.length === n * (n + 1) / 2, 'every run of neighbours once: ' + n);
+    ok(ch.every(r => r.tempo === 120 && r.to - r.from + 1 === r.step && r.from >= 1 && r.to <= n), 'all at the goal, size is the step');
+    ok(new Set(ch.map(r => r.from + '-' + r.to)).size === ch.length, 'no run twice');
+    ok(ch.every((r, i) => !i || r.step >= ch[i - 1].step) && ch[ch.length - 1].from === 1 && ch[ch.length - 1].to === n, 'sizes grow to the whole passage');
+    if (n >= 4) { ok(ch.some(r => r.from === 2 && r.to === 3), 'the overlapping pair is there'); }
+  }
+  // interleaved clicking up #2
+  const sv = MET.interleave({ kind: 'several', chunks: 3, start: 60, goal: 120, by: 5 });
+  const rounds = k => sv.filter(r => r.step === k), tempos = (k, psg) => rounds(k).filter(r => r.from === psg).map(r => r.tempo).join(' ');
+  ok(sv.every(r => r.from === r.to && r.from >= 1 && r.from <= 3), 'one passage at a time');
+  ok(tempos(1, 1) === '60 65 70 75 80 85 90 95 100 105 110 115 120' && tempos(1, 2) === tempos(1, 1) && tempos(1, 3) === tempos(1, 1), 'round 1: each clicked up by 5');
+  ok(tempos(2, 2) === '60 70 80 90 100 110 120' && tempos(3, 1) === '60 80 100 120' && tempos(4, 3) === '60 90 120', 'then by 10, 20 and 30');
+  ok(tempos(5, 1) === '60 90 120' && tempos(6, 2) === '60 120' && tempos(7, 3) === '120' && sv[sv.length - 1].step === 7, 'then start, halfway and goal; start and goal; goal');
+  ok(rounds(7).map(r => r.from).join('') === '123' && rounds(1).slice(0, 13).every(r => r.from === 1), 'A right up, then B, then C; the last round is each at tempo in turn');
+  const sv2 = MET.interleave({ kind: 'several', chunks: 4, start: 100, goal: 120, by: 10 });
+  ok(sv2.filter(r => r.step === 1 && r.from === 1).map(r => r.tempo).join(' ') === '100 110 120' && sv2[sv2.length - 1].step === 4, 'jumps wider than the climb are left out, and a step of 10 is not done twice');
+  const sv3 = MET.interleave({ kind: 'several', chunks: 2, start: 90, goal: 90, by: 5 });
+  ok(sv3.length === 2 && sv3.every(r => r.tempo === 90), 'start at the goal: just the goal');
+  for (const k of ['several', 'chunking']) for (const n of [2, 5, 10]) for (const by of [3, 5, 10]) {
+    const l = MET.interleave({ kind: k, chunks: n, start: 55, goal: 127, by });
+    ok(l.length > 0 && l.every(r => r.tempo >= 55 && r.tempo <= 127 && r.from <= r.to) && l[l.length - 1].tempo === 127, 'in range and ends at the goal ' + [k, n, by]);
+  }
+  const ku = MET.upgrade({ v: 2, inter: { on: true, kind: 'nope' }, blind: { on: 1 } });
+  ok(ku.inter.kind === 'one' && ku.blind.on === true && MET.upgrade({ v: 2 }).blind.on === false, 'method and blind bars kept and tidied');
+  ok(MET.unlink(MET.link(MET.upgrade({ v: 2, gap: '2-2', blind: { on: true }, inter: { on: true, kind: 'several', chunks: 3 } }))).blind.on === true, 'blind bars and the method travel in a link');
+  // Blind bars: drift through the gap
+  const grid = (bpm, on, off) => Array.from({ length: on + off + 1 }, (_, i) => ({ time: 10 + i * 60 / bpm, silent: i >= on && i < on + off }));
+  const tapsFor = (g, f) => g.map((x, i) => x.time + f(i) / 1000);
+  let g = grid(100, 8, 8), d = MET.drift(g, tapsFor(g, () => 0));
+  ok(d.n === 8 && d.of === 8 && d.drift === 0 && d.verdict === 'steady', 'taps on the beat are steady');
+  d = MET.drift(g, tapsFor(g, () => 90)); ok(d.verdict === 'steady' && d.mean === 90 && d.drift === 0, 'a constant delay (the screen\'s) is not drift');
+  d = MET.drift(g, tapsFor(g, i => i < 8 ? 0 : -(i - 8) * 12)); ok(d.verdict === 'rushing' && d.drift < -60, 'getting earlier is rushing');
+  d = MET.drift(g, tapsFor(g, i => i < 8 ? 40 : 40 + (i - 8) * 9)); ok(d.verdict === 'dragging' && d.drift > 40 && d.drift < 70, 'getting later is dragging, whatever the delay');
+  d = MET.drift(g, tapsFor(g, i => (i % 2 ? 10 : -10))); ok(d.verdict === 'steady', 'small wobble is steady');
+  d = MET.drift(g, tapsFor(g, () => 0).slice(0, 9)); ok(d.verdict === 'few' && d.n === 1, 'stopping tapping in the gap is not judged');
+  ok(MET.drift(g, []).verdict === 'few' && MET.drift(grid(100, 4, 2), tapsFor(grid(100, 4, 2), () => 0)) === null, 'no taps, or a gap under three beats, gives no verdict');
+  d = MET.drift(g, tapsFor(g, () => 0).concat([10.01, 14.9, 15.31])); ok(d.verdict === 'steady' && d.n === 8, 'stray taps do not count twice');
+  g = grid(120, 8, 8); d = MET.drift(g, g.map((x, i) => g[0].time + i * 0.5 * 0.95)); ok(d.verdict === 'rushing' && d.n === 8 && d.last < -350, 'a player more than half a beat out by the end is still followed beat by beat');
+  d = MET.drift(g, g.map((x, i) => g[0].time + i * 0.5 * 1.05)); ok(d.verdict === 'dragging' && d.drift >= 140, 'and the same dragging');
+  d = MET.drift(g, tapsFor(g, i => i * 3).filter((t, i) => i !== 11)); ok(d.verdict === 'steady' && d.n === 7, 'one missed tap does not shift the rest');
+  // the engine gives beats a time and a silent mark that drift can use, and has a clock for taps
+  {
+    const clock2 = { currentTime: 0, sampleRate: 48000, destination: {}, outputLatency: 0.02 };
+    const m2 = MET.create({ context: clock2, manual: true, random: () => 0.5 });
+    m2.set(Object.assign({}, MET.upgrade({ v: 2 }), { bpm: 120, countIn: 0, gap: { on: 2, off: 2 }, offsetMs: 30 }));
+    await m2.start(); m2.pump(10);
+    const evs = m2.drain(10).filter(ev => ev.sub === 0 && !ev.countIn).slice(0, 17).map(ev => ({ time: ev.time, silent: !!ev.off }));
+    ok(evs.length === 17 && evs.slice(8, 16).every(x => x.silent) && !evs[16].silent && Math.abs(evs[1].time - evs[0].time - 0.5) < 1e-6, 'two bars on, two off, with times');
+    const dd = MET.drift(evs, evs.map((x, i) => x.time + 0.05 + (i > 8 ? (i - 8) * 0.01 : 0)));
+    ok(dd && dd.verdict === 'dragging', 'the engine\'s beats can be judged');
+    clock2.currentTime = 5; ok(Math.abs(m2.now() - (5 - 0.02 - 0.03)) < 1e-9, 'the tap clock allows for the speaker and headphone delay');
+    m2.stop();
+  }
   console.log('checks', checks, 'failed', fails.length); fails.slice(0, 12).forEach(f => console.log('  ' + f));
   process.exit(fails.length ? 1 : 0);
 })().catch(e => { console.log('ERROR', e); process.exit(1); });

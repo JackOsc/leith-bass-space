@@ -91,6 +91,38 @@
 		var n = clamp(Math.round(+o.chunks || 4), 1, 16), by = clamp(Math.abs(Math.round(+o.by || 5)), 1, 60);
 		var start = clamp(Math.round(+o.start || 60), BOTTOM, TOP), goal = clamp(Math.round(+o.goal || start * 2), start, TOP);
 		var tempos = [], t, out = [];
+		/*
+		 * Two more of her methods use the same guide.
+		 * 'chunking' (at-tempo chunking): everything at the goal. One chunk at a time through the passage, then
+		 *   every two neighbouring chunks (the overlapping pairs too: 2 and 3 as well as 1 and 2, 3 and 4), then
+		 *   every three, until the whole passage. step is the number of chunks played together.
+		 * 'several' (interleaved clicking up #2): n passages, played in turn so each is half forgotten before it
+		 *   comes back. Each passage clicked up by the step, one after another; then the same in steps of 10, 20
+		 *   and 30; then each at start, halfway and goal; then start and goal; then goal alone. The jumps grow
+		 *   until the last round is the passage at tempo, cold. Here from and to are both the passage's number,
+		 *   and step is the round.
+		 */
+		if (o.kind === 'chunking') {
+			for (var size = 1; size <= n; size++) { for (var a = 1; a + size - 1 <= n; a++) { out.push({ step: size, tempo: goal, from: a, to: a + size - 1 }); } }
+			return out;
+		}
+		if (o.kind === 'several') {
+			var rounds = [], seen = {};
+			[by, 10, 20, 30].forEach(function (jump) {
+				if (jump < by || seen[jump] || jump >= goal - start) { return; }
+				seen[jump] = true;
+				var list = []; for (var x = start; x < goal; x += jump) { list.push(x); } list.push(goal);
+				rounds.push({ tempos: list });
+			});
+			if (goal > start) { rounds.push({ tempos: [start, Math.round((start + goal) / 2), goal] }); rounds.push({ tempos: [start, goal] }); }
+			rounds.push({ tempos: [goal] });
+			rounds.forEach(function (r, ri) {
+				var psg, ti;
+				// one passage through the round's tempos, then the next passage: by the time A comes back it is half forgotten
+				for (psg = 1; psg <= n; psg++) { for (ti = 0; ti < r.tempos.length; ti++) { out.push({ step: ri + 1, tempo: r.tempos[ti], from: psg, to: psg }); } }
+			});
+			return out;
+		}
 		for (t = start; t < goal; t += by) { tempos.push(t); }
 		tempos.push(goal);
 		for (var step = 1; step <= n; step++) {
@@ -114,7 +146,7 @@
 	 * understands gets in. The tempo and what the click does travel; the sound, the volumes and the
 	 * player's own setups stay at home.
 	 */
-	var LINK_KEYS = ['bpm', 'meter', 'sub', 'swing', 'accents', 'which', 'every', 'where', 'gap', 'random', 'gradual', 'up', 'thin', 'inter', 'countIn', 'groove'];
+	var LINK_KEYS = ['bpm', 'meter', 'sub', 'swing', 'accents', 'which', 'every', 'where', 'gap', 'random', 'gradual', 'up', 'thin', 'inter', 'blind', 'countIn', 'groove'];
 	function link(saved) {
 		var o = {}, base = upgrade({ v: 2 });
 		LINK_KEYS.forEach(function (k) {
@@ -158,6 +190,44 @@
 		var bpm = 60000 / gaps[1], off = bpm - target;
 		return { bpm: Math.round(bpm), off: Math.round(off), percent: Math.round(off / target * 100), spread: Math.round((gaps[2] - gaps[0]) / gaps[1] * 100),
 			verdict: Math.abs(off / target) <= 0.03 ? 'on' : off > 0 ? 'fast' : 'slow' };
+	}
+	/*
+	 * BLIND BARS, MEASURED. The click goes silent for some bars and the player taps on through the silence.
+	 * drift(beats, taps) compares each tap with the silent beat nearest to it (beats: [{time, silent}], taps:
+	 * [time], all in seconds on one clock). A phone screen adds a delay of its own to every tap, so how far
+	 * ahead or behind the taps are on average says little. What can be trusted is how that changes across the
+	 * gap: taps that start level and end 60 ms ahead are rushing, whatever the delay. So the verdict is the
+	 * drift: the average of the last two offsets less the average of the first two, in milliseconds
+	 * (minus is ahead). Within 25 ms either way is steady.
+	 */
+	function drift(beats, taps) {
+		var first = -1, last = -1, offs = [], i;
+		for (i = 0; i < beats.length; i++) { if (beats[i].silent) { if (first < 0) { first = i; } last = i; } }
+		if (first < 0 || last - first + 1 < 3) { return null; }
+		var of = last - first + 1, gap = (beats[beats.length - 1].time - beats[0].time) / Math.max(1, beats.length - 1);
+		var ts = taps.slice().sort(function (a, b) { return a - b; }), at = -1, best = null;
+		// The first silent beat comes straight after the click, so the tap for it is the one nearest to it.
+		ts.forEach(function (t, k) { var d = Math.abs(t - beats[first].time); if (d <= gap / 2 && (best === null || d < best)) { best = d; at = k; } });
+		if (at < 0) { return { n: 0, of: of, verdict: 'few' }; }
+		// After that each tap goes to the beat nearest to where the player's own beat has got to (the last offset
+		// carried forward). Matching to the nearest written beat instead goes wrong once the player is half a
+		// beat out. Two taps for one beat: the one that fits the run so far is kept.
+		var beat = first, off = ts[at] - beats[first].time, before = 0;
+		offs.push(off * 1000);
+		for (i = at + 1; i < ts.length; i++) {
+			var b = first + Math.round((ts[i] - off - beats[first].time) / gap);
+			if (b > last) { break; }
+			var o = ts[i] - beats[b].time;
+			if (b === beat) { if (Math.abs(o - before) < Math.abs(off - before)) { off = o; offs[offs.length - 1] = o * 1000; } continue; }
+			if (b < beat) { continue; }
+			before = off; beat = b; off = o;
+			offs.push(o * 1000);
+		}
+		if (offs.length < 3 || offs.length < of / 2) { return { n: offs.length, of: of, verdict: 'few' }; }
+		var k2 = offs.length >= 4 ? 2 : 1, avg = function (l) { return l.reduce(function (x, y) { return x + y; }, 0) / l.length; };
+		var f = avg(offs.slice(0, k2)), l = avg(offs.slice(-k2)), d = l - f;
+		return { n: offs.length, of: of, mean: Math.round(avg(offs)), first: Math.round(f), last: Math.round(l), drift: Math.round(d),
+			verdict: Math.abs(d) <= 25 ? 'steady' : d < 0 ? 'rushing' : 'dragging' };
 	}
 	// Where Click up is heading: the tempo asked for, or 5% past it ("so the goal feels manageable under pressure").
 	function upStop(up) {
@@ -471,7 +541,9 @@
 			// Count it off: tap a tempo cold, between two tempos
 			count: { on: false, from: 60, to: 140 },
 			// Interleaved clicking up: the passage, and how far through the schedule the player is
-			inter: { on: false, chunks: 4, beats: 4, start: 60, goal: 120, by: 5, back: false, at: 0 },
+			inter: { on: false, kind: 'one', chunks: 4, beats: 4, start: 60, goal: 120, by: 5, back: false, at: 0 },
+			// Blind bars: bars of click, bars of silence, and taps through the silence measured against where the beats were
+			blind: { on: false },
 			countIn: s.countIn ? 1 : 0, groove: s.groove || null, offsetMs: +s.offsetMs || 0,
 			hideSilent: !!s.hideSilent, flash: !!s.flash, vibrate: !!s.vibrate,
 			setups: Array.isArray(s.setups) ? s.setups : []
@@ -497,7 +569,7 @@
 			if (['all', 'alt', 'backbeat', 'one'].indexOf(s.which) >= 0) { out.which = s.which; }
 			if (s.inter && typeof s.inter === 'object') {
 				var it = s.inter;
-				out.inter = { on: !!it.on, chunks: clamp(Math.round(+it.chunks || 4), 2, 16), beats: clamp(Math.round(+it.beats || 4), 1, 32), start: clamp(Math.round(+it.start || 60), BOTTOM, TOP),
+				out.inter = { on: !!it.on, kind: ['one', 'chunking', 'several'].indexOf(it.kind) !== -1 ? it.kind : 'one', chunks: clamp(Math.round(+it.chunks || 4), 2, 16), beats: clamp(Math.round(+it.beats || 4), 1, 32), start: clamp(Math.round(+it.start || 60), BOTTOM, TOP),
 					goal: clamp(Math.round(+it.goal || 120), BOTTOM, TOP), by: clamp(Math.abs(Math.round(+it.by || 5)), 1, 60), back: !!it.back, at: Math.max(0, Math.round(+it.at || 0)) };
 				if (out.inter.goal < out.inter.start) { out.inter.goal = out.inter.start; }
 			}
@@ -505,6 +577,7 @@
 				var cf = clamp(Math.round(+s.count.from || 60), BOTTOM, TOP), ct = clamp(Math.round(+s.count.to || 140), BOTTOM, TOP);
 				out.count = { on: !!s.count.on, from: Math.min(cf, ct), to: Math.max(cf, ct) };
 			}
+			if (s.blind && typeof s.blind === 'object') { out.blind = { on: !!s.blind.on }; }
 			if (s.thin && typeof s.thin === 'object') { out.thin = { on: !!s.thin.on, stage: clamp(Math.round(+s.thin.stage || 0), 0, THIN.length - 1) }; }
 			if (['on', 'and', 'e', 'a', 'mid', 'last'].indexOf(s.where) >= 0) { out.where = s.where; }
 			['random', 'gradual', 'up'].forEach(function (k) { if (s[k] && typeof s[k] === 'object') { Object.assign(out[k], s[k]); } });
@@ -1361,6 +1434,9 @@
 			say('stopped');
 		};
 
+		// The time on the audio clock of what is being heard this instant (the clock, less the delay to the speaker
+		// and any set for wireless headphones): the clock a beat's "time" is on, for measuring taps against beats.
+		m.now = function () { return ctx ? ctx.currentTime - (Math.min(0.5, ctx.outputLatency || ctx.baseLatency || 0) + m.opts.offsetMs / 1000) : 0; };
 		m.currentBpm = function () { return st && m.running ? st.bpm : m.opts.bpm; };
 		m.info = function () {
 			var id = kitId();
@@ -1406,7 +1482,7 @@
 	root.LBSMetronome = {
 		create: create, GROOVES: GROOVES, SOUNDS: SOUNDS, RECORDED: RECORDED, LEVELS: LEVELS, TOP: TOP, BOTTOM: BOTTOM, LEAD: LEAD,
 		setup: function (o) { cfg.base = o.base || ''; cfg.version = o.version || ''; },
-		band: band, upgrade: upgrade, tap: tap, draw: draw, Bag: Bag, THIN: THIN, upStop: upStop, upNext: upNext, interleave: interleave, counted: counted, link: link, unlink: unlink,
+		band: band, upgrade: upgrade, tap: tap, draw: draw, Bag: Bag, THIN: THIN, upStop: upStop, upNext: upNext, interleave: interleave, counted: counted, drift: drift, link: link, unlink: unlink,
 		_defaults: defaults, _subPositions: subPositions, _placeOf: placeOf, _levels: { CLICK_GAIN: CLICK_GAIN, DRAWN_DB: DRAWN_DB, KIT_DB: KIT_DB }
 	};
 }(typeof window !== 'undefined' ? window : this));

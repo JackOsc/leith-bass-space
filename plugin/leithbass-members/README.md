@@ -294,6 +294,10 @@ One release for the whole programme agreed on 11 Nov 2026 (`claude/leith-bass-sp
 - **Offbeat click** and **Beat one only** as named setups.
 - **The screen goes still on silent beats** when Random mute or Gradual mute is switched on, and in Thin the click: eyes keep time too. It can be switched back under More.
 - **Count it off** (a setup). No click: a tempo is named, you tap four beats as if counting a band in, and it says what you tapped and how far off. Within 3% counts as there. Hear the tempo, or draw another, between two tempos you set.
+- **Several passages** (her interleaved clicking up #2), a setup. For three to five passages that all need speed. The face names the passage and the tempo ("Play passage B at 80"): each clicked up in small steps, then in steps of 10, 20 and 30, then start, halfway and goal, then start and goal, then the goal alone.
+- **At tempo, in chunks** (her at-tempo chunking), a setup. Everything at the goal: one chunk at a time, then every two that sit together (the overlapping pairs too), then every three, until the whole passage.
+- **Blind bars**, a setup. Bars of click, bars of silence, and a Tap button. Tap every beat and keep tapping through the silence. After each gap it says whether the beat held, rushed or dragged, and by how many milliseconds. It measures how the taps moved across the gap, so the phone's own touch delay does not count.
+- **Strong and weak beats**, a setup: a bar of four as strong, weak, medium, weak.
 - **A setup as a link.** "Copy a link to what is set now" (under Setups) gives an address that opens the metronome with the same tempo and everything the click is doing: `…/metronome/?m=…`. The sound, the volumes and saved setups stay the reader's own, and a member's own Shelf loop does not travel. The theme says where the free metronome is (`lbs_tool_url`); without one the link opens the page it was made on.
 
 **Harmonic Elements:**

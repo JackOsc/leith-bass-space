@@ -1194,10 +1194,15 @@
 		['2 and 4', { which: 'backbeat' }],
 		['Offbeat click', { where: 'and' }],
 		['Beat one only', { which: 'one' }],
+		// (the beats of a bar of four are not equal: strong, weak, medium, weak)
+		['Strong and weak beats', { meter: '4/4', accents: ['accent', 'soft', 'normal', 'soft'] }],
 		['Thin the click', { thin: { on: true, stage: 0 }, hideSilent: true }],
 		['Bar on, bar off', { gap: '1-1' }],
+		['Blind bars', { gap: '2-2', blind: { on: true }, hideSilent: true }],
 		['Fade the click', { gradual: { on: true, to: 75, over: 32, keepOne: false, bars: false } }],
-		['Interleaved clicking up', { inter: { on: true } }],
+		['Interleaved clicking up', { inter: { on: true, kind: 'one' } }],
+		['Several passages', { inter: { on: true, kind: 'several', chunks: 3, beats: 8 } }],
+		['At tempo, in chunks', { inter: { on: true, kind: 'chunking' } }],
 		['Count it off', { count: { on: true } }],
 		['Build speed', { up: { on: true, by: 5, every: 4, stopAt: '', ladder: false, ready: true, past: false } }],
 		['Swing, brushes', { which: 'backbeat', groove: { kind: 'feel', feel: 'Swing', groove: 0, kit: 'brushes', name: 'Swing' } }]
@@ -1428,24 +1433,42 @@
 		}
 		if (o.inter && o.inter.on) {
 			var it = o.inter, sched = MET.interleave(it), at = Math.min(it.at, sched.length - 1), rep = sched[at], boxes = '';
-			for (var c = 1; c <= it.chunks; c++) { boxes += '<i class="' + (c >= rep.from && c <= rep.to ? 'on' : '') + (c === (it.back ? rep.from : rep.to) ? ' new' : '') + '">' + c + '</i>'; }
-			var steps = sched.filter(function (r) { return r.step === rep.step; }), within = steps.indexOf(rep) + 1;
-			var what = rep.from === rep.to ? 'chunk ' + rep.to : 'chunks ' + rep.from + ' to ' + rep.to;
-			h += '<div class="mp-m-guide mp-m-inter" role="group" aria-label="Interleaved clicking up">' +
-				'<span><b>Interleaved clicking up</b> step ' + rep.step + ' of ' + it.chunks + ' · ' + within + ' of ' + steps.length + '</span>' +
+			var several = it.kind === 'several', chunking = it.kind === 'chunking', letter = function (c) { return String.fromCharCode(64 + c); };
+			for (var c = 1; c <= it.chunks; c++) { boxes += '<i class="' + (c >= rep.from && c <= rep.to ? 'on' : '') + (!several && !chunking && c === (it.back ? rep.from : rep.to) ? ' new' : '') + '">' + (several ? letter(c) : c) + '</i>'; }
+			var steps = sched.filter(function (r) { return r.step === rep.step; }), within = steps.indexOf(rep) + 1, rounds = sched[sched.length - 1].step;
+			var what = several ? 'passage ' + letter(rep.to) : rep.from === rep.to ? 'chunk ' + rep.to : 'chunks ' + rep.from + ' to ' + rep.to;
+			var title = several ? 'Several passages' : chunking ? 'At tempo, in chunks' : 'Interleaved clicking up';
+			var where = several ? 'round ' + rep.step + ' of ' + rounds : chunking ? rep.step + (rep.step === 1 ? ' chunk' : ' chunks') + ' at a time' : 'step ' + rep.step + ' of ' + rounds;
+			h += '<div class="mp-m-guide mp-m-inter" role="group" aria-label="' + title + '">' +
+				'<span><b>' + title + '</b> ' + where + ' · ' + within + ' of ' + steps.length + '</span>' +
 				'<p class="mp-m-inter-say">Play ' + what + ' at <b>' + rep.tempo + '</b></p>' +
 				'<div class="mp-m-inter-boxes" aria-hidden="true">' + boxes + '</div>' +
 				'<button type="button" class="mp-btn sm" data-met="inter-play">' + (metUi.inter ? 'Stop' : 'Play it') + '</button>' +
 				'<button type="button" class="mp-btn-ghost sm" data-met="inter-back"' + (at ? '' : ' disabled') + '>Back</button>' +
 				'<button type="button" class="mp-btn-ghost sm" data-met="inter-next"' + (at < sched.length - 1 ? '' : ' disabled') + '>Next</button>' +
-				'<button type="button" class="mp-x" data-met="inter-off" aria-label="Leave interleaved clicking up">Done</button>' +
-				'<details class="mp-m-inter-set"' + (metUi.interSet ? ' open' : '') + '><summary>The passage</summary>' +
-					'<div class="mp-m-two">' + metNumField('inter.chunks', 'Chunks', 'in the passage', 1) + metNumField('inter.beats', 'Each chunk is', 'beats', 1, [1, 2, 4, 8]) + '</div>' +
-					'<div class="mp-m-two">' + metNumField('inter.start', 'Start at', 'bpm', 5) + metNumField('inter.goal', 'Goal', 'bpm', 5) + '</div>' +
-					metNumField('inter.by', 'Change by', 'bpm', 1, [3, 5, 10]) +
-					metSwitch('inter.back', it.back, 'Build from the end', 'Start with the last chunk and add the ones before it. For a passage whose end is the hard part.') +
-					'<p class="mp-note">Cut the passage into chunks: a beat, a bar, two bars. Each step adds a chunk and takes it from the start tempo to the goal, sometimes alone and sometimes with the chunks before it. Play each one once. A count of one bar, then the click runs for the chunks and one beat more, so you can land. If it goes wrong, start slower or use smaller chunks. After Molly Gebrian, Learn Faster, Perform Better.</p>' +
+				'<button type="button" class="mp-x" data-met="inter-off" aria-label="Leave ' + title + '">Done</button>' +
+				'<details class="mp-m-inter-set"' + (metUi.interSet ? ' open' : '') + '><summary>' + (several ? 'The passages' : 'The passage') + '</summary>' +
+					'<div class="mp-m-picks" role="group" aria-label="Which method">' + [['one', 'Clicking up'], ['several', 'Several passages'], ['chunking', 'At tempo']].map(function (k) { return '<button type="button" data-met="inter-kind-' + k[0] + '" aria-pressed="' + (it.kind === k[0]) + '">' + k[1] + '</button>'; }).join('') + '</div>' +
+					'<div class="mp-m-two">' + metNumField('inter.chunks', several ? 'Passages' : 'Chunks', several ? 'to work on' : 'in the passage', 1) + metNumField('inter.beats', several ? 'Each passage is' : 'Each chunk is', 'beats', 1, several ? [4, 8, 16, 32] : [1, 2, 4, 8]) + '</div>' +
+					(chunking ? metNumField('inter.goal', 'Tempo', 'bpm', 5) :
+						'<div class="mp-m-two">' + metNumField('inter.start', 'Start at', 'bpm', 5) + metNumField('inter.goal', 'Goal', 'bpm', 5) + '</div>' +
+						metNumField('inter.by', 'Change by', 'bpm', 1, [3, 5, 10])) +
+					(several || chunking ? '' : metSwitch('inter.back', it.back, 'Build from the end', 'Start with the last chunk and add the ones before it. For a passage whose end is the hard part.')) +
+					'<p class="mp-note">' + (several ?
+						'For three to five passages that all need speed (more if they are short). Call them A, B, C. First each is clicked up in small steps, then in steps of 10, 20 and 30, then start, halfway and goal, then start and goal, then the goal alone. The jumps grow until the last round is each passage at tempo, cold. Play each one once.' :
+						chunking ?
+						'Everything at the goal tempo, or a little over. One chunk at a time through the passage, landing on the first note of the next. Then every two chunks that sit together, then every three, until it is the whole passage. If two notes will not join, fix those two alone and put them back.' :
+						'Cut the passage into chunks: a beat, a bar, two bars. Each step adds a chunk and takes it from the start tempo to the goal, sometimes alone and sometimes with the chunks before it. Play each one once. If it goes wrong, start slower or use smaller chunks.') +
+						' A count of one bar, then the click runs for what you play and one beat more, so you can land. After Molly Gebrian, Learn Faster, Perform Better.</p>' +
 				'</details></div>';
+		}
+		if (o.blind && o.blind.on && o.gap !== '0') {
+			h += '<div class="mp-m-guide mp-m-inter" role="group" aria-label="Blind bars">' +
+				'<span><b>Blind bars</b> tap every beat, and keep tapping through the silent bars</span>' +
+				'<p class="mp-m-inter-say" data-met-blind aria-live="polite">' + esc(metUi.blindSay || 'Start, then tap') + '</p>' +
+				'<button type="button" class="mp-btn sm mp-m-count-tap" data-met-tap>Tap</button>' +
+				'<button type="button" class="mp-x" data-met="blind-off" aria-label="Leave Blind bars">Done</button>' +
+				'<p class="mp-note" style="flex-basis:100%">After each gap this says whether your beat held, rushed or dragged while the click was away. It measures how your taps moved across the gap, so the screen’s own delay does not count against you. Change the length of the gap under Where the click falls.</p></div>';
 		}
 		if (o.up.on && o.up.ready) {
 			var cur = o.bpm, stop = MET.upStop(o.up), nx = MET.upNext(cur, o.up, false), there = stop != null && cur === stop;
@@ -1650,6 +1673,14 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 		do { t = Math.round((lo + Math.random() * (hi - lo)) / 2) * 2; } while (t === not && hi - lo > 2 && ++n < 20);
 		return Math.max(MET.BOTTOM, Math.min(MET.TOP, t));
 	}
+	// What Blind bars says after a gap. Written straight into the row so the screen does not redraw under a tapping finger.
+	function blindSay(d) {
+		var say = !d || d.verdict === 'few' ? 'Tap every beat through the silence' :
+			d.verdict === 'steady' ? 'Steady through the gap' :
+			d.verdict === 'rushing' ? 'Rushing: ' + Math.abs(d.drift) + ' ms ahead by the end' : 'Dragging: ' + d.drift + ' ms behind by the end';
+		metUi.blindSay = say;
+		var el = room && room.querySelector('[data-met-blind]'); if (el) { el.textContent = say; }
+	}
 	// One go of interleaved clicking up: a bar's count, then the click for the chunks and a beat to land on, then it stops.
 	function interPlay() {
 		if (!met) { return; }
@@ -1665,6 +1696,7 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 		if (!met) { return; }
 		var eo = engineOpts();
 		// (a go of interleaved clicking up is a plain click on every beat, counted in, whatever else is set)
+		metUi.blind = null; metUi.blindSay = '';
 		if (metUi.inter) { eo.countIn = 1; eo.mute = null; eo.clickUp = null; eo.gap = null; eo.which = 'all'; eo.where = 'on'; eo.groove = null; }
 		if (eo.groove && eo.groove.kind === 'kit') { met.kitUrls = shelf.data.kit; }
 		met.set(eo);
@@ -1701,6 +1733,17 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 		met.onbeat = function (ev) {
 			var mod = room && room.querySelector('[data-mod="metronome"]');
 			metUi.now = ev.bpm; if (!ev.countIn && ev.sub === 0) { metUi.bars = ev.bar + 1; }
+			// Blind bars: keep each beat's time, and when the click comes back judge the taps made through the gap
+			if (metOpts.blind.on && metOpts.gap !== '0' && !ev.countIn && ev.sub === 0) {
+				var bl = metUi.blind || (metUi.blind = { beats: [], taps: [] });
+				if (!ev.off && bl.beats.length && bl.beats[bl.beats.length - 1].silent) {
+					var closing = bl;
+					metUi.blind = { beats: [], taps: [] };
+					// (a tap on the click's first beat back can land a little late, so wait half a beat before judging)
+					window.setTimeout(function () { blindSay(MET.drift(closing.beats.concat([{ time: ev.time, silent: false }]), closing.taps.concat(metUi.blind ? metUi.blind.taps : []))); }, 30000 / ev.bpm);
+				}
+				(metUi.blind || bl).beats.push({ time: ev.time, silent: !!ev.off });
+			}
 			// a go of interleaved clicking up stops itself once the landing beat has sounded
 			if (metUi.inter && !ev.countIn && ev.sub === 0 && --metUi.inter.left <= 0) {
 				metUi.inter = null;
@@ -1756,7 +1799,11 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 	}
 	/* Swipe the tempo: up is faster. About one bpm for every 8px. A tap that doesn't move opens the field to type in. */
 	var swipe = null;
+	// A Blind bars tap is timed when the finger lands, not when it lifts, and on the audio's own clock.
+	function blindTap() { if (met && met.running && metUi.blind) { metUi.blind.taps.push(met.now()); } }
+	document.addEventListener('keydown', function (e) { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat && e.target.closest && e.target.closest('[data-met-tap]')) { blindTap(); } });
 	document.addEventListener('pointerdown', function (e) {
+		if (e.target.closest && e.target.closest('[data-met-tap]')) { blindTap(); return; }
 		var s = e.target.closest && e.target.closest('[data-met-swipe]');
 		if (!s || !met || metUi.typing) { return; }
 		swipe = { y: e.clientY, bpm: metNowBpm(), id: e.pointerId, moved: false, at: Date.now() };
@@ -2883,6 +2930,15 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 				if (mk === 'count-hear' && metUi.count) { setBpm(metUi.count.target, true); if (!met.running) { startMet(); } renderModule('metronome', { focus: '[data-met="count-hear"]' }); }
 				if (mk === 'count-next' && metUi.count) { if (met.running) { stopMet(); } metUi.count = { target: countTarget(metUi.count.target), taps: [], got: null }; renderModule('metronome', { focus: '[data-met="count-tap"]' }); }
 				if (mk === 'count-off') { metUi.count = null; metSave({ count: Object.assign({}, metOpts.count, { on: false }) }, false); renderModule('metronome', { focus: '[data-met="go"]' }); }
+				if (mk.indexOf('inter-kind-') === 0) {
+					if (metUi.inter) { stopMet(); }
+					var kd = mk.slice(11), kp = Object.assign({}, metOpts.inter, { kind: kd, at: 0 });
+					// several passages are longer than chunks and fewer: a sensible start when changing over
+					if (kd === 'several' && metOpts.inter.kind !== 'several') { kp.chunks = Math.min(kp.chunks, 3); kp.beats = Math.max(kp.beats, 8); }
+					metSave({ inter: kp }, false); metUi.interSet = true;
+					renderModule('metronome', { focus: '[data-met="' + mk + '"]' });
+				}
+				if (mk === 'blind-off') { metSave({ blind: { on: false } }, false); renderModule('metronome', { focus: '[data-met="go"]' }); }
 				if (mk === 'inter-play') { if (metUi.inter) { stopMet(); } else { interPlay(); } }
 				if (mk === 'inter-next' || mk === 'inter-back' || mk === 'inter-off') {
 					if (metUi.inter) { stopMet(); }
