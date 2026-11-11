@@ -1,0 +1,278 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Leith Bass Notation exercise (renderer 2.1)",
+  "description": "Structural schema. render.js also enforces musical rules a schema cannot: bar lengths, spelling against fret, crowding, unique slugs. Version 3: auto width, frame, show, rowLabels, repeat.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "panels"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "slug": {
+      "type": "string"
+    },
+    "timeSignature": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9
+            },
+            {
+              "const": 4
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        }
+      ]
+    },
+    "accidentalPreference": {
+      "enum": [
+        "sharp",
+        "flat"
+      ]
+    },
+    "noteNames": {
+      "type": "boolean"
+    },
+    "theme": {
+      "enum": [
+        "cream",
+        "print"
+      ]
+    },
+    "layout": {
+      "enum": [
+        "standard",
+        "compact"
+      ],
+      "description": "Accepted for old files; no longer changes the rendering."
+    },
+    "width": {
+      "oneOf": [
+        {
+          "const": "auto"
+        },
+        {
+          "type": "integer",
+          "minimum": 600,
+          "maximum": 3600
+        }
+      ],
+      "description": "\"auto\" (default) sizes the figure to the music; all panels share one width."
+    },
+    "instrument": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "writtenOctaveOffset": {
+          "type": "integer"
+        },
+        "strings": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "openMidi"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "openMidi": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 127
+              }
+            }
+          }
+        }
+      }
+    },
+    "panels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "heading",
+          "measures"
+        ],
+        "properties": {
+          "heading": {
+            "type": "string",
+            "minLength": 1
+          },
+          "slug": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "measures": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "incomplete": {
+                  "type": "boolean"
+                },
+                "notes": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 8,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "string",
+                      "fret"
+                    ],
+                    "properties": {
+                      "string": {
+                        "type": "string"
+                      },
+                      "fret": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 36
+                      },
+                      "finger": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ],
+                        "enum": [
+                          1,
+                          2,
+                          3,
+                          4,
+                          null
+                        ]
+                      },
+                      "spelling": {
+                        "type": "string",
+                        "pattern": "^[A-G][#b\u266f\u266d]?-?\\d+$"
+                      },
+                      "courtesy": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "string": {
+                  "type": "string"
+                },
+                "frets": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 8,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 36
+                  }
+                },
+                "fingers": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  }
+                },
+                "spellings": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-G][#b\u266f\u266d]?-?\\d+$"
+                  }
+                },
+                "courtesy": {
+                  "type": "array",
+                  "items": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "oneOf": [
+                {
+                  "required": [
+                    "notes"
+                  ]
+                },
+                {
+                  "required": [
+                    "string",
+                    "frets"
+                  ]
+                }
+              ]
+            }
+          },
+          "repeat": {
+            "type": "boolean",
+            "description": "Repeat barlines at both ends of the panel."
+          }
+        }
+      }
+    },
+    "maxWidth": {
+      "type": "integer",
+      "minimum": 600,
+      "maximum": 3600
+    },
+    "frame": {
+      "enum": [
+        "panel",
+        "plain"
+      ],
+      "description": "panel: card with border and heading (web). plain: no border or heading (documents)."
+    },
+    "show": {
+      "enum": [
+        "both",
+        "notation",
+        "tab"
+      ]
+    },
+    "rowLabels": {
+      "type": "boolean",
+      "description": "Show NOTE and FINGER row labels. Default true for panel, false for plain."
+    }
+  }
+}

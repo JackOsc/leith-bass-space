@@ -1,0 +1,131 @@
+/*
+ * Leith Bass Space: Ear Training for Bass Players.
+ *
+ * It wears the same instrument register as Harmonic Elements and is built
+ * from the same parts (harmonic.css, scoped to .he), so the two read as one
+ * family. This file only adds what is Ear Training's own: Today, the strands
+ * and the Jam room across the top, the bars of a question, the answer pads
+ * and slots, the meter for a bass played into the microphone, the answer
+ * written out, and the Jam room.
+ *
+ * Orange means sound or the current pick, nothing else. The notation keeps
+ * its own cream panel; the necks are part of the instrument.
+ */
+.he.ear { padding-top: 0.25rem; }
+
+/* Today, the six strands and the Jam room: a grid of three on a phone (nothing hidden off the side), one row where there is room */
+.he.ear { grid-template-columns: minmax(0, 1fr); }
+.ear .he-bar { min-width: 0; }
+.ear .ear-strands { flex: 1 1 100%; min-width: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.ear .ear-strands .he-tab { min-width: 0; padding: 0 0.4rem; font-size: 0.875rem; letter-spacing: 0.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ear .ear-strands .he-tab[data-strand="today"], .ear .ear-strands .he-tab[data-strand="jam"] { color: var(--he-orange-lit); }
+.ear .ear-strands .he-tab[data-strand="today"][aria-pressed="true"], .ear .ear-strands .he-tab[data-strand="jam"][aria-pressed="true"] { color: var(--he-ground); }
+@media (min-width: 40rem) { .ear .ear-strands { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 62rem) {
+  .ear .ear-strands { flex: 0 1 auto; display: flex; flex-wrap: wrap; }
+  .ear .ear-strands .he-tab { padding: 0 0.85rem; font-size: 0.9375rem; overflow: visible; }
+}
+
+/* Today's set: its parts, the one being worked on lit */
+.ear-plan { display: grid; gap: 0.35rem; margin-top: 0.6rem; }
+.ear-plan b { display: block; font: 700 1rem/1.2 var(--he-display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--he-ink); }
+.ear-plan b.is-on { color: var(--he-orange-lit); }
+.ear-plan span { color: var(--he-dust); }
+@media (max-width: 30rem) { .ear .he-title { width: 100%; font-size: 1.125rem; } }
+
+/* the bars of a question (two, or four for a longer line or a progression): the one that is sounding fills up a beat at a time */
+.ear .ear-bars b { font-size: 1.0625rem; }
+.ear .ear-bars li.is-on { background: linear-gradient(90deg, var(--he-orange) calc(var(--he-beat, 4) * 25%), rgba(232, 113, 2, 0.4) 0); }
+/* the display is kept short, so that on a phone Start and the answers are on the screen together */
+.ear .he-d-main { flex-wrap: nowrap; align-items: flex-end; gap: 0.5rem 1.25rem; }
+.ear .he-glyph { font-size: clamp(3.5rem, 17vw, 5.5rem); }
+.ear .he-roman { font-size: clamp(1.75rem, 7.5vw, 2.75rem); padding-bottom: 0.3rem; }
+.ear .he-d-name:empty { display: none; }
+.ear .he-ask-head .he-small:empty { display: none; }
+
+/* answer pads */
+.ear .ear-pad.is-deg { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.ear .ear-pad.is-deg .he-pick { text-align: center; padding: 0; min-height: 56px; }
+.ear .ear-pad.is-deg .he-pick b { font-size: 1.375rem; }
+.ear .ear-pad.is-int { grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); }
+.ear .ear-pad.is-int .he-pick b, .ear .ear-pad.is-scale .he-pick b, .ear .ear-pad.is-inv .he-pick b { font-size: 1.0625rem; }
+.ear .ear-pad .he-pick.is-miss b, .ear .ear-pad .he-pick.is-miss span { color: var(--he-dust); text-decoration: line-through; }
+.ear-commit { grid-template-columns: minmax(0, 1fr); }
+
+/* a line or a progression: a slot for each note, filled as it is said; the last go underneath, ticked note by note */
+.ear-slots { display: grid; gap: 0.5rem; }
+.ear-slots-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.ear-slots-row i { display: grid; place-items: center; min-width: 2.75rem; height: 2.75rem; padding: 0 0.35rem; border: 2px dashed var(--he-rule-strong); font: 700 1.25rem/1 var(--he-display); font-style: normal; color: var(--he-ink); }
+.ear-slots-row i.is-filled { border-style: solid; border-color: var(--he-ink); }
+.ear-slots-row i.is-answer { border-color: var(--he-orange); color: var(--he-orange-lit); }
+.ear-slots-row.is-last i { height: auto; min-height: 2.5rem; padding: 0.25rem 0.35rem; border-style: solid; font-size: 1rem; gap: 0.1rem; }
+.ear-slots-row.is-last i.is-right { border-color: var(--he-ink-soft); }
+.ear-slots-row.is-last i.is-wrong { border-color: var(--he-dust); color: var(--he-dust); text-decoration: line-through; }
+.ear-slots-row.is-last small { font-size: 0.75rem; text-decoration: none; }
+.ear-slots .he-togs { margin-top: -0.25rem; }
+
+/* after the answer: the near neighbours to hear, and where to take it next */
+.ear-compare { display: grid; gap: 0.5rem; padding: 0.9rem 0; border-top: 1px solid var(--he-rule); border-bottom: 1px solid var(--he-rule); }
+.ear-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.ear-links .he-btn { min-height: 48px; font-size: 0.9375rem; letter-spacing: 0.1em; display: inline-flex; align-items: center; text-decoration: none; }
+
+/* a neck to answer on, and the answer written out */
+.ear-fb, .ear-stave, .ear-neck { min-width: 0; --lbs-fb-ink: var(--he-ink); --lbs-fb-ground: var(--he-panel); --lbs-fb-orange: var(--he-orange); }
+.ear-fb svg, .ear-stave svg, .ear-neck svg { display: block; height: auto; }
+.ear-fb { display: grid; gap: 0.5rem; }
+.ear-fb [data-fb], .ear-neck [data-fb] { cursor: pointer; }
+.ear-fb [data-fb]:focus-visible, .ear-neck [data-fb]:focus-visible { outline: 2px solid var(--he-orange-lit); outline-offset: -2px; }
+.ear-why { gap: 0.4rem; font-size: 0.9375rem; }
+
+/* playing the answer on a bass */
+.ear-mic { display: grid; gap: 0.6rem; padding: 0.9rem; border: 1px solid var(--he-rule); }
+.ear-mic-line { min-height: 1.4em; font: 700 1rem/1.3 var(--he-display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--he-dust); }
+.ear-mic-line.is-open { color: var(--he-orange-lit); }
+.ear-meter { height: 8px; background: var(--he-faint); overflow: hidden; }
+.ear-meter i { display: block; height: 100%; width: 0; background: var(--he-dust); transition: width 0.06s linear; }
+.ear-meter i.is-clear { background: var(--he-orange); }
+@media (prefers-reduced-motion: reduce) { .ear-meter i { transition: none; } }
+.ear-heard { display: flex; flex-wrap: wrap; gap: 4px; min-height: 2.25rem; align-items: center; }
+.ear-heard i { display: grid; place-items: center; min-width: 2.25rem; height: 2.25rem; padding: 0 0.4rem; background: var(--he-panel); font: 700 1.0625rem/1 var(--he-display); font-style: normal; color: var(--he-ink); }
+
+/* the record, and a sitting for the practice diary */
+.ear .he-rec li.ear-rec-head { display: block; padding: 0.9rem 0 0.3rem; border-bottom: 0; }
+.ear .he-rec li.ear-rec-head:first-child { padding-top: 0; }
+.ear-diary { display: grid; gap: 0.4rem; }
+.ear .he-panel > .he-fold { border-top: 0; }
+.ear .he-panel > .he-fold > summary { padding-top: 0; min-height: 44px; }
+
+/* room for the dock, so it never sits on the last thing on the page */
+.he.ear.has-dock { padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px)); }
+
+/* Full screen on a phone: the strip above already says what this is, so the title gives its row to the question. */
+@media (max-width: 30rem) { .ear.he-full .he-title { display: none; } }
+
+/* ---------- the Jam room ---------- */
+.ear.is-jam .he-side #ear-mix { display: none; }
+.ear-jam { display: grid; gap: 1rem; }
+#ear-jam-body { display: grid; gap: 0.75rem; }
+.ear-jam-top { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 0.6rem 1rem; padding: 1rem; background: var(--he-panel); }
+.ear-jam-top .he-btn { min-width: 7.5rem; }
+.ear-jam-top .he-btn[aria-pressed="true"] { background: none; color: var(--he-ink); border-color: var(--he-ink); }
+.ear-jam-name { font: 700 clamp(2.5rem, 12vw, 4rem)/0.95 var(--he-display); color: var(--he-ink); letter-spacing: 0.02em; }
+.ear-jam-bars { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 0; padding: 0; list-style: none; }
+.ear-jam-bars li { height: 10px; background: var(--he-panel-lift); }
+.ear-jam-bars li.is-on { background: linear-gradient(90deg, var(--he-orange) calc(var(--he-beat, 4) * 25%), rgba(232, 113, 2, 0.4) 0); }
+.ear-jam-say { font-size: 1rem; color: var(--he-ink-soft); max-width: 40rem; }
+.ear-jam .he-kicker { margin-top: 0.4rem; }
+.ear-jam-keys { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+.ear-jam-keys .he-tog { padding: 0; font: 700 1.0625rem/1 var(--he-display); }
+@media (min-width: 40rem) { .ear-jam-keys { grid-template-columns: repeat(12, minmax(0, 1fr)); } }
+.ear-jam-fb { min-width: 0; --lbs-fb-ink: var(--he-ink); --lbs-fb-ground: var(--he-panel); --lbs-fb-orange: var(--he-orange); }
+.ear-jam-fb svg { display: block; height: auto; }
+.ear-jam-fb [data-fb] { cursor: pointer; }
+.ear-jam-fb [data-fb]:focus-visible { outline: 2px solid var(--he-orange-lit); outline-offset: -2px; }
+.ear-jam-degs { display: flex; flex-wrap: wrap; gap: 4px; }
+.ear-jam-degs .he-tog { display: grid; gap: 0.1rem; justify-items: center; min-width: 3.25rem; padding: 0.35rem 0.4rem; min-height: 52px; background: none; border: 2px solid var(--he-orange); }
+.ear-jam-degs .he-tog.is-chord { background: var(--he-orange); color: var(--he-ground); }
+.ear-jam-degs .he-tog b { font: 700 1.125rem/1 var(--he-display); }
+.ear-jam-degs .he-tog span { font-size: 0.75rem; }
+.ear-jam-more { border-top: 1px solid var(--he-rule); padding-top: 0.5rem; }
+.ear-jam-more > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font: 700 1rem/1 var(--he-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--he-ink); }
+.ear-jam-more[open] > summary { margin-bottom: 0.25rem; }

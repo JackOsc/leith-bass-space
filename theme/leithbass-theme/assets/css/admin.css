@@ -1,0 +1,24 @@
+.jackaudio-admin { max-width: 1180px; }
+.jackaudio-admin-intro { max-width: 780px; font-size: 15px; }
+.jackaudio-admin .nav-tab-wrapper { margin: 24px 0; }
+.jackaudio-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr)); gap: 16px; max-width: 1080px; }
+.jackaudio-field { min-width: 0; padding: 18px; border: 1px solid #c3c4c7; background: #fff; box-shadow: 0 1px 1px rgba(0,0,0,.04); }
+.jackaudio-field > label { display: block; margin-bottom: 9px; }
+.jackaudio-field .regular-text { width: 100%; max-width: none; }
+.jackaudio-field .wp-editor-wrap { width: 100%; }
+.jackaudio-image-heading { margin-top: 36px; }
+.jackaudio-image-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 16px; max-width: 1080px; }
+.jackaudio-image-card { padding: 16px; border: 1px solid #c3c4c7; background: #fff; box-shadow: 0 1px 1px rgba(0,0,0,.04); }
+.jackaudio-image-card h3 { margin-top: 0; }
+.jackaudio-publish-control { max-width: 840px; margin: 20px 0 24px; padding: 18px 20px; border-left: 4px solid #dba617; background: #fff; box-shadow: 0 1px 1px rgba(0,0,0,.04); }
+.jackaudio-publish-control > label { display: block; font-size: 15px; }
+.jackaudio-publish-control > p:last-child { margin-bottom: 0; }
+.jackaudio-image-preview { aspect-ratio: 16 / 9; overflow: hidden; background: #1d2327; }
+.jackaudio-image-preview img { width: 100%; height: 100%; object-fit: cover; }
+.jackaudio-image-actions { display: flex; align-items: center; gap: 12px; min-height: 30px; }
+.jackaudio-range { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; margin-top: 14px; font-weight: 600; }
+.jackaudio-range output { font-variant-numeric: tabular-nums; font-weight: 400; }
+.jackaudio-range input { grid-column: 1 / -1; width: 100%; }
+@media (max-width: 782px) {
+	.jackaudio-fields, .jackaudio-image-grid { grid-template-columns: 1fr; }
+}

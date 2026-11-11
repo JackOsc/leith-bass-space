@@ -1,0 +1,370 @@
+/*
+ * Leith Bass Space: the Harmonic Elements ear trainer.
+ *
+ * Layout: one instrument column (display, play, answer, verdict) with the
+ * mixer, the mix and the record beside it on wide screens and beneath it on
+ * phones. Once the play button has scrolled out of sight, play, stop and the
+ * next step sit in a dock along the bottom of the screen.
+ *
+ * The Shed's instrument register: always dark, whatever the site's theme.
+ * Orange means sound or the current pick, nothing else. Outlined type is
+ * pencilled in; solid type is confirmed.
+ *
+ * Everything is scoped to .he and named he-*, so the theme's own styles and
+ * these never meet.
+ */
+.he {
+  --he-ground: #090909;
+  --he-panel: #12151B;
+  --he-panel-lift: #1C2029;
+  --he-ink: #F3F1EB;
+  --he-ink-soft: #D4D1CA;
+  --he-dust: #ACA89F;
+  --he-orange: #E87102;
+  --he-orange-lit: #F49542;
+  --he-rule: rgba(243, 241, 235, 0.14);
+  --he-rule-strong: rgba(243, 241, 235, 0.42);
+  --he-faint: rgba(243, 241, 235, 0.2);
+  --he-glow: rgba(232, 113, 2, 0.45);
+  --he-display: var(--font-display, 'Oswald', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif);
+  --he-body: var(--font-body, 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif);
+  --he-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color-scheme: dark;
+  display: grid; gap: 1.75rem;
+  max-width: 72rem; margin: 0 auto; padding: 0 0 2.5rem;
+  background: var(--he-ground); color: var(--he-ink-soft);
+  font: 400 1rem/1.5 var(--he-body); letter-spacing: 0; text-align: left;
+  -webkit-font-smoothing: antialiased;
+}
+.he *, .he *::before, .he *::after { box-sizing: border-box; }
+.he h2, .he h3, .he p, .he ul, .he dl, .he dd, .he dt { margin: 0; }
+.he ul { padding: 0; list-style: none; }
+.he button { margin: 0; font: inherit; letter-spacing: inherit; color: inherit; cursor: pointer; border-radius: 0; -webkit-appearance: none; appearance: none; }
+.he button:disabled { cursor: default; }
+.he :focus-visible { outline: 2px solid var(--he-orange-lit); outline-offset: 3px; }
+.he [hidden] { display: none !important; }
+.he a { color: var(--he-orange-lit); }
+
+/* top row */
+.he-bar { min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; flex-wrap: wrap; padding-bottom: 0.5rem; border-bottom: 1px solid var(--he-rule); }
+.he-title { font: 700 1.375rem/1 var(--he-display); letter-spacing: 0.02em; text-transform: uppercase; color: var(--he-ink); }
+.he-bar-links { display: flex; gap: 0.25rem 1.25rem; flex-wrap: wrap; margin-left: auto; }
+.he .he-bar a { display: flex; align-items: center; gap: 8px; min-height: 44px; color: var(--he-dust); font-size: 0.8125rem; font-weight: 600; text-decoration: none; }
+.he .he-bar a:hover, .he .he-bar a:focus-visible { color: var(--he-ink); }
+/* on a phone the title has a line to itself, and the rooms and the mix share the next */
+.he-narrow { display: none; }
+@media (max-width: 30rem) {
+  .he-bar { gap: 0.35rem 0.5rem; }
+  .he-full .he-title { width: 100%; font-size: 1.125rem; }
+  .he .he-tab { padding: 0 0.85rem; }
+  .he-wide { display: none; }
+  .he-narrow { display: inline; }
+}
+
+.he-kicker { font: 600 0.6875rem/1.4 var(--he-body); letter-spacing: 0.16em; text-transform: uppercase; color: var(--he-dust); }
+.he .is-outline { color: transparent; -webkit-text-stroke: 1.5px var(--he-orange); }
+@supports not (-webkit-text-stroke: 1px black) { .he .is-outline { color: var(--he-orange-lit); } }
+.he-note { display: flex; gap: 0.75rem; align-items: baseline; padding: 0.6rem 0.8rem; border: 1px dotted var(--he-rule-strong); font-size: 0.8125rem; color: var(--he-dust); max-width: 46rem; }
+.he-note b { flex-shrink: 0; font: 700 0.75rem/1 var(--he-display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--he-ink); }
+
+.he-cols { display: grid; gap: 2rem; }
+@media (min-width: 62rem) { .he-cols { grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); gap: 3rem; align-items: start; } }
+.he-rig, .he-side { display: grid; gap: 1.5rem; min-width: 0; }
+
+/* display */
+.he-display { display: grid; gap: 0.9rem; scroll-margin-top: 5.5rem; }
+.he-display .he-kicker { color: var(--he-orange-lit); min-height: 1.4em; }
+.he-d-main { display: flex; align-items: flex-end; gap: 0.5rem 1.5rem; flex-wrap: wrap; }
+.he-d-cell { display: grid; gap: 0.2rem; min-width: 0; }
+.he-d-cell > span:first-child { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.16em; color: var(--he-dust); }
+.he-glyph { font: 700 clamp(6rem, 30vw, 8.75rem)/0.88 var(--he-display); color: var(--he-ink); min-width: 1.1ch; }
+.he-roman { font: 700 clamp(2rem, 8.5vw, 3rem)/1.05 var(--he-display); color: var(--he-ink); overflow-wrap: anywhere; }
+.he-d-name { font-size: 0.875rem; color: var(--he-dust); padding-bottom: 0.35rem; }
+.he-pips { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.he-pips i { display: block; height: 8px; background: var(--he-faint); }
+/* the bar that is sounding fills a beat at a time (--he-beat is 1 to 4, set as the loop plays) */
+.he-pips i.is-on { background: linear-gradient(90deg, var(--he-orange) calc(var(--he-beat, 4) * 25%), rgba(232, 113, 2, 0.34) 0); box-shadow: 0 0 16px var(--he-glow); }
+.he-changes { display: flex; flex-wrap: wrap; gap: 6px; }
+.he-changes li { display: grid; gap: 0.1rem; padding: 0.45rem 0.7rem 0.5rem; background: var(--he-panel); min-width: 4.25rem; }
+.he-changes b { font: 700 1.375rem/1.1 var(--he-display); color: var(--he-ink); }
+.he-changes span { font-size: 0.75rem; color: var(--he-dust); }
+.he-changes li.is-on { background: var(--he-orange); }
+.he-changes li.is-on b, .he-changes li.is-on span { color: var(--he-ground); }
+/* A form (the blues, rhythm changes): a box for each bar, four to a line. Two chords in a bar share its box,
+   and the one that is sounding is the bright one. Before the answer is out the boxes only carry their numbers. */
+.he-changes.is-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; }
+.he-changes.is-form li { display: flex; align-items: center; justify-content: space-around; gap: 0.25rem; min-width: 0; min-height: 2.75rem; padding: 0.3rem 0.25rem; text-align: center; }
+.he-changes.is-form b { font-size: 1.0625rem; overflow-wrap: anywhere; }
+.he-changes.is-form li.is-two b { font-size: 0.9375rem; }
+.he-changes.is-form li.is-blank span { font: 600 0.75rem/1 var(--he-body); color: var(--he-dust); }
+.he-changes.is-form li.is-on.is-blank span { color: var(--he-ground); }
+.he-changes.is-form[data-half="1"] li.is-on.is-two b:last-child, .he-changes.is-form[data-half="2"] li.is-on.is-two b:first-child { opacity: 0.45; }
+/* What the Dojo asks: name it, which is which, before and after. */
+.he-modes { display: grid; gap: 0.4rem; }
+/* A drill's two loops, and which of them is sounding. */
+.he-turns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.he-turns li { display: grid; gap: 0.1rem; padding: 0.4rem 0.7rem 0.45rem; background: var(--he-panel); min-width: 0; }
+.he-turns span { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--he-dust); }
+.he-turns b { font: 700 1.25rem/1.1 var(--he-display); color: var(--he-ink); overflow-wrap: anywhere; }
+.he-turns li.is-on { background: var(--he-orange); }
+.he-turns li.is-on span, .he-turns li.is-on b { color: var(--he-ground); }
+
+/* play */
+.he-ask { display: grid; gap: 0.6rem; }
+.he .he-go { width: 100%; min-height: 64px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 1rem; border: 2px solid var(--he-orange); background: var(--he-orange); color: var(--he-ground); font: 700 1.375rem/1 var(--he-display); letter-spacing: 0.14em; text-transform: uppercase; }
+.he .he-go[aria-pressed="true"] { background: none; border-color: var(--he-ink); color: var(--he-ink); }
+.he-go i { display: block; width: 14px; height: 14px; background: currentColor; }
+.he-go[aria-pressed="false"] i { width: 0; height: 0; background: none; border-style: solid; border-width: 8px 0 8px 14px; border-color: transparent transparent transparent currentColor; }
+.he-status { font-size: 0.8125rem; color: var(--he-dust); }
+/* (still there for a screen reader to be told what turns up in it, but taking no room) */
+.he-status:empty { margin-top: -0.6rem; }
+/* who is playing this loop */
+.he-who-plays { display: flex; align-items: baseline; gap: 0.25rem 0.7rem; flex-wrap: wrap; min-height: 1.3em; font-size: 0.8125rem; color: var(--he-ink-soft); }
+
+/* a line that opens into more */
+.he-more > summary { display: inline-flex; align-items: center; min-height: 44px; cursor: pointer; font-size: 0.8125rem; font-weight: 600; color: var(--he-orange-lit); list-style: none; }
+.he-more > summary::-webkit-details-marker { display: none; }
+.he-more > summary::after { content: ""; width: 7px; height: 7px; margin: -3px 0 0 0.6rem; border: solid currentColor; border-width: 0 1.8px 1.8px 0; transform: rotate(45deg); }
+.he-more[open] > summary::after { margin-top: 3px; transform: rotate(-135deg); }
+.he-more > p { max-width: 42rem; padding-bottom: 0.4rem; }
+/* a heading that opens into a group of settings */
+.he-fold { border-top: 1px solid var(--he-rule); }
+.he-fold > summary { position: relative; display: flex; align-items: baseline; justify-content: space-between; gap: 0.1rem 1rem; flex-wrap: wrap; min-height: 52px; padding: 0.9rem 2rem 0.8rem 0; cursor: pointer; list-style: none; }
+.he-fold > summary::-webkit-details-marker { display: none; }
+.he-fold > summary::after { content: ""; position: absolute; right: 6px; top: 50%; width: 8px; height: 8px; margin-top: -7px; border: solid var(--he-ink); border-width: 0 1.8px 1.8px 0; transform: rotate(45deg); }
+.he-fold[open] > summary::after { margin-top: -2px; transform: rotate(-135deg); }
+.he-fold-body { display: grid; gap: 0.9rem; padding-bottom: 0.5rem; }
+
+/* answer */
+.he-ask-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.25rem 1rem; flex-wrap: wrap; }
+.he .he-h { font: 700 0.9375rem/1.2 var(--he-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--he-ink); text-wrap: initial; }
+.he-small { font-size: 0.8125rem; line-height: 1.45; color: var(--he-dust); }
+.he-homes { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.he .he-pick { border: 2px solid transparent; background: var(--he-panel); color: var(--he-ink); min-height: 52px; }
+/* not while it's the current pick: a phone keeps a button "hovered" after a tap */
+.he .he-pick:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--he-panel-lift); }
+.he .he-pick[aria-pressed="true"] { background: var(--he-orange); color: var(--he-ground); }
+.he .he-pick.is-answer { background: var(--he-ink); color: var(--he-ground); }
+.he .he-pick.is-miss { background: none; border: 2px dotted var(--he-rule-strong); color: var(--he-dust); }
+.he .he-pick:disabled:not(.is-answer):not(.is-miss):not([aria-pressed="true"]) { color: var(--he-dust); opacity: 0.6; }
+.he .he-homes .he-pick { font: 700 1.25rem/1 var(--he-display); padding: 0; }
+.he-els { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.25rem, 1fr)); gap: 6px; }
+.he-els .he-grp { grid-column: 1 / -1; padding-top: 0.35rem; }
+.he-els .he-grp:first-child { padding-top: 0; }
+.he .he-els .he-pick { display: grid; gap: 0.15rem; align-content: center; text-align: left; padding: 0.5rem 0.7rem; min-height: 60px; }
+.he-els .he-pick b { font: 700 1.25rem/1.1 var(--he-display); overflow-wrap: anywhere; }
+.he-els .he-pick span { font-size: 0.75rem; line-height: 1.25; color: var(--he-dust); }
+.he-els .he-pick[aria-pressed="true"] span, .he-els .he-pick.is-answer span { color: inherit; }
+/* Check, then "Show me" and the two halves that can be shown: beside Check on a wide screen, under it on a narrow one */
+.he-commit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.he-shows { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; align-items: center; }
+.he-shows .he-kicker { grid-column: 1 / -1; padding-top: 0.25rem; }
+.he-shows .he-kicker[hidden], .he-shows .he-btn[hidden] { display: none; }
+.he .he-shows .he-btn.is-quiet { padding: 0 0.6rem; }
+@media (min-width: 40rem) { .he-commit { grid-template-columns: minmax(0, 1fr) auto; } .he-shows { grid-template-columns: auto auto auto; } .he-shows .he-kicker { grid-column: auto; padding: 0 0.25rem 0 0; } }
+/* the key: home's note, then major or minor */
+.he-kmodes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; margin-top: 6px; }
+.he .he-kmodes .he-pick { font: 700 1.0625rem/1 var(--he-display); letter-spacing: 0.12em; text-transform: uppercase; min-height: 48px; }
+.he-d-mode { font: 700 0.9375rem/1 var(--he-display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--he-dust); min-height: 1em; }
+.he .he-btn { min-height: 56px; padding: 0 1.25rem; border: 2px solid var(--he-ink); background: var(--he-ink); color: var(--he-ground); font: 700 1.125rem/1 var(--he-display); letter-spacing: 0.14em; text-transform: uppercase; }
+.he .he-btn:disabled { background: var(--he-panel); border-color: var(--he-panel); color: var(--he-dust); }
+.he .he-btn.is-quiet { background: none; color: var(--he-ink); border-color: var(--he-rule-strong); font-size: 0.9375rem; }
+.he .he-btn.is-quiet:disabled { background: none; border-color: var(--he-rule); color: var(--he-dust); }
+.he .he-btn.is-sound { background: var(--he-orange); border-color: var(--he-orange); }
+
+/* verdict */
+.he-result { display: grid; gap: 1rem; padding: 1.1rem; border: 1px solid var(--he-rule-strong); scroll-margin: 5.5rem 0 6rem; }
+.he-news { font: 700 1.0625rem/1.3 var(--he-display); color: var(--he-orange-lit); }
+.he-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.he-tag { display: inline-flex; align-items: center; min-height: 28px; padding: 0 0.6rem; font: 700 0.8125rem/1 var(--he-display); letter-spacing: 0.12em; text-transform: uppercase; }
+.he-tag.is-yes { background: var(--he-ink); color: var(--he-ground); }
+.he-tag.is-no { border: 2px dotted var(--he-rule-strong); color: var(--he-dust); }
+.he-verdict { font: 700 clamp(1.6rem, 6vw, 2.1rem)/1.05 var(--he-display); text-transform: uppercase; color: var(--he-ink); }
+.he-answer-line { font: 700 1.25rem/1.25 var(--he-display); color: var(--he-ink); }
+.he-facts { display: grid; gap: 0.8rem; }
+.he-facts dt { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--he-dust); margin-bottom: 0.15rem; }
+.he-facts .he-say { font: 700 1.125rem/1.35 var(--he-display); color: var(--he-ink); }
+
+/* side panels */
+.he-panel { display: grid; gap: 0.9rem; padding-top: 1.25rem; border-top: 1px solid var(--he-rule); scroll-margin-top: 5.5rem; }
+.he-fader-row { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) 2.2rem; align-items: center; gap: 0.75rem; }
+.he-fader-row output { font-size: 0.8125rem; color: var(--he-dust); text-align: right; font-variant-numeric: tabular-nums; }
+.he .he-fader { -webkit-appearance: none; appearance: none; width: 100%; height: 44px; margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.he-fader::-webkit-slider-runnable-track { height: 2px; background: var(--he-ink); }
+.he-fader::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -10px; border: 0; border-radius: 50%; background: var(--he-orange); }
+.he-fader::-moz-range-track { height: 2px; background: var(--he-ink); }
+.he-fader::-moz-range-thumb { width: 22px; height: 22px; border: 0; border-radius: 50%; background: var(--he-orange); }
+.he-switch { display: flex; align-items: center; gap: 0.7rem; min-height: 44px; color: var(--he-ink); cursor: pointer; }
+.he .he-switch input { width: 22px; height: 22px; margin: 0; accent-color: var(--he-orange); flex-shrink: 0; }
+
+.he-set { display: grid; gap: 0.5rem; }
+.he-togs { display: flex; flex-wrap: wrap; gap: 4px; }
+.he .he-tog { min-height: 44px; padding: 0 0.8rem; border: 0; background: var(--he-panel); color: var(--he-ink); font-size: 0.8125rem; font-weight: 600; }
+.he .he-tog:hover { background: var(--he-panel-lift); }
+.he .he-tog[aria-pressed="true"] { background: var(--he-ink); color: var(--he-ground); }
+.he .he-tog.is-note { min-width: 44px; padding: 0 0.3rem; font: 700 1.0625rem/1 var(--he-display); }
+.he-tog.is-rec { position: relative; }
+.he-tog.is-rec::after { content: ""; position: absolute; left: 50%; bottom: 5px; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--he-orange); }
+.he .he-tog.is-link { background: none; color: var(--he-orange-lit); padding: 0 0.5rem; }
+.he .he-tog.is-link:hover { background: none; color: var(--he-ink); }
+.he-stages { display: grid; gap: 4px; }
+.he-stage { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 4px; }
+.he .he-stage-all { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; min-height: 48px; padding: 0 0.8rem; border: 0; background: var(--he-panel); color: var(--he-ink); text-align: left; }
+.he-stage-all b { font: 700 0.9375rem/1.2 var(--he-display); letter-spacing: 0.08em; text-transform: uppercase; }
+.he-stage-all span { font-size: 0.75rem; color: var(--he-dust); white-space: nowrap; }
+.he .he-stage-all[aria-pressed="true"] { background: var(--he-ink); color: var(--he-ground); }
+.he-stage-all[aria-pressed="true"] span { color: inherit; }
+.he .he-stage-all[aria-pressed="mixed"] { box-shadow: inset 0 0 0 2px var(--he-ink); }
+.he .he-stage-open { border: 0; padding: 0; background: var(--he-panel); color: var(--he-ink); display: grid; place-items: center; }
+.he-stage-open svg { transition: transform 0.15s ease; }
+.he-stage-open[aria-expanded="true"] svg { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .he-stage-open svg { transition: none; } }
+.he-stage-els { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 4px; padding-bottom: 0.5rem; }
+.he .he-stage-els .he-tog { display: grid; gap: 0.1rem; align-content: center; text-align: left; padding: 0.4rem 0.6rem; min-height: 52px; }
+.he-stage-els .he-tog b { font: 700 1.0625rem/1.1 var(--he-display); overflow-wrap: anywhere; }
+.he-stage-els .he-tog span { font-size: 0.6875rem; line-height: 1.2; font-weight: 400; color: var(--he-dust); }
+.he-stage-els .he-tog[aria-pressed="true"] span { color: inherit; }
+/* the house band's sounds, a family at a time */
+.he-groups { display: grid; gap: 0.7rem; }
+.he-group { display: grid; gap: 0.3rem; }
+
+/* record */
+.he-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.he-tiles > div { display: grid; gap: 0.3rem; align-content: space-between; padding: 0.6rem 0.7rem 0.65rem; background: var(--he-panel); }
+.he-tiles dt { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--he-dust); }
+.he-tiles dd { font: 700 1.75rem/1 var(--he-display); color: var(--he-ink); font-variant-numeric: tabular-nums; }
+.he-tiles dd span { margin-left: 0.4rem; font: 400 0.75rem/1 var(--he-body); color: var(--he-dust); }
+.he-rec li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.25rem 0.9rem; align-items: center; padding: 0.55rem 0; border-bottom: 1px solid var(--he-rule); }
+.he-rec b { font: 700 1.0625rem/1.2 var(--he-display); color: var(--he-ink); }
+.he-rec .he-who span { display: block; font-size: 0.75rem; color: var(--he-dust); }
+.he-rec .he-how { display: grid; justify-items: end; gap: 0.25rem; font-size: 0.75rem; color: var(--he-dust); }
+.he-rec .he-how.is-got { color: var(--he-ink); }
+.he-dots { display: flex; gap: 5px; }
+.he-dots i { display: block; width: 10px; height: 10px; border-radius: 50%; background: var(--he-faint); }
+.he-dots i.is-ok { background: var(--he-ink); }
+.he-dots i.is-no { background: none; border: 1.5px solid var(--he-dust); }
+.he-rec li.is-empty { display: block; padding: 0.9rem; border: 1px dotted var(--he-rule-strong); font-size: 0.875rem; color: var(--he-dust); }
+
+/* only Jack sees this */
+.he-behind { display: grid; gap: 0.7rem; padding: 1rem 1.1rem; border: 1px dotted var(--he-rule-strong); min-width: 0; }
+.he-behind pre { margin: 0; padding: 0.7rem 0.8rem; background: var(--he-panel); color: var(--he-ink); font: 400 0.8125rem/1.6 var(--he-mono); overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---------- the two rooms ---------- */
+.he-tabs { display: flex; gap: 4px; }
+.he .he-tab { min-height: 44px; padding: 0 1rem; border: 0; background: var(--he-panel); color: var(--he-ink); font: 700 1rem/1 var(--he-display); letter-spacing: 0.1em; text-transform: uppercase; }
+.he .he-tab:hover { background: var(--he-panel-lift); }
+.he .he-tab[aria-pressed="true"] { background: var(--he-ink); color: var(--he-ground); }
+.he-after { display: grid; gap: 6px; }
+@media (min-width: 30rem) { .he-after { grid-template-columns: minmax(0, 1fr) auto; } }
+
+/* ---------- the Guide ---------- */
+/* Contents on the left and a page on the right on wide screens; one or the other on phones. */
+.he-guide { display: grid; gap: 2rem; }
+@media (min-width: 62rem) {
+  .he-guide { grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); gap: 3rem; align-items: start; }
+  .he-g-index { position: sticky; top: 5.5rem; max-height: calc(100vh - 7rem); overflow-y: auto; padding-right: 0.4rem; scrollbar-width: thin; }
+  .he-full .he-g-index { top: 4rem; max-height: calc(100vh - 5rem); }
+  .he-g-back { display: none; }
+}
+@media (max-width: 61.99rem) {
+  .he-guide[data-pane="index"] .he-g-page, .he-guide[data-pane="page"] .he-g-index { display: none; }
+}
+.he-g-index { display: grid; gap: 0.6rem; align-content: start; min-width: 0; }
+.he-g-index > .he-kicker { padding-top: 0.75rem; }
+.he-g-index > .he-kicker:first-child { padding-top: 0; }
+.he-g-list { display: grid; gap: 4px; }
+.he .he-g-link { display: grid; gap: 0.15rem; align-content: center; min-height: 44px; padding: 0.5rem 0.8rem; border: 0; background: var(--he-panel); color: var(--he-ink); text-align: left; font-size: 0.875rem; font-weight: 600; line-height: 1.3; }
+.he .he-g-link:hover, .he .he-g-index .he-stage-all:hover:not([aria-current]) { background: var(--he-panel-lift); }
+.he .he-g-link[aria-current="page"], .he .he-stage-all[aria-current="page"], .he .he-tog[aria-current="page"] { background: var(--he-ink); color: var(--he-ground); }
+.he-stage-all[aria-current="page"] span, .he-tog[aria-current="page"] span { color: inherit; }
+
+.he-g-page { display: grid; gap: 1.25rem; align-content: start; min-width: 0; max-width: 46rem; scroll-margin-top: 5.5rem; }
+.he-g-page > p { max-width: 42rem; }
+.he .he-g-crumb { padding: 0; border: 0; background: none; color: var(--he-orange-lit); font: inherit; letter-spacing: inherit; text-transform: inherit; min-height: 24px; }
+.he .he-g-crumb:hover { color: var(--he-ink); }
+.he .he-g-title { display: grid; gap: 0.35rem; margin: 0; font: inherit; letter-spacing: 0; text-transform: none; text-wrap: balance; }
+.he-g-roman { font: 700 clamp(2.5rem, 11vw, 4.25rem)/0.95 var(--he-display); color: var(--he-ink); overflow-wrap: anywhere; }
+.he-g-name { font: 700 1.375rem/1.15 var(--he-display); letter-spacing: 0.04em; text-transform: uppercase; color: var(--he-dust); }
+.he-g-name.is-big { font-size: clamp(1.9rem, 7vw, 2.75rem); line-height: 1; letter-spacing: 0; color: var(--he-ink); }
+.he-g-sub { font: 700 1.125rem/1.3 var(--he-display); color: var(--he-orange-lit); }
+
+/* reading */
+.he-g-text { display: grid; gap: 0.9rem; max-width: 42rem; font-size: 1rem; line-height: 1.62; color: var(--he-ink-soft); }
+.he-g-text b { font-weight: 600; color: var(--he-ink); }
+.he .he-g-text ul, .he .he-g-text ol { display: grid; gap: 0.45rem; padding-left: 1.25rem; }
+.he .he-g-text ul { list-style: square; }
+.he .he-g-text ol { list-style: decimal; }
+.he-g-text li::marker { color: var(--he-dust); }
+.he .he-g-h { margin: 0.6rem 0 0; font: 700 1.125rem/1.2 var(--he-display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--he-ink); text-wrap: initial; }
+.he-g-lede p { margin: 0; }
+
+/* tables scroll sideways inside their own box, so the page never does */
+.he-table { max-width: 100%; overflow-x: auto; border: 1px solid var(--he-rule); }
+.he-g-text .he-table { max-width: min(100%, calc(100vw - 32px)); }
+.he-table table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; line-height: 1.45; }
+.he-table table:has(tr > :nth-child(3)) { min-width: 34rem; }
+.he-table table:has(tr > :nth-child(5)) { min-width: 46rem; }
+.he-table table:has(tr > :nth-child(7)) { min-width: 92rem; }
+.he-table table:has(tr > :nth-child(7)) td:nth-child(n+7) { min-width: 19rem; }
+.he-table th, .he-table td { padding: 0.5rem 0.65rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--he-rule); }
+.he-table tr:last-child > * { border-bottom: 0; }
+.he-table thead th { font: 600 0.6875rem/1.3 var(--he-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--he-dust); white-space: nowrap; background: var(--he-panel); }
+.he-table tbody th { font-weight: 600; color: var(--he-ink); }
+.he-table tr.is-group th { background: var(--he-panel); font: 700 0.9375rem/1.2 var(--he-display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--he-ink); }
+.he-table td b { color: var(--he-ink); }
+
+/* an element's facts */
+.he-g-facts { display: grid; gap: 1px; background: var(--he-rule); border: 1px solid var(--he-rule); }
+.he-g-facts > div { display: grid; gap: 0.15rem 1rem; padding: 0.6rem 0.75rem; background: var(--he-ground); }
+@media (min-width: 34rem) { .he-g-facts > div { grid-template-columns: 12rem minmax(0, 1fr); align-items: baseline; } }
+.he-g-facts dt { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--he-dust); }
+.he-g-facts dd { font: 700 1.0625rem/1.3 var(--he-display); letter-spacing: 0.02em; color: var(--he-ink); }
+/* a form, bar by bar, four to a line */
+.he-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; max-width: 24rem; }
+.he-form i { padding: 0.35rem 0.3rem; background: var(--he-panel); font: 700 0.9375rem/1.15 var(--he-display); font-style: normal; text-align: center; color: var(--he-ink); overflow-wrap: anywhere; }
+.he-table .he-form { min-width: 15rem; }
+
+/* playing along */
+.he-jam { display: grid; gap: 0.9rem; padding: 1.1rem; border: 1px solid var(--he-rule-strong); }
+.he-jam > .he-kicker:first-child { color: var(--he-orange-lit); min-height: 1.4em; }
+.he-jam { scroll-margin-top: 5.5rem; }
+.he-jam-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: 0.75rem; }
+.he-jam .he-fold { margin-bottom: -0.6rem; }
+/* Play: the neck and the written line. The fretboard is part of the instrument; the notation keeps its own cream panel. */
+.he-fb, .he-stave { min-width: 0; }
+.he-fb svg, .he-stave svg { display: block; height: auto; }
+.he-fb { --lbs-fb-ink: var(--he-ink); --lbs-fb-ground: var(--he-panel); --lbs-fb-orange: var(--he-orange); }
+.he-jam .he-fold + .he-fold { margin-top: 0.6rem; }
+.he-g-test { display: grid; gap: 0.5rem; justify-items: start; }
+.he-field { display: grid; gap: 0.35rem; min-width: 0; }
+.he .he-field select { width: 100%; min-height: 44px; margin: 0; padding: 0 2.2rem 0 0.75rem; border: 0; border-radius: 0; -webkit-appearance: none; appearance: none; background: var(--he-panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%23F3F1EB' stroke-width='1.8'%3E%3Cpolyline points='3,6 8,11 13,6'/%3E%3C/svg%3E") no-repeat right 0.7rem center; color: var(--he-ink); font: 600 0.8125rem/1.2 var(--he-body); cursor: pointer; }
+.he .he-field select:hover { background-color: var(--he-panel-lift); }
+
+.he-g-pager { display: grid; gap: 6px; padding-top: 1.25rem; border-top: 1px solid var(--he-rule); }
+@media (min-width: 30rem) { .he-g-pager { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.he-g-pager .he-g-link { min-height: 56px; }
+.he-g-pager .he-g-link:last-child { text-align: right; justify-items: end; }
+
+/* ---------- the dock ---------- */
+/* Play, stop and the next step, along the bottom of the screen once the big button is out of sight. */
+.he-dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.75rem;
+  padding: 8px max(12px, env(safe-area-inset-right, 0px), calc((100vw - 72rem) / 2)) calc(8px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px), calc((100vw - 72rem) / 2));
+  background: var(--he-panel); border-top: 1px solid var(--he-rule-strong);
+}
+.he .he-dock-go { width: 52px; height: 52px; display: grid; place-items: center; padding: 0; border: 2px solid var(--he-orange); background: var(--he-orange); color: var(--he-ground); }
+.he .he-dock-go[aria-pressed="true"] { background: none; border-color: var(--he-ink); color: var(--he-ink); }
+.he-dock-go i { display: block; width: 14px; height: 14px; background: currentColor; }
+.he-dock-go[aria-pressed="false"] i { width: 0; height: 0; margin-left: 3px; background: none; border-style: solid; border-width: 9px 0 9px 15px; border-color: transparent transparent transparent currentColor; }
+.he-dock-text { display: grid; gap: 0.2rem; min-width: 0; }
+.he-dock-text .he-kicker, .he-dock-text b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.he-dock-text .he-kicker { font-size: 0.625rem; letter-spacing: 0.12em; color: var(--he-orange-lit); }
+.he-dock-text b { font: 700 1.25rem/1.1 var(--he-display); color: var(--he-ink); }
+.he .he-dock .he-btn { min-height: 52px; padding: 0 1.1rem; font-size: 1rem; }
+.he .he-dock .he-btn.is-quiet { font-size: 0.875rem; }
+
+/* The page that is only the trainer: it fills the screen. */
+.he.he-full { padding: 0.75rem 16px calc(2.5rem + env(safe-area-inset-bottom, 0px)); min-height: 100vh; min-height: 100svh; align-content: start; }
+/* (room for the dock, so it never sits on the last thing on the page) */
+.he.he-full.has-dock { padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px)); }

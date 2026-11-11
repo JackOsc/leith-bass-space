@@ -1,0 +1,57 @@
+{
+  "title": "C major in one position",
+  "kicker": "Worksheet · Scales",
+  "aim": "Connect the C major shape on the fretboard to the note names you play.",
+  "meta": "Leith Bass Space · Beginner · Four-string bass in standard tuning",
+  "level": "beginner",
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "The idea"
+    },
+    {
+      "type": "paragraph",
+      "text": "A scale is a set of notes, and a *shape* is one way of finding them on the neck. This shape starts on C at the third fret of the A string and stays in one position: your first finger covers fret 2, your little finger covers fret 5, and you never need to slide."
+    },
+    {
+      "type": "diagram",
+      "title": "Figure 1. The shape",
+      "diagram": "../diagrams/c-major-shape.json",
+      "caption": "Square markers show C, the root. Every other marker is a scale note."
+    },
+    {
+      "type": "heading",
+      "text": "How to practise it"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Play the shape slowly, saying each note name out loud as you play it.",
+        "Keep your first finger resting over fret 2, so your hand stays in position.",
+        "When the names feel familiar, start from the top C and name each note on the way down before you play it."
+      ]
+    },
+    {
+      "type": "callout",
+      "label": "Listen for",
+      "text": "the pull from B back up to C at the top of the scale. Let each note ring until the next one starts."
+    },
+    {
+      "type": "pagebreak"
+    },
+    {
+      "type": "heading",
+      "text": "The notation"
+    },
+    {
+      "type": "paragraph",
+      "text": "Here is the same shape written out, first going up and then coming back down. Every note has its name and a suggested finger beneath it, then its fret in the TAB."
+    },
+    {
+      "type": "notation",
+      "title": "Figure 2. Up and back down",
+      "exercise": "../c-major-up-and-down.json",
+      "caption": "Orange numbers are fretting-hand fingers: 1 index, 2 middle, 3 ring, 4 little finger."
+    }
+  ]
+}

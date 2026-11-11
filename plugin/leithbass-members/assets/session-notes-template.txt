@@ -1,0 +1,32 @@
+# THE LEITH BASS SPACE · SESSION NOTES
+# Paste into Members > Add session > "Paste your notes".
+# Every line is optional except Member. Delete what you don't need.
+# Lines starting with # are ignored.
+
+Member:
+Date:
+Start:
+Length: 1h
+Status: done
+Block: yes
+
+Covered:
+
+Summary:
+
+
+Objectives:
+-
+-
+-
+
+Files:
+-
+
+Answered:
+-
+
+Listen:
+-
+
+Next time:

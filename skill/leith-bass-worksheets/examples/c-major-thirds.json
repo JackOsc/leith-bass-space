@@ -1,0 +1,23 @@
+{
+  "title": "C major in thirds",
+  "timeSignature": [4, 4],
+  "noteNames": true,
+  "panels": [
+    {
+      "slug": "up",
+      "heading": "C major in thirds: up",
+      "altText": "C major in thirds, ascending, three bars of 4/4 crotchets in second position: A3, D2, A5, D3, D2, D5, D3, G2, D5, G4, G2, G5, where the letter is the string and the number is the fret. Notes C E D F, E G F A, G B A C. Fingers 2 1 4 2, 1 4 2 1, 4 3 1 4.",
+      "measures": [
+        { "notes": [
+          { "string": "A", "fret": 3, "finger": 2 }, { "string": "D", "fret": 2, "finger": 1 },
+          { "string": "A", "fret": 5, "finger": 4 }, { "string": "D", "fret": 3, "finger": 2 } ] },
+        { "notes": [
+          { "string": "D", "fret": 2, "finger": 1 }, { "string": "D", "fret": 5, "finger": 4 },
+          { "string": "D", "fret": 3, "finger": 2 }, { "string": "G", "fret": 2, "finger": 1 } ] },
+        { "notes": [
+          { "string": "D", "fret": 5, "finger": 4 }, { "string": "G", "fret": 4, "finger": 3 },
+          { "string": "G", "fret": 2, "finger": 1 }, { "string": "G", "fret": 5, "finger": 4 } ] }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "type": "keyboard",
+  "title": "Natural semitones",
+  "heading": "Where the natural semitones sit",
+  "range": [
+    "C3",
+    "C4"
+  ],
+  "highlight": [
+    {
+      "pitch": "E3",
+      "role": "target"
+    },
+    {
+      "pitch": "F3",
+      "role": "target"
+    },
+    {
+      "pitch": "B3",
+      "role": "target"
+    },
+    {
+      "pitch": "C4",
+      "role": "target"
+    }
+  ],
+  "legendLabels": {
+    "target": "E to F, B to C: semitones with no black key between"
+  }
+}

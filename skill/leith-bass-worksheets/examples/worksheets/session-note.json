@@ -1,0 +1,65 @@
+{
+  "title": "Session 6 note",
+  "kicker": "Session note · Example Pupil · 3 November 2026",
+  "aim": "Hear the major scale as pairs of thirds, and read a groove from TAB with its rhythm.",
+  "meta": "Leith Bass Space · Four-string bass in standard tuning",
+  "level": "beginner",
+  "runningHeader": "Example Pupil · Session 6",
+  "portal": {
+    "member": "Example Pupil",
+    "date": "2026-11-03",
+    "start": "18:00",
+    "covered": "C major in thirds; reading rhythm from TAB",
+    "summary": "We played C major in thirds in second position and read the Em groove from TAB with the rhythm shown.",
+    "objectives": [
+      "C major in thirds, slowly, saying the note names",
+      "Em groove from the TAB, looped with a drum loop"
+    ],
+    "nextTime": "Thirds coming back down, and the same groove in notation."
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "This session"
+    },
+    {
+      "type": "paragraph",
+      "text": "We played the C major shape you know in **thirds**: each note jumps up a third, then steps back to the next scale note. Same notes, heard in pairs."
+    },
+    {
+      "type": "notation",
+      "title": "Figure 1. C major in thirds",
+      "exercise": "../c-major-thirds.json",
+      "caption": "Note names sit under the staff, orange numbers are fretting-hand fingers, and the TAB shows the frets."
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Play each pair slowly and say both names: C E, D F, E G.",
+        "Keep your first finger over fret 2 the whole way, then add a slow click."
+      ]
+    },
+    {
+      "type": "heading",
+      "text": "Reading rhythm from TAB"
+    },
+    {
+      "type": "groove",
+      "title": "Figure 2. The Em groove in TAB",
+      "groove": "../grooves/em-eighths.json",
+      "show": "tab",
+      "caption": "The stems and beams above the TAB give the rhythm; the x is a muted note. Listen for the gap after the two open E notes: the rest is part of the groove."
+    },
+    {
+      "type": "heading",
+      "text": "Before next time"
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "C major in thirds, five minutes a day.",
+        "Loop the Em groove with a drum loop you like."
+      ]
+    }
+  ]
+}

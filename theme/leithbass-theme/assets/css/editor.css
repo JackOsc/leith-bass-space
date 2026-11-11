@@ -1,0 +1,28 @@
+@font-face { font-family: 'Oswald'; src: url('../fonts/oswald-latin-700-normal.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('../fonts/inter-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('../fonts/inter-latin-600-normal.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+
+.editor-styles-wrapper {
+	color: #333333;
+	background: #F3EFE7;
+	font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+	font-size: 17px;
+	line-height: 1.62;
+}
+.editor-styles-wrapper .wp-block { max-width: 640px; }
+.editor-styles-wrapper .wp-block[data-align="wide"] { max-width: 1180px; }
+.editor-styles-wrapper .wp-block[data-align="full"] { max-width: none; }
+.editor-styles-wrapper strong,
+.editor-styles-wrapper b { font-weight: 600; }
+.editor-styles-wrapper h1,
+.editor-styles-wrapper h2,
+.editor-styles-wrapper h3,
+.editor-styles-wrapper h4 {
+	color: #111111;
+	font-family: 'Oswald', 'Arial Narrow', Arial, sans-serif;
+	font-weight: 700;
+	line-height: 1;
+	text-transform: uppercase;
+}
+.editor-styles-wrapper a { color: #B05200; }
+.editor-styles-wrapper blockquote { padding-left: 20px; border-left: 4px solid #E87102; }

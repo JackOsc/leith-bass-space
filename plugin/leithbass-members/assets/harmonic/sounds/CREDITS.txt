@@ -1,0 +1,50 @@
+Leith Bass Space, Harmonic Elements: the recorded sounds
+========================================================
+
+Every recording in these packs is in the public domain (Creative Commons
+Zero, CC0 1.0). No credit is required. These are the people who made and gave
+them away:
+
+kit-studio.mp3
+    Virtuosity Drums. Versilian Studios, recorded at Virtuosity Musical
+    Instruments, Boston, played by Austin McMahon.
+    https://github.com/sfzinstruments/virtuosity_drums
+
+kit-rock.mp3, kit-brushes.mp3
+    Big Rusty Drums. Karoryfer Samples.
+    https://github.com/sfzinstruments/karoryfer.big-rusty-drums
+
+guitar.mp3
+    Black And Green Guitars (the green Gretsch Anniversary). Karoryfer
+    Samples, recorded by Brian Wood.
+    https://github.com/sfzinstruments/karoryfer.black-and-green-guitars
+
+grand.mp3 (Steinway B), upright.mp3 (Knight), vibes.mp3, and the claps and
+tambourines in perc.mp3
+    VCSL, the Versilian Community Sample Library. Versilian Studios and
+    contributors (the Knight upright was sampled by Simon Dalzell, Ivy Audio).
+    https://github.com/sgossner/VCSL
+
+The shaker, congas, claves and cowbell in perc.mp3
+    The auxiliary percussion of Virtuosity Drums, from VSCO 2. Versilian
+    Studios.
+
+ebass.mp3
+    Black And Blue Basses: the black one, a Washburn AB-95 five string
+    played with the fingers on its neck pickup, recorded direct.
+    Karoryfer Samples.
+    https://github.com/sfzinstruments/karoryfer.black-and-blue-basses
+
+ubass.mp3
+    Meatbass (a 1958 double bass, plucked). Karoryfer Samples.
+    https://github.com/sfzinstruments/karoryfer.meatbass
+
+clicks.mp3 (the Shed metronome's clicks)
+    The woodblocks, claves and cowbells are from VCSL (Versilian Studios
+    and contributors); the cross stick and the hi hat are from Virtuosity
+    Drums.
+
+Each pack was cut down to the notes and hits the app uses, mixed to one
+channel and saved as MP3 by build_packs.py. Everything else the app plays
+(electric pianos, organ, strings, pads, brass, nylon guitar, the 808 and the
+909) is made in the browser and uses no recordings at all.

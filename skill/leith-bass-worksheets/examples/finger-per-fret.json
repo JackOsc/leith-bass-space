@@ -1,0 +1,43 @@
+{
+  "$schema": "../references/exercise.schema.json",
+  "title": "Finger-per-Fret Bass Exercise",
+  "slug": "finger-per-fret-bass-exercise",
+  "timeSignature": [4, 4],
+  "accidentalPreference": "sharp",
+  "instrument": {
+    "name": "standard four-string bass",
+    "writtenOctaveOffset": 12,
+    "strings": [
+      { "name": "E", "openMidi": 28 },
+      { "name": "A", "openMidi": 33 },
+      { "name": "D", "openMidi": 38 },
+      { "name": "G", "openMidi": 43 }
+    ]
+  },
+  "panels": [
+    {
+      "slug": "ascending",
+      "heading": "Up the strings",
+      "altText": "Ascending finger-per-fret exercise for four-string bass in standard notation and TAB, using frets 9, 10, 11 and 12.",
+      "description": "Play frets 9, 10, 11 and 12 on each string, moving from the E string to the G string. Orange numbers show fretting-hand fingers.",
+      "measures": [
+        { "string": "E", "frets": [9, 10, 11, 12], "fingers": [1, 2, 3, 4] },
+        { "string": "A", "frets": [9, 10, 11, 12], "fingers": [1, 2, 3, 4] },
+        { "string": "D", "frets": [9, 10, 11, 12], "fingers": [1, 2, 3, 4] },
+        { "string": "G", "frets": [9, 10, 11, 12], "fingers": [1, 2, 3, 4] }
+      ]
+    },
+    {
+      "slug": "descending",
+      "heading": "Back down",
+      "altText": "Descending finger-per-fret exercise for four-string bass in standard notation and TAB, using frets 12, 11, 10 and 9.",
+      "description": "Play frets 12, 11, 10 and 9 on each string, moving from the G string to the E string. Orange numbers show fretting-hand fingers.",
+      "measures": [
+        { "string": "G", "frets": [12, 11, 10, 9], "fingers": [4, 3, 2, 1] },
+        { "string": "D", "frets": [12, 11, 10, 9], "fingers": [4, 3, 2, 1] },
+        { "string": "A", "frets": [12, 11, 10, 9], "fingers": [4, 3, 2, 1] },
+        { "string": "E", "frets": [12, 11, 10, 9], "fingers": [4, 3, 2, 1] }
+      ]
+    }
+  ]
+}

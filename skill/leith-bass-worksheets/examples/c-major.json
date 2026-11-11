@@ -1,0 +1,62 @@
+{
+  "title": "C major from A string",
+  "noteNames": true,
+  "panels": [
+    {
+      "heading": "C major: ascending",
+      "altText": "C major ascending from A-string fret 3: A 3, 5; D 2, 3, 5; G 2, 4, 5. Bass-clef notation, note names and TAB.",
+      "measures": [
+        {
+          "label": "",
+          "notes": [
+            {
+              "string": "A",
+              "fret": 3,
+              "finger": 2
+            },
+            {
+              "string": "A",
+              "fret": 5,
+              "finger": 4
+            },
+            {
+              "string": "D",
+              "fret": 2,
+              "finger": 1
+            },
+            {
+              "string": "D",
+              "fret": 3,
+              "finger": 2
+            }
+          ]
+        },
+        {
+          "label": "",
+          "notes": [
+            {
+              "string": "D",
+              "fret": 5,
+              "finger": 4
+            },
+            {
+              "string": "G",
+              "fret": 2,
+              "finger": 1
+            },
+            {
+              "string": "G",
+              "fret": 4,
+              "finger": 3
+            },
+            {
+              "string": "G",
+              "fret": 5,
+              "finger": 4
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

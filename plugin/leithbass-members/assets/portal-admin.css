@@ -1,0 +1,76 @@
+/* Members admin: session edit screen, member pages, settings. */
+.lbs-admin { max-width: 1180px; }
+.lbs-card { background: #fff; border: 1px solid #c3c4c7; padding: 16px 18px; margin: 0 0 16px; box-shadow: 0 1px 1px rgba(0,0,0,.04); }
+.lbs-card h2 { margin-top: 0; font-size: 1.1em; }
+.lbs-cols { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 960px) { .lbs-cols { grid-template-columns: 1fr; } }
+.lbs-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 18px; }
+.lbs-inline-form { display: inline; margin: 0; }
+.lbs-danger { color: #b32d2e !important; }
+.lbs-table td, .lbs-table th { vertical-align: middle; }
+.lbs-table .num, .lbs-ledger .num { font-variant-numeric: tabular-nums; }
+.lbs-ledger .num { text-align: right; }
+.lbs-list { margin: 0; }
+.lbs-list li { margin: 0 0 6px; }
+
+.lbs-pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: #f0f0f1; color: #50575e; vertical-align: middle; }
+.lbs-pill-active { background: #edfaef; color: #00701a; }
+.lbs-pill-invited { background: #fcf9e8; color: #8a6d00; }
+.lbs-pill-expired, .lbs-pill-off { background: #fcf0f1; color: #b32d2e; }
+.lbs-flag { display: inline-block; font-size: 11px; font-weight: 600; color: #8a2424; background: #fcf0f1; padding: 1px 6px; border-radius: 3px; }
+.lbs-status { font-weight: 600; }
+.lbs-status-done { color: #00701a; }
+.lbs-status-upcoming { color: #2271b1; }
+.lbs-status-cancelled_free, .lbs-status-cancelled_charged { color: #787c82; }
+
+.lbs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 4px 16px; }
+.lbs-grid p, .lbs-form p { margin: 0 0 10px; }
+.lbs-grid .lbs-wide { grid-column: 1 / -1; }
+.lbs-grid label, .lbs-form label { display: block; font-weight: 600; margin-bottom: 4px; }
+.lbs-grid input[type=text], .lbs-grid input[type=email], .lbs-grid input[type=number], .lbs-grid input[type=date], .lbs-grid input[type=time], .lbs-grid select,
+.lbs-form input[type=text], .lbs-form input[type=email] { width: 100%; max-width: none; }
+.lbs-check label, .lbs-grid .lbs-check label { font-weight: 400; display: flex; gap: 6px; align-items: center; }
+.lbs-grid .lbs-check { align-self: end; }
+.lbs-end { align-self: end; }
+.lbs-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; }
+.lbs-two h4 { margin: 0 0 8px; }
+@media (max-width: 782px) { .lbs-two { grid-template-columns: 1fr; } }
+.lbs-q { display: flex; gap: 6px; align-items: flex-start; margin: 0 0 6px; }
+.lbs-q input { margin-top: 3px; }
+.lbs-inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* Paste box */
+.lbs-paste { margin: 16px 0 0; padding: 12px 14px 4px; border-left: 4px solid #E87102; }
+.lbs-paste-head h2 { margin: 0 0 4px !important; padding: 0 !important; font-size: 14px !important; }
+.lbs-paste-head p { margin: 0 0 8px; color: #50575e; }
+.lbs-paste textarea { width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+.lbs-paste-actions { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.lbs-paste-out { font-size: 13px; color: #50575e; flex: 1 1 20rem; }
+.lbs-paste-out ul { margin: 0; }
+.lbs-paste-out .warn { color: #8a2424; }
+.lbs-filled { box-shadow: 0 0 0 2px #E87102 !important; transition: box-shadow 1.2s ease; }
+
+/* Files picker */
+.lbs-files { max-height: 280px; overflow: auto; border: 1px solid #dcdcde; margin-bottom: 8px; }
+.lbs-files .path { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; background: #f6f7f7; padding: 6px 10px; border-bottom: 1px solid #dcdcde; color: #50575e; }
+.lbs-files label { display: flex; gap: 8px; align-items: center; padding: 6px 10px; border-bottom: 1px solid #f0f0f1; margin: 0; }
+.lbs-files label:last-child { border-bottom: 0; }
+.lbs-files .tag { margin-left: auto; font-size: 11px; color: #787c82; white-space: nowrap; }
+.lbs-files > p { padding: 8px 10px; margin: 0; }
+.lbs-files .missing { color: #8a2424; }
+
+/* Prep */
+.lbs-prep h4 { margin: 12px 0 4px; }
+.lbs-prep > div:first-child h4 { margin-top: 0; }
+.lbs-prep ul { margin: 0 0 0 18px; list-style: disc; }
+.lbs-prep p { margin: 0 0 6px; }
+.lbs-off { color: #787c82; font-style: italic; margin: 0 0 6px; }
+.lbs-dash { margin: 0; }
+.lbs-dash li { margin: 0 0 8px; }
+
+/* 3.6.1 */
+.lbs-credit-note { margin: 0 0 10px; color: #50575e; font-size: 13px; }
+.lbs-credit-note:empty { display: none; }
+.lbs-warn { color: #8a2424 !important; background: #fcf0f1; padding: 6px 10px; border-left: 3px solid #b32d2e; }
+.lbs-booking-state { margin: 4px 0 12px; }
+.lbs-inline-form input[type=text] { width: 12rem; }

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 600" role="img" aria-label="Drawn example screen in use">
+  <rect width="300" height="600" rx="34" fill="#1B1D22"/>
+  <rect x="10" y="10" width="280" height="580" rx="26" fill="#F3EFE7"/>
+  <rect x="30" y="60" width="240" height="70" fill="#FFFDF8" stroke="#E87102" stroke-width="3"/>
+  <rect x="30" y="150" width="240" height="120" fill="#FFFDF8" stroke="#D9D3C7" stroke-width="2"/>
+  <rect x="30" y="290" width="240" height="60" fill="#FFFDF8" stroke="#D9D3C7" stroke-width="2"/>
+  <text x="150" y="430" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="17" fill="#6F6C66">Drawn example in use</text>
+  <text x="150" y="456" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#6F6C66">Choose a screenshot to replace it</text>
+</svg>

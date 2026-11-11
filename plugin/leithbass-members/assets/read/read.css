@@ -1,0 +1,165 @@
+/*
+ * Leith Bass Space: Read.
+ *
+ * It wears the instrument register of Harmonic Elements and Ear Training and is
+ * built from the same parts (harmonic.css, scoped to .he), so the rooms read as
+ * one family. This file only adds what is Read's own: the strands, the stave
+ * card, the answer pads, the tap pad, the timing strip, writing on the stave,
+ * the Map's key and the Guide's figures.
+ *
+ * Orange means sound or the current pick, nothing else. The notation keeps its
+ * own cream panel (never inverted); the necks are part of the instrument.
+ */
+.he.rd { grid-template-columns: minmax(0, 1fr); padding-top: 0.25rem; }
+
+/* the strands: a grid on a phone (nothing hidden off the side), one row where there is room */
+.rd .rd-strands { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 0.75rem 0 0.25rem; }
+.rd .rd-strands .he-tab { min-width: 0; padding: 0 0.4rem; font-size: 0.8125rem; letter-spacing: 0.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rd .rd-strands .he-tab[data-strand="today"], .rd .rd-strands .he-tab[data-strand="map"] { color: var(--he-orange-lit); }
+.rd .rd-strands .he-tab[data-strand="today"][aria-pressed="true"], .rd .rd-strands .he-tab[data-strand="map"][aria-pressed="true"] { color: var(--he-ground); }
+@media (min-width: 46rem) { .rd .rd-strands { display: flex; flex-wrap: wrap; } .rd .rd-strands .he-tab { padding: 0 0.85rem; font-size: 0.9375rem; overflow: visible; } }
+@media (max-width: 30rem) { .rd .he-title { font-size: 1.125rem; } }
+.rd .rd-narrow { display: none; }
+@media (max-width: 30rem) { .rd .rd-strands .rd-wide { display: none; } .rd .rd-strands .rd-narrow { display: inline; } }
+
+/* what is asked */
+.rd-display { display: grid; gap: 0.6rem; }
+.rd-card { display: grid; gap: 0.6rem; justify-items: center; min-height: 6rem; }
+.rd-score { width: 100%; display: flex; justify-content: center; }
+.rd-score svg, .rd-neck svg, .rd-write svg { display: block; height: auto; }
+.rd-one svg { max-width: 300px; }
+.rd-neck { width: 100%; }
+.rd-neck svg { margin: 0 auto; }
+.rd-under { display: flex; gap: 0.75rem; align-items: center; justify-content: center; flex-wrap: wrap; }
+.rd-under .he-btn { min-height: 44px; }
+.rd-big { font: 700 clamp(1.5rem, 6vw, 2.25rem)/1.1 var(--he-display); text-transform: uppercase; letter-spacing: 0.02em; color: var(--he-ink); text-align: center; padding: 1rem 0; }
+.rd #rd-act:empty, .rd #rd-commit:empty { display: none; }
+.rd #rd-commit { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.rd #rd-commit .he-btn { flex: 1 1 10rem; }
+
+/* the name pads: seven letters, with a row of sharps above and flats below when they are in play */
+.rd-pads { display: grid; gap: 6px; }
+.rd-pad-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.rd .rd-pad { min-height: 56px; padding: 0 0.2rem; font: 700 1.25rem/1 var(--he-display); letter-spacing: 0.02em; }
+.rd .he-togs.rd-pads { display: flex; flex-wrap: wrap; }
+.rd .he-togs.rd-pads .rd-pad { flex: 1 0 4.25rem; min-height: 52px; font-size: 1.0625rem; }
+.rd .rd-int .rd-pad { flex-basis: 3.5rem; }
+.rd-pad-gap { display: block; }
+.rd .rd-pad.is-yes, .rd .rd-choice.is-yes { background: var(--he-ink); color: var(--he-ground); }
+.rd .rd-pad.is-no, .rd .rd-choice.is-no { background: none; color: var(--he-dust); outline: 2px dotted var(--he-rule-strong); outline-offset: -2px; text-decoration: line-through; }
+
+/* writing on the stave: the whole card is a target */
+.rd-write { display: flex; justify-content: center; cursor: crosshair; touch-action: manipulation; }
+.rd-accs { justify-content: center; }
+.rd .rd-accs .he-tog { min-width: 64px; font: 700 1.5rem/1 var(--he-display); }
+
+/* the tap pad: a big target that flashes on each tap */
+.rd .rd-tap { width: 100%; min-height: 96px; font-size: 1.5rem; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.rd .rd-tap.is-live { background: var(--he-orange); }
+.rd .rd-tap.is-hit { animation: rd-hit 0.12s ease-out; }
+@keyframes rd-hit { from { filter: brightness(1.45); transform: scale(0.985); } to { filter: none; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rd .rd-tap.is-hit { animation: none; } }
+.rd-tempo { max-width: 28rem; }
+.rd .rd-mini { min-height: 36px; font-size: 0.875rem; }
+
+/* the timing strip: where each note starts, and where each tap fell */
+.rd-strip { display: block; max-width: 640px; background: var(--he-panel); }
+.rd-strip-bar { stroke: var(--he-rule-strong); stroke-width: 1.5; }
+.rd-strip-note { stroke: var(--he-ink); stroke-width: 2; }
+.rd-strip-ok { fill: var(--he-ink); }
+.rd-strip-early, .rd-strip-late { fill: none; stroke: var(--he-orange-lit); stroke-width: 2.5; }
+.rd-strip-extra { fill: none; stroke: var(--he-dust); stroke-width: 2; stroke-dasharray: 3 2; }
+
+/* hear it: three bars to choose between */
+.rd-choices { display: grid; gap: 6px; }
+.rd .rd-choice { display: grid; grid-template-columns: 2rem 1fr; align-items: center; gap: 0.5rem; padding: 0.5rem; border: 0; background: var(--he-panel); color: var(--he-ink); cursor: pointer; }
+.rd .rd-choice:hover { background: var(--he-panel-lift); }
+.rd .rd-choice .he-kicker { font: 700 1.25rem/1 var(--he-display); color: var(--he-ink); }
+.rd .rd-choice svg { background: #F5EFE2; }
+
+/* sight reading: the five things to look for, lit while you look */
+.rd-scan { display: grid; gap: 0.2rem; margin: 0; padding-left: 1.25rem; color: var(--he-dust); font-size: 0.875rem; }
+.rd-scan.is-on { color: var(--he-ink); }
+.rd-scan.is-on li::marker { color: var(--he-orange-lit); }
+
+/* the microphone */
+.rd-mic { display: grid; gap: 0.5rem; }
+.rd-meter { display: block; height: 6px; background: var(--he-panel); overflow: hidden; }
+.rd-meter i { display: block; height: 100%; width: 0; background: var(--he-orange); transition: width 0.06s linear; }
+
+/* levels: number and name */
+.rd-levels { display: grid; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); gap: 4px; }
+.rd .rd-levels .he-tog { display: grid; grid-template-columns: 2rem 1fr; align-items: center; text-align: left; min-height: 48px; padding: 0.35rem 0.6rem; }
+.rd .rd-levels .he-tog b { font: 700 1.125rem/1 var(--he-display); }
+.rd .rd-levels .he-tog span { font-size: 0.75rem; line-height: 1.25; }
+
+/* Today and Where am I? */
+.rd-plan { display: grid; gap: 0.15rem; }
+.rd-plan b { font: 700 0.9375rem/1.3 var(--he-display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--he-ink); }
+.rd-plan b.is-on { color: var(--he-orange-lit); }
+.rd-plan span { color: var(--he-dust); }
+
+/* the Map */
+.rd-map-tiles, .rd #rd-rec-body .he-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }
+.rd #rd-rec-body .he-tiles dd { font-size: 1.375rem; }
+.rd-legend { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0; padding: 0; list-style: none; }
+.rd-legend li { display: inline-flex; align-items: center; gap: 0.4rem; }
+.rd-key { display: inline-block; width: 14px; height: 14px; border-radius: 50%; vertical-align: -2px; }
+.rd-key-solid { background: var(--he-ink); }
+.rd-key-open { border: 2px solid var(--he-ink); }
+.rd-key-ring { border: 2px solid var(--he-orange); }
+.rd-key-ghost { width: 6px; height: 6px; background: var(--he-faint); }
+
+/* the Guide */
+.rd-g-text figure.rd-fig { display: grid; gap: 0.5rem; margin: 0.5rem 0; min-width: 0; }
+.rd-g-text figure.rd-fig figcaption { color: var(--he-dust); }
+.rd-g-text .rd-score { justify-content: flex-start; }
+.rd-fig-play { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+.rd .rd-fig-play .he-btn { min-height: 44px; display: inline-flex; gap: 0.6rem; align-items: center; }
+.rd .rd-fig-play .he-btn i { width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent currentColor; }
+.rd .rd-fig-play .he-btn[aria-pressed="true"] i { width: 10px; height: 10px; border: 0; background: currentColor; }
+.rd .rd-fig-play .he-btn[aria-pressed="true"] { border-color: var(--he-orange); color: var(--he-orange-lit); }
+.rd-g-text .rd-keys, .rd-g-text .rd-circle { display: block; height: auto; }
+.rd-circle-box { display: flex; justify-content: center; }
+.rd-g-dojo { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.rd .rd-g-dojo .he-btn { min-height: 48px; font-size: 0.875rem; letter-spacing: 0.08em; border-color: var(--he-orange); }
+.rd-g-call { max-width: 42rem; }
+.rd-g-text h3.he-g-h { margin-top: 0.5rem; }
+.rd-g-text ol, .rd-g-text ul { padding-left: 1.25rem; display: grid; gap: 0.35rem; }
+.rd-strip-key { margin-top: 0.25rem; }
+
+/* on a phone the tiles go two by two, so their labels fit */
+@media (max-width: 30rem) { .rd #rd-rec-body .he-tiles, .rd .rd-map-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Write the rhythm: the pieces a bar is built from, one beat-sized cell to a button */
+.rd-cells { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; margin: 0.75rem 0; }
+.rd .rd-cell { display: flex; align-items: center; justify-content: center; min-height: 64px; padding: 4px; border: 0; background: #F5EFE2; color: #292724; cursor: pointer; border-radius: 4px; }
+.rd .rd-cell:hover:not(:disabled) { outline: 2px solid var(--he-orange-lit, #D86B25); outline-offset: -2px; }
+.rd .rd-cell:disabled { opacity: 0.3; cursor: default; }
+.rd .rd-cell svg { height: 50px; width: auto; max-width: 100%; }
+
+/* ---------- a phone: everything above the question kept to three short lines (1.12.1) ----------
+   The title and the Guide and Dojo switch share a line; the strands are one row of small tabs (it scrolls
+   sideways if a phone is too narrow for all seven); the drills are a row of small toggles; the line that
+   describes the drill is left out, as the question's own heading says what to do. */
+@media (max-width: 39.99rem) {
+  .rd.he-full .he-bar { flex-wrap: nowrap; min-height: 0; padding: 0.15rem 0 0.4rem; gap: 0.5rem; }
+  .rd.he-full .he-title { width: auto; font-size: 1rem; white-space: nowrap; }
+  .rd .he-bar .he-tabs { margin-left: auto; gap: 3px; }
+  .rd .he-bar .he-tab { min-height: 36px; padding: 0 0.6rem; font-size: 0.75rem; letter-spacing: 0.06em; }
+  .rd .he-bar .he-bar-links { display: none; }
+  .rd .rd-strands { display: flex; gap: 3px; margin: 0.5rem 0 0; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .rd .rd-strands::-webkit-scrollbar { display: none; }
+  .rd .rd-strands .he-tab { flex: 1 0 auto; min-height: 36px; padding: 0 0.5rem; font-size: 0.6875rem; letter-spacing: 0.05em; overflow: visible; }
+  .rd .rd-strands .rd-wide { display: none; }
+  .rd .rd-strands .rd-narrow { display: inline; }
+  .rd .he-modes { gap: 0; }
+  .rd #rd-drills { gap: 3px; margin-top: 3px; }
+  .rd #rd-drills .he-tog { flex: 1 1 0; min-height: 34px; padding: 0 0.5rem; font-size: 0.75rem; }
+  .rd #rd-drill-note { display: none; }
+  .rd .rd-display { margin-top: 0.25rem; gap: 0.5rem; }
+  .rd.he-full { gap: 0.5rem; padding-top: 0.5rem; }
+  .rd .he-rig { gap: 0.75rem; }
+  .rd .he-status:empty { display: none; }
+  .rd .he-ask { gap: 0.45rem; }
+}

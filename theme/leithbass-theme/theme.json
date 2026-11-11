@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schemas.wp.org/wp/6.0/theme.json",
+  "version": 2,
+  "settings": {
+    "appearanceTools": true,
+    "layout": {
+      "contentSize": "640px",
+      "wideSize": "1180px"
+    },
+    "color": {
+      "custom": true,
+      "defaultPalette": false,
+      "palette": [
+        { "slug": "cream", "name": "Cream", "color": "#F3EFE7" },
+        { "slug": "charcoal", "name": "Charcoal", "color": "#090909" },
+        { "slug": "orange", "name": "Leith Bass Space orange", "color": "#E87102" },
+        { "slug": "white", "name": "White", "color": "#FFFFFF" }
+      ]
+    },
+    "spacing": {
+      "units": ["px", "rem", "em", "%", "vw", "vh"]
+    },
+    "typography": {
+      "dropCap": true,
+      "fluid": true,
+      "lineHeight": true
+    }
+  }
+}

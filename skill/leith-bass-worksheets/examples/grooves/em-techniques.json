@@ -1,0 +1,141 @@
+{
+  "title": "Em groove with techniques",
+  "timeSignature": [
+    4,
+    4
+  ],
+  "tempo": 84,
+  "key": {
+    "tonic": "E",
+    "mode": "minor"
+  },
+  "panels": [
+    {
+      "heading": "Em: slide, hammer-on and a double stop",
+      "repeat": true,
+      "altText": "Two repeated bars in E minor at 84 crotchet beats per minute. Bar 1 (Em): open E quaver, quaver rest, A string fret 2 hammered on to fret 3 as triplet quavers then back to fret 2, a crotchet double stop of open E with D string fret 2 tied to a quaver, then a ghosted A string fret 2. Bar 2 (G): E string fret 3 accented crotchet, A string fret 5 sliding to fret 7, D string fret 5 pulled off to fret 3, a muted A string note, then a short E string fret 3.",
+      "measures": [
+        {
+          "label": "Em",
+          "events": [
+            {
+              "string": "E",
+              "fret": 0,
+              "duration": "8"
+            },
+            {
+              "rest": true,
+              "duration": "8"
+            },
+            {
+              "string": "A",
+              "fret": 2,
+              "finger": 1,
+              "duration": "8t",
+              "hammer": true
+            },
+            {
+              "string": "A",
+              "fret": 3,
+              "finger": 2,
+              "duration": "8t"
+            },
+            {
+              "string": "A",
+              "fret": 2,
+              "finger": 1,
+              "duration": "8t"
+            },
+            {
+              "notes": [
+                {
+                  "string": "E",
+                  "fret": 0
+                },
+                {
+                  "string": "D",
+                  "fret": 2,
+                  "finger": 1
+                }
+              ],
+              "duration": "4",
+              "tie": true
+            },
+            {
+              "notes": [
+                {
+                  "string": "E",
+                  "fret": 0
+                },
+                {
+                  "string": "D",
+                  "fret": 2,
+                  "finger": 1
+                }
+              ],
+              "duration": "8"
+            },
+            {
+              "string": "A",
+              "fret": 2,
+              "finger": 1,
+              "duration": "8",
+              "ghost": true
+            }
+          ]
+        },
+        {
+          "label": "G",
+          "events": [
+            {
+              "string": "E",
+              "fret": 3,
+              "finger": 2,
+              "duration": "4",
+              "accent": true
+            },
+            {
+              "string": "A",
+              "fret": 5,
+              "finger": 4,
+              "duration": "8",
+              "slide": true
+            },
+            {
+              "string": "A",
+              "fret": 7,
+              "finger": 4,
+              "duration": "8"
+            },
+            {
+              "string": "D",
+              "fret": 5,
+              "finger": 3,
+              "duration": "8",
+              "pull": true
+            },
+            {
+              "string": "D",
+              "fret": 3,
+              "finger": 1,
+              "duration": "8"
+            },
+            {
+              "string": "A",
+              "fret": 0,
+              "duration": "8",
+              "muted": true
+            },
+            {
+              "string": "E",
+              "fret": 3,
+              "finger": 2,
+              "duration": "8",
+              "staccato": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

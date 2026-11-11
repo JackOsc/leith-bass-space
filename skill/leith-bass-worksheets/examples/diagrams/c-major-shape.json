@@ -1,0 +1,17 @@
+{
+  "type": "fretboard",
+  "title": "C major shape from A string fret 3",
+  "heading": "C major: the shape",
+  "frets": [1, 6],
+  "markers": [
+    { "string": "A", "fret": 3, "role": "root" },
+    { "string": "A", "fret": 5 },
+    { "string": "D", "fret": 2 },
+    { "string": "D", "fret": 3 },
+    { "string": "D", "fret": 5 },
+    { "string": "G", "fret": 2 },
+    { "string": "G", "fret": 4 },
+    { "string": "G", "fret": 5, "role": "root" }
+  ],
+  "legendLabels": { "root": "Root (C)", "tone": "Scale note" }
+}

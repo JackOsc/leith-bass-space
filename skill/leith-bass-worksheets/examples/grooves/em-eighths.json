@@ -1,0 +1,28 @@
+{
+  "title": "Em eighth-note groove",
+  "timeSignature": [4, 4],
+  "panels": [
+    {
+      "heading": "Em groove: two bars",
+      "altText": "Two-bar Em groove in 4/4. Bar 1: open E eighths, a rest, then G and A on the E string leading to B on A-string fret 2, tied. Bar 2: open E, a muted note, D on A-string fret 5, and E on D-string fret 2.",
+      "measures": [
+        { "label": "Em", "events": [
+          { "string": "E", "fret": 0, "duration": "8", "finger": null },
+          { "string": "E", "fret": 0, "duration": "8" },
+          { "rest": true, "duration": "8" },
+          { "string": "E", "fret": 3, "duration": "16", "finger": 2 },
+          { "string": "E", "fret": 5, "duration": "16", "finger": 4 },
+          { "string": "A", "fret": 2, "duration": "4", "finger": 1, "tie": true },
+          { "string": "A", "fret": 2, "duration": "8" },
+          { "string": "A", "fret": 5, "duration": "8", "finger": 4 }
+        ] },
+        { "label": "Em", "events": [
+          { "string": "E", "fret": 0, "duration": "4." },
+          { "string": "A", "fret": 0, "duration": "8", "muted": true },
+          { "string": "A", "fret": 5, "duration": "4", "finger": 4 },
+          { "string": "D", "fret": 2, "duration": "4", "finger": 1 }
+        ] }
+      ]
+    }
+  ]
+}

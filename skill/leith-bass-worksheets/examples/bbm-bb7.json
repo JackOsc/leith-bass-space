@@ -1,0 +1,49 @@
+{
+  "title": "Bbm to Bb7",
+  "timeSignature": null,
+  "noteNames": true,
+  "panels": [
+    {
+      "heading": "Bbm to Bb7",
+      "measures": [
+        {
+          "label": "Bbm",
+          "string": "A",
+          "frets": [
+            1,
+            4,
+            8
+          ],
+          "spellings": [
+            "Bb2",
+            "Db3",
+            "F3"
+          ]
+        },
+        {
+          "label": "Bb7",
+          "string": "A",
+          "frets": [
+            1,
+            5,
+            8,
+            11
+          ],
+          "spellings": [
+            "Bb2",
+            "D3",
+            "F3",
+            "Ab3"
+          ],
+          "courtesy": [
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      ],
+      "altText": "Bbm then Bb7 chord tones on the A string, unmetered pitch study. Bbm: frets 1, 4, 8 (Bb, Db, F). Bb7: frets 1, 5, 8, 11 (Bb, D natural, F, Ab)."
+    }
+  ]
+}

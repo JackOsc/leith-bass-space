@@ -1,0 +1,55 @@
+{
+  "title": "An Em groove with space in it",
+  "kicker": "Worksheet · Groove",
+  "aim": "Play a two-bar Em groove where the rests and the muted note matter as much as the pitches.",
+  "meta": "Leith Bass Space · Four-string bass in standard tuning",
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "The groove"
+    },
+    {
+      "type": "paragraph",
+      "text": "This line sits on the root of Em and climbs to the fifth, B. The eighth rest in bar 1 and the muted note in bar 2 give it its shape: without them, it becomes a scale."
+    },
+    {
+      "type": "groove",
+      "title": "Figure 1. Em groove",
+      "groove": "../grooves/em-eighths.json",
+      "caption": "Orange numbers under the staff are fretting-hand fingers. The x is a muted note: rest your fretting fingers on the A string without pressing, then pluck."
+    },
+    {
+      "type": "heading",
+      "text": "How to practise it"
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Play bar 1 alone with a metronome at a slow tempo. Stop the open E cleanly for the rest.",
+        "Add bar 2 and let the dotted quarter E ring for its full length before the muted note.",
+        "Loop both bars. When it feels steady, try it with a drum loop."
+      ]
+    },
+    {
+      "type": "table",
+      "headers": [
+        "Bar",
+        "What to listen for"
+      ],
+      "columnWidths": [
+        0.2,
+        0.8
+      ],
+      "rows": [
+        [
+          "1",
+          "The silence after the two E notes, then the quick lift up to B."
+        ],
+        [
+          "2",
+          "A short, percussive muted note that sounds like part of the drums."
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "title": "Six-string open strings",
+  "timeSignature": null,
+  "noteNames": true,
+  "instrument": {
+    "name": "six-string bass",
+    "writtenOctaveOffset": 12,
+    "strings": [
+      { "name": "B", "openMidi": 23 },
+      { "name": "E", "openMidi": 28 },
+      { "name": "A", "openMidi": 33 },
+      { "name": "D", "openMidi": 38 },
+      { "name": "G", "openMidi": 43 },
+      { "name": "C", "openMidi": 48 }
+    ]
+  },
+  "panels": [
+    {
+      "heading": "Open strings, low to high",
+      "altText": "Six open strings of a B E A D G C bass, written B1 E2 A2 D3 G3 C4, in bass clef and six-line TAB.",
+      "measures": [
+        { "label": "", "notes": [
+          { "string": "B", "fret": 0 }, { "string": "E", "fret": 0 }, { "string": "A", "fret": 0 },
+          { "string": "D", "fret": 0 }, { "string": "G", "fret": 0 }, { "string": "C", "fret": 0 }
+        ] }
+      ]
+    }
+  ]
+}

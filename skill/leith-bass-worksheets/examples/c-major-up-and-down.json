@@ -1,0 +1,33 @@
+{
+  "title": "C major up and down",
+  "timeSignature": [4, 4],
+  "noteNames": true,
+  "panels": [
+    {
+      "slug": "ascending",
+      "heading": "C major: ascending",
+      "altText": "C major ascending in two bars of 4/4 from A-string fret 3: A3, A5, D2, D3, D5, G2, G4, G5, where the letter is the string and the number is the fret. Fingers 2 4 1 2 4 1 3 4.",
+      "measures": [
+        { "label": "", "notes": [
+          { "string": "A", "fret": 3, "finger": 2 }, { "string": "A", "fret": 5, "finger": 4 },
+          { "string": "D", "fret": 2, "finger": 1 }, { "string": "D", "fret": 3, "finger": 2 } ] },
+        { "label": "", "notes": [
+          { "string": "D", "fret": 5, "finger": 4 }, { "string": "G", "fret": 2, "finger": 1 },
+          { "string": "G", "fret": 4, "finger": 3 }, { "string": "G", "fret": 5, "finger": 4 } ] }
+      ]
+    },
+    {
+      "slug": "descending",
+      "heading": "C major: descending",
+      "altText": "C major descending in two bars of 4/4 from G-string fret 5: G5, G4, G2, D5, D3, D2, A5, A3, where the letter is the string and the number is the fret. Fingers 4 3 1 4 2 1 4 2.",
+      "measures": [
+        { "label": "", "notes": [
+          { "string": "G", "fret": 5, "finger": 4 }, { "string": "G", "fret": 4, "finger": 3 },
+          { "string": "G", "fret": 2, "finger": 1 }, { "string": "D", "fret": 5, "finger": 4 } ] },
+        { "label": "", "notes": [
+          { "string": "D", "fret": 3, "finger": 2 }, { "string": "D", "fret": 2, "finger": 1 },
+          { "string": "A", "fret": 5, "finger": 4 }, { "string": "A", "fret": 3, "finger": 2 } ] }
+      ]
+    }
+  ]
+}
