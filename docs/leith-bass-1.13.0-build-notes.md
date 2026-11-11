@@ -253,6 +253,14 @@ Plugin 1.13.0-alpha.6 with theme 3.20.0-alpha.1 (the theme's first change in thi
 
 - The Sets field in wp-admin and the row on a real Home (WordPress). Read's Node suite was not rerun: Read's scripts changed by two lines (the delay being kept), and its stylesheet.
 
+## alpha.9: the admin card, the course text's list of changes, the Elements page's copy
+
+Plugin 1.13.0-alpha.9, theme 3.20.0-alpha.2.
+
+- **The member card in wp-admin** (`harmonic-admin.js`) shows Find home: "found the key first time 3 of 5", and the loops hardest to place. A member who has only used Find home no longer reads as "Nothing answered yet". Checked in Node with a made up record and a stand in for the page. Not seen in wp-admin.
+- **The course text.** Not rewritten. `claude/harmonic-elements-course-text-changes-1.13.0.md` lists every change it needs (steps, the "Whose home is it?" section in full, the eleven cards with their draft lines, the eight taken out, the conventions), in the form of the 1.9.0 list. The Guide patch script stays in use until the text is changed. Reason: eleven cards and one section are waiting for Jack's words, so a rewrite now would be done twice.
+- **Theme**: the default text of the Harmonic Elements page ("How it works" list and the opening) now describes Name it, Find home, Today, links and the map, and no longer mentions "a further set of molecules". As with the metronome page, **saved text in Site Content wins over these defaults**.
+
 ## Audition page
 
 "Elements: audition page" (https://claude.ai/artifact/XzXJTLxZryKzfSfYM2wV1H), private to Jack. Built on 1.12.1's catalogue, so it still lists the 19 as they were. Jack's first reactions (11 Nov): Cue, Pedal and Bass are all useful; he suggested the Home hit; "step" is good; numerals should lead the names. His tick and cross answers per home are still to come.

@@ -117,7 +117,19 @@
     var st = HE.trainer.stats(log);
     var rows = HE.ELEMENTS.filter(function (e) { return st.elements[e.id]; });
     box.textContent = '';
-    if (!rows.length) { box.appendChild(el('p', { 'class': 'description', text: 'Nothing answered yet.' })); return; }
+    // Find home (1.13.0) is counted on its own: finding a loop's key is not naming the element
+    var findHome = function () {
+      if (!st.homes || !st.homes.n) { return; }
+      var hard = Object.keys(st.homes.elements).map(function (id) { return { el: HE.byId(id), r: st.homes.elements[id] }; })
+        .filter(function (x) { return x.el && x.r.n >= 2 && x.r.ok < x.r.n; })
+        .sort(function (x, y) { return x.r.ok / x.r.n - y.r.ok / y.r.n || y.r.n - x.r.n; }).slice(0, 4)
+        .map(function (x) { return x.el.roman + ' (' + x.r.ok + ' of ' + x.r.n + ')'; });
+      box.appendChild(el('p', {}, [el('strong', { text: 'Find home: ' }), 'found the key first time ' + st.homes.ok + ' of ' + st.homes.n + '.' + (hard.length ? ' Hardest to place: ' + hard.join('; ') + '.' : '')]));
+    };
+    if (!rows.length) {
+      if (st.homes && st.homes.n) { findHome(); } else { box.appendChild(el('p', { 'class': 'description', text: 'Nothing answered yet.' })); }
+      return;
+    }
 
     var last = log[log.length - 1], recognised = rows.filter(function (e) { return st.elements[e.id].recognised; }).length;
     var first = log.filter(function (e) { return e.ok; }).length;
@@ -138,6 +150,7 @@
       return HE.byId(m.was).roman + ' taken for ' + HE.byId(m.said).roman + (m.times > 1 ? ' (' + m.times + ' times)' : '');
     });
     if (mix.length) { box.appendChild(el('p', {}, [el('strong', { text: 'Mixes up: ' }), mix.join('; ') + '.'])); }
+    findHome();
 
     box.appendChild(table(['Element', 'Last five', 'Standing', 'Loops'], rows.map(function (e) {
       var r = st.elements[e.id], right = r.last.filter(Boolean).length;
@@ -145,7 +158,7 @@
       return [e.roman + '  ' + e.name.replace(/^The /, ''), el('span', { title: right + ' right of the last ' + r.last.length, style: 'letter-spacing:0.1em;white-space:nowrap', text: dots }),
         r.recognised ? 'Recognised' : right + ' of last ' + r.last.length, r.right + ' of ' + r.attempts + ' first time'];
     })));
-    box.appendChild(el('p', { 'class': 'description', text: 'A filled dot is a first-time answer, the key and the element both, with nothing shown. Recognised means four of the last five, on two different days.' }));
+    box.appendChild(el('p', { 'class': 'description', text: 'A filled dot is a first-time answer with nothing shown: the element in Name it and Today (home is given), or the key and the element both in records from before 1.13.0. Recognised means four of the last five, on two different days.' }));
   }
 
   var s = document.getElementById('lbs-he-summary'), r = document.getElementById('lbs-he-record');

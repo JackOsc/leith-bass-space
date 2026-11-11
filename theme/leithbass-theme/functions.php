@@ -7,7 +7,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'LEITHBASS_VERSION', '3.20.0-alpha.1' );
+define( 'LEITHBASS_VERSION', '3.20.0-alpha.2' );
 
 /* -------------------------------------------------------------------------
  * Site-wide constants — edit these in one place.
