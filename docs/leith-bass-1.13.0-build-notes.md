@@ -182,6 +182,30 @@ Built in the repository (`JackOsc/leith-bass-space`, branch `release-1.13.0`). N
 - A real finger on a real phone. Touch delay varies from tap to tap on some phones, and that would show as wobble.
 - How any of it sounds. Real WordPress.
 
+## alpha.6: set list, the practice's three small tools, the free page's copy
+
+Plugin 1.13.0-alpha.6 with theme 3.20.0-alpha.1 (the theme's first change in this release). On the branch, no zip.
+
+- **Set list** (`setGo()`, `metUi.set`, the row in `metGuideRow()`). It runs the player's own saved setups in order. Nothing new is saved: a song is a setup. `data-met-setup-up` moves one earlier. Recalling any other setup leaves the set list.
+- **Five in a row, Shuffle, Lucky dip** in the running practice (`pracRowHtml()`, `pracShuffle()`, `pracDip()`; `prac.row`, `prac.rowBest`, `prac.now`, `prac.swap`, `prac.dip`, all kept on the device with the practice). The timed switch writes straight into the page, so a journal being typed is not disturbed.
+- **Theme**: the default text of the free metronome page's "What it does" list now covers Click up as it is, Thin the click, the guided speed work (crediting Molly Gebrian, *Learn Faster, Perform Better*), Blind bars, Count it off, set lists and links, and the walking suggestion. **These are defaults. If the list has been edited in Site Content on the live site, the saved text wins and this will not show until it is pasted in.**
+
+**Decisions taken on Jack's behalf (to confirm)**
+
+- A set list is the saved setups in order, not a separate list of songs. Simple, but it means every saved setup is in the set. A list of its own (or one drawn from Songs) is the next step if he wants it.
+- The lucky dip's ten patterns and four ways of playing are Claude's list (`DIP_PATTERNS`, `DIP_WAYS` in `portal.js`). Tempos are 60 to 120 in 4s. Jack should replace the lists with his own.
+- Shuffle switches by hand, or every 3 or 5 minutes. The words "Five in a row. Move on, or make it harder."
+- None of the three is written to the diary entry (only the three in a row tick).
+
+**Checked**
+
+- Headless Chromium, 390 by 844, no page errors. Set list: three setups saved, reordered with Up, stepped through, the click stopping between songs, left with Done. Practice (a static page of the practice view with three objectives): shuffle six times without a repeat; three clean and a slip back to 0; five in a row; a dip drawn, its drone button opening the drone on that note; the timed switch after the clock was pushed on four minutes, with the journal's text kept; the diary's tick set after three in a row.
+- The metronome's Node suite still passes (1,076). `php -l` on the theme's `content.php`.
+
+**Not checked**
+
+- The members' dashboard itself (the practice was driven on a cut down page). A real phone. WordPress. Whether the live site's saved copy overrides the new default.
+
 ## Audition page
 
 "Elements: audition page" (https://claude.ai/artifact/XzXJTLxZryKzfSfYM2wV1H), private to Jack. Built on 1.12.1's catalogue, so it still lists the 19 as they were. Jack's first reactions (11 Nov): Cue, Pedal and Bass are all useful; he suggested the Home hit; "step" is good; numerals should lead the names. His tick and cross answers per home are still to come.

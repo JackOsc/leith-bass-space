@@ -785,10 +785,42 @@
 		return Math.max(0, end - prac.started - (prac.paused || 0));
 	}
 	function clock(ms) { var s = Math.floor(ms / 1000), m = Math.floor(s / 60); return (m >= 60 ? Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0') : m) + ':' + String(s % 60).padStart(2, '0'); }
+	/*
+	 * Three small things in a practice, from the same research as the metronome's methods.
+	 * Five in a row: a count of clean goes that a slip sends back to nothing.
+	 * Shuffle: with two or more things to work on, what to play now, drawn so the same one never comes twice
+	 *   running, by hand or every few minutes. Mixing things up feels worse and sticks better.
+	 * Lucky dip: a key, a pattern, a way of playing it and a tempo drawn at random, with the click and the drone a tap away.
+	 */
+	var DIP_PATTERNS = ['Major scale', 'Natural minor scale', 'Major pentatonic', 'Minor pentatonic', 'Major triad', 'Minor triad', 'Major scale in thirds', 'Dominant seventh arpeggio', 'Minor seventh arpeggio', 'Major seventh arpeggio'];
+	var DIP_WAYS = ['in one position', 'along one string', 'over two octaves', 'from the top down'];
+	function pracDraw(listOf, not) { var pool = listOf.filter(function (x) { return x !== not; }); return (pool.length ? pool : listOf)[Math.floor(Math.random() * (pool.length || listOf.length))]; }
+	function pracShuffle() { prac.now = pracDraw(prac.focus || [], prac.now); prac.nowAt = pracElapsed(); pracSave(); }
+	function pracDip() {
+		var names = window.LBSDrone ? window.LBSDrone.NOTE_NAMES : ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'], was = prac.dip || {};
+		var note = pracDraw([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], was.note);
+		prac.dip = { note: note, key: names[note], pattern: pracDraw(DIP_PATTERNS, was.pattern), way: pracDraw(DIP_WAYS, was.way), bpm: 60 + 4 * Math.floor(Math.random() * 16) };
+		pracSave();
+	}
+	function pracRowHtml() {
+		var row = prac.row || 0, pips = '';
+		for (var i = 0; i < 5; i++) { pips += '<i' + (i < row ? ' class="on"' : '') + '></i>'; }
+		return '<div class="mp-prac-row" role="group" aria-label="Five in a row"><span class="mp-kick">In a row</span><span class="mp-prac-pips" aria-hidden="true">' + pips + '</span>' +
+			'<b class="mp-num" aria-live="polite">' + row + '</b>' +
+			'<button type="button" class="mp-btn-ghost sm" data-prac="row-clean">Clean</button><button type="button" class="mp-btn-ghost sm" data-prac="row-slip"' + (row ? '' : ' disabled') + '>Slip</button>' +
+			(row >= 5 ? '<p class="mp-note" style="flex-basis:100%;margin:0">Five in a row. Move on, or make it harder.</p>' : '') + '</div>';
+	}
 	function pracTick() {
 		clearInterval(pracTimer); pracTimer = null;
 		if (!prac || prac.stage !== 'run') { return; }
 		pracTimer = setInterval(function () {
+			// (the shuffle's own clock: written straight into the page so a journal being typed is left alone)
+			if (prac.swap && !prac.pauseAt && (prac.focus || []).length > 1 && pracElapsed() - (prac.nowAt || 0) >= prac.swap * 60000) {
+				pracShuffle();
+				var nw = room && room.querySelector('[data-prac-now]'); if (nw) { nw.textContent = prac.now; }
+				if (navigator.vibrate) { navigator.vibrate([60, 60, 60]); }
+				toast('Switch to: ' + prac.now);
+			}
 			var el = room && room.querySelector('[data-prac-time]');
 			if (el) { el.textContent = clock(pracElapsed()); }
 			var sg = room && room.querySelector('[data-prac-segs]');
@@ -852,7 +884,15 @@
 				(prac.plan ? '<div class="mp-prac-aim"><span class="mp-kick">The aim</span><b>' + esc(prac.plan) + '</b></div>' : '') +
 				(prac.first ? '<p class="mp-prac-line"><span class="mp-kick">Start with</span>' + esc(prac.first) + '</p>' : '') +
 				((prac.focus || []).length ? '<div class="mp-chips-ro">' + prac.focus.map(function (f) { return '<span>' + esc(f) + '</span>'; }).join('') + '</div>' : '') +
-				(tools ? '<div class="mp-quicks">' + tools + '</div>' : '') +
+				((prac.focus || []).length > 1 ? '<div class="mp-prac-row" role="group" aria-label="Shuffle"><span class="mp-kick">Now</span><b data-prac-now>' + esc(prac.now || prac.focus[0]) + '</b>' +
+					'<button type="button" class="mp-btn-ghost sm" data-prac="shuffle">Switch</button>' +
+					'<span class="mp-m-picks" role="group" aria-label="Switch by itself">' + [[0, 'By hand'], [3, 'Every 3 min'], [5, 'Every 5']].map(function (w) { return '<button type="button" data-prac="swap-' + w[0] + '" aria-pressed="' + ((prac.swap || 0) === w[0]) + '">' + w[1] + '</button>'; }).join('') + '</span></div>' : '') +
+				pracRowHtml() +
+				(prac.dip ? '<div class="mp-prac-row" role="group" aria-label="Lucky dip"><span class="mp-kick">Lucky dip</span><b>' + esc(prac.dip.pattern + ' in ' + prac.dip.key + ', ' + prac.dip.way + ', at ' + prac.dip.bpm) + '</b>' +
+					((state.tools || {}).metronome && met ? '<button type="button" class="mp-btn-ghost sm" data-quick-met="' + prac.dip.bpm + '">Click at ' + prac.dip.bpm + '</button>' : '') +
+					((state.tools || {}).drone && drone ? '<button type="button" class="mp-btn-ghost sm" data-dip-drone="' + prac.dip.note + '">Drone on ' + esc(prac.dip.key) + '</button>' : '') +
+					'<button type="button" class="mp-btn-ghost sm" data-prac="dip">Draw again</button></div>' : '') +
+				(tools || !prac.dip ? '<div class="mp-quicks">' + tools + (prac.dip ? '' : '<button type="button" class="mp-quick" data-prac="dip"><span>Lucky dip</span></button>') + '</div>' : '') +
 				'</div>' +
 				'<div class="mp-paper">' + TORN + '<div class="mp-paper-body">' +
 				'<div class="mp-paper-head"><label for="mp-p-jot">Journal</label><span>' + nice(L.today) + ' · kept on your phone as you go</span></div>' +
@@ -1411,6 +1451,17 @@
 	// A guided row on the face, with Back and Next: a hand-stepped Click up, or Thin the click.
 	function metGuideRow(n) {
 		var o = metOpts, h = '';
+		// Set list: the player's own saved setups, in their order, one tap from song to song
+		if (metUi.set != null && o.setups.length) {
+			var si = Math.min(metUi.set, o.setups.length - 1), song = o.setups[si], nxt = o.setups[si + 1];
+			h += '<div class="mp-m-guide mp-m-inter mp-m-set" role="group" aria-label="Set list">' +
+				'<span><b>Set list</b> ' + (si + 1) + ' of ' + o.setups.length + '</span>' +
+				'<p class="mp-m-inter-say mp-m-set-song">' + esc(song.name) + '</p>' +
+				'<p class="mp-m-set-next">' + (nxt ? 'Next: ' + esc(nxt.name) + ' · ' + (+nxt.s.bpm || '') : 'Last one') + '</p>' +
+				'<button type="button" class="mp-btn sm mp-m-count-tap" data-met="set-next"' + (nxt ? '' : ' disabled') + '>Next song</button>' +
+				'<button type="button" class="mp-btn-ghost sm" data-met="set-back"' + (si ? '' : ' disabled') + '>Back</button>' +
+				'<button type="button" class="mp-x" data-met="set-off" aria-label="Leave the set list">Done</button></div>';
+		}
 		if (o.thin && o.thin.on) {
 			var st = o.thin.stage, last = MET.THIN.length - 1;
 			h += '<div class="mp-m-guide" role="group" aria-label="Thin the click"><span><b>Thin the click</b> ' + (st + 1) + ' of ' + (last + 1) + ' · ' + esc(thinName(st, n)) + '</span>' +
@@ -1578,7 +1629,8 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 		var K = heKit(), g = o.groove, h = '';
 		if (key === 'setups') {
 			return '<form class="mp-m-save" data-form="met-setup" novalidate><div class="field"><label for="mp-m-setup-name">Save what is set now as</label><input id="mp-m-setup-name" type="text" maxlength="40" data-f="m-setup-name" placeholder="e.g. Scales, 2 and 4"></div><button class="mp-btn-ghost sm" type="submit">Save</button></form>' +
-				(o.setups.length ? '<ul class="mp-m-mine">' + o.setups.map(function (su, i) { return '<li><span>' + esc(su.name) + '</span><button type="button" class="mp-x" data-met-setup-del="' + i + '" aria-label="Delete the setup ' + esc(su.name) + '">Delete</button></li>'; }).join('') + '</ul>' : '') +
+				(o.setups.length ? '<ul class="mp-m-mine">' + o.setups.map(function (su, i) { return '<li><span>' + esc(su.name) + ' <small>' + (+su.s.bpm || '') + '</small></span><span class="mp-m-mine-acts">' + (i ? '<button type="button" class="mp-x" data-met-setup-up="' + i + '" aria-label="Move ' + esc(su.name) + ' up">Up</button>' : '') + '<button type="button" class="mp-x" data-met-setup-del="' + i + '" aria-label="Delete the setup ' + esc(su.name) + '">Delete</button></span></li>'; }).join('') + '</ul>' : '') +
+				(o.setups.length > 1 ? '<p class="mp-m-share"><button type="button" class="mp-btn-ghost sm" data-met="set-on">Run these as a set list</button></p><p class="mp-note">A set list takes your saved setups in this order: save one for each song (its tempo, time signature and count in), put them in order with Up, and step from song to song with one tap.</p>' : '') +
 				'<p class="mp-m-share"><button type="button" class="mp-btn-ghost sm" data-met="link">Copy a link to what is set now</button></p>' +
 				'<p class="mp-note">A link opens the metronome with this tempo and everything the click is doing, for anyone you send it to. A setup keeps everything on this screen: tempo, time signature, sound, the lot. Tap its name above to bring it back. The ones that come with the metronome leave your tempo and sound alone.</p>';
 		}
@@ -1867,10 +1919,19 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 		metSave(patch, false);
 		renderModule('metronome', { focus: '[data-fn-sw="' + key + '"]' });
 	}
+	// A song of the set list: its setup, quietly, with the click stopped so the next count in is the song's own.
+	function setGo(i) {
+		var keep = metOpts.setups, su = keep[i]; if (!su) { return; }
+		if (met && met.running) { stopMet(); }
+		metOpts = MET.upgrade(JSON.parse(JSON.stringify(su.s))); metOpts.setups = keep;
+		metUi.set = i; metUi.reached = 0; metUi.fn = '';
+		metSave({ groove: metOpts.groove }, false);
+	}
 	/* Bring a setup back: a saved one is the whole screen, a starter leaves the tempo, sound and volumes alone. */
 	function metRecall(code) {
 		var i = +code.slice(2), mine = code.charAt(0) === 'u', su = mine ? metOpts.setups[i] : MET_STARTERS[i], keep = metOpts.setups;
 		if (!su) { return; }
+		metUi.set = null;
 		if (mine) { metOpts = MET.upgrade(JSON.parse(JSON.stringify(su.s))); }
 		else { metOpts = MET.upgrade(Object.assign({ v: 2, bpm: metOpts.bpm, sound: metOpts.sound, vol: metOpts.vol, offsetMs: metOpts.offsetMs, flash: metOpts.flash, vibrate: metOpts.vibrate, hideSilent: metOpts.hideSilent }, JSON.parse(JSON.stringify(su[1])))); }
 		metOpts.setups = keep;
@@ -2682,6 +2743,8 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 			var op = t.closest('[data-open]');
 			if (op) { openTool(op.getAttribute('data-open')); return; }
 			if (t.closest('[data-close]')) { closeTool(); return; }
+			var dd = t.closest('[data-dip-drone]');
+			if (dd && drone) { droneChange({ note: +dd.getAttribute('data-dip-drone') }); openTool('drone'); return; }
 			var qm = t.closest('[data-quick-met]');
 			if (qm && met) { setBpm(+qm.getAttribute('data-quick-met')); if (!met.running) { startMet(); } openTool('metronome'); return; }
 			var c = t.closest('[data-chooser]');
@@ -2817,12 +2880,19 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 					prac = null; pracSave(); pracTick(); closeTool();
 					return;
 				}
+				if (pa === 'row-clean' && prac) { prac.row = (prac.row || 0) + 1; prac.rowBest = Math.max(prac.rowBest || 0, prac.row); if (prac.row === 5 && navigator.vibrate) { navigator.vibrate(120); } }
+				if (pa === 'row-slip' && prac) { prac.row = 0; }
+				if (pa === 'shuffle' && prac) { pracShuffle(); }
+				if (pa.indexOf('swap-') === 0 && prac) { prac.swap = +pa.slice(5); prac.nowAt = pracElapsed(); if (!prac.now) { prac.now = prac.focus[0]; } }
+				if (pa === 'dip' && prac) { pracDip(); }
+				// (three clean in a row answers the diary's question before it is asked)
+				if (pa === 'finish' && prac && !prac.reps && (prac.rowBest || 0) >= 3) { prac.reps = 'yes'; }
 				if (pa === 'pause' && prac) { prac.pauseAt = nowMs; }
 				if ((pa === 'resume' || pa === 'back') && prac) { if (prac.pauseAt) { prac.paused = (prac.paused || 0) + nowMs - prac.pauseAt; prac.pauseAt = null; } prac.stage = 'run'; }
 				if (pa === 'finish' && prac) { if (!prac.pauseAt) { prac.pauseAt = nowMs; } prac.stage = 'reflect'; }
 				pracSave(); pracTick();
 				if (ui.open !== 'practice') { openTool('practice'); return; }
-				renderModule('practice', { focus: { plan: '#mp-p-plan', finish: '#mp-p-note', pause: '[data-prac="resume"]', resume: '[data-prac="pause"]', back: '[data-prac="finish"]' }[pa] });
+				renderModule('practice', { focus: { plan: '#mp-p-plan', finish: '#mp-p-note', pause: '[data-prac="resume"]', resume: '[data-prac="pause"]', back: '[data-prac="finish"]' }[pa] || '[data-prac="' + (pa === 'row-slip' ? 'row-clean' : pa) + '"]' });
 				return;
 			}
 			var rp = t.closest('[data-reps]');
@@ -2938,6 +3008,9 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 					metSave({ inter: kp }, false); metUi.interSet = true;
 					renderModule('metronome', { focus: '[data-met="' + mk + '"]' });
 				}
+				if (mk === 'set-on') { ui.metPanel = ''; setGo(0); renderModule('metronome', { focus: '[data-met="go"]' }); }
+				if (mk === 'set-next' || mk === 'set-back') { setGo(Math.max(0, Math.min(metOpts.setups.length - 1, (metUi.set || 0) + (mk === 'set-next' ? 1 : -1)))); renderModule('metronome', { focus: '[data-met="go"]' }); }
+				if (mk === 'set-off') { metUi.set = null; renderModule('metronome', { focus: '[data-met="go"]' }); }
 				if (mk === 'blind-off') { metSave({ blind: { on: false } }, false); renderModule('metronome', { focus: '[data-met="go"]' }); }
 				if (mk === 'inter-play') { if (metUi.inter) { stopMet(); } else { interPlay(); } }
 				if (mk === 'inter-next' || mk === 'inter-back' || mk === 'inter-off') {
@@ -2981,6 +3054,13 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 			}
 			var msu = t.closest('[data-met-setup]');
 			if (msu) { metRecall(msu.getAttribute('data-met-setup')); return; }
+			var msup = t.closest('[data-met-setup-up]');
+			if (msup) {
+				var ui2 = +msup.getAttribute('data-met-setup-up'), moved = metOpts.setups.splice(ui2, 1)[0];
+				metOpts.setups.splice(ui2 - 1, 0, moved); metStore();
+				renderModule('metronome', { focus: ui2 > 1 ? '[data-met-setup-up="' + (ui2 - 1) + '"]' : '#mp-m-setup-name' });
+				return;
+			}
 			var msd = t.closest('[data-met-setup-del]');
 			if (msd) {
 				var di = +msd.getAttribute('data-met-setup-del'), gone = metOpts.setups[di];

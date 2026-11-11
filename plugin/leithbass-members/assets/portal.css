@@ -1151,3 +1151,17 @@ body.lbs-room .mp-offline { bottom: calc(4.25rem + env(safe-area-inset-bottom, 0
 .mp-m-inter-set { flex-basis: 100%; }
 .mp-m-inter-set summary { cursor: pointer; padding: 0.5rem 0; min-height: 44px; display: flex; align-items: center; }
 .mp-m-count-tap { min-width: 7rem; min-height: 56px !important; }
+
+/* 1.13.0: the set list (big enough to read on a music stand), and the practice's small counters */
+.mp-m-set .mp-m-set-song { font-size: 1.9rem; overflow-wrap: anywhere; }
+.mp-m-set-next { flex-basis: 100%; margin: 0; font-size: 0.9rem; opacity: 0.75; }
+.mp-m-mine small { opacity: 0.6; margin-left: 0.4rem; }
+.mp-m-mine-acts { display: flex; gap: 0.75rem; }
+.mp-prac-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; padding: 0.6rem 0; border-top: 1px solid var(--rule); }
+.mp-prac-row > b { flex: 1 1 8rem; min-width: 0; }
+.mp-prac-row .mp-btn-ghost { min-height: 44px; }
+.mp-prac-pips { display: inline-flex; gap: 4px; }
+.mp-prac-pips i { width: 14px; height: 14px; border: 1.5px solid currentColor; opacity: 0.4; }
+.mp-prac-pips i.on { opacity: 1; background: var(--orange, #E87102); border-color: var(--orange, #E87102); }
+
+.mp-prac-row[aria-label="Lucky dip"] > b { flex-basis: 100%; }

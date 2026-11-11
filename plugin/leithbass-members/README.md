@@ -298,7 +298,14 @@ One release for the whole programme agreed on 11 Nov 2026 (`claude/leith-bass-sp
 - **At tempo, in chunks** (her at-tempo chunking), a setup. Everything at the goal: one chunk at a time, then every two that sit together (the overlapping pairs too), then every three, until the whole passage.
 - **Blind bars**, a setup. Bars of click, bars of silence, and a Tap button. Tap every beat and keep tapping through the silence. After each gap it says whether the beat held, rushed or dragged, and by how many milliseconds. It measures how the taps moved across the gap, so the phone's own touch delay does not count.
 - **Strong and weak beats**, a setup: a bar of four as strong, weak, medium, weak.
+- **Set list.** Under Setups, "Run these as a set list" steps through your saved setups in their order, one tap from song to song, with the song's name in big type and the next one shown. The click stops between songs. Up moves a setup earlier in the order.
 - **A setup as a link.** "Copy a link to what is set now" (under Setups) gives an address that opens the metronome with the same tempo and everything the click is doing: `…/metronome/?m=…`. The sound, the volumes and saved setups stay the reader's own, and a member's own Shelf loop does not travel. The theme says where the free metronome is (`lbs_tool_url`); without one the link opens the page it was made on.
+
+**The practice (the Shed's timer and diary):**
+
+- **Five in a row.** Clean and Slip buttons while the timer runs. A slip sends the count back to nothing. Three or more in a row ticks the diary's "three times in a row" for you.
+- **Shuffle.** With two or more things picked to work on, the practice says which to play now. Switch draws another (never the same twice running), by hand or every 3 or 5 minutes.
+- **Lucky dip.** Draws a key, a pattern, a way of playing it and a tempo, with the click and the drone one tap away.
 
 **Harmonic Elements:**
 
