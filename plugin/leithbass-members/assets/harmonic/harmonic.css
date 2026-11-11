@@ -399,3 +399,16 @@
 	.he .he-commit .he-shows .he-btn { flex: 1 1 auto; }
 }
 .he .he-g-hear { margin: 1rem 0; }
+
+/* 1.13.0: the map of the course in the record, and Today */
+.he-map { display: grid; gap: 0.9rem; margin: 0.5rem 0 1.25rem; }
+.he-map-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.75rem; margin-bottom: 0.4rem; font-size: 0.9rem; }
+.he-map-head span { opacity: 0.65; }
+.he-map-go { margin-left: auto; min-height: 44px; padding: 0 0.25rem; background: none; border: 0; color: inherit; font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.he-map-els { display: flex; flex-wrap: wrap; gap: 6px; }
+.he .he-map-el, .he-map-el { display: inline-flex; align-items: center; min-height: 44px; padding: 0 0.6rem; border: 1.5px solid currentColor; text-decoration: none; color: var(--ink, #F3F1EB); font-size: 0.82rem; opacity: 0.45; }
+.he-map-el.is-on { opacity: 1; }
+.he .he-map-el.is-got { color: #090909; }
+.he-map-el.is-got { opacity: 1; background: var(--orange, #E87102); border-color: var(--orange, #E87102); color: #090909; }
+.he-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.is-today .he-set:has(> #he-presets), .is-today .he-set:has(> #he-stages), .is-today .he-set:has(> #he-copy-link) { display: none; }

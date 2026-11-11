@@ -325,6 +325,7 @@ function lbs_ear_trainer( $mode = 'page', $args = array() ) {
 					<div class="he-set"><p class="he-kicker">Start from</p><div class="he-togs" id="ear-sets"></div></div>
 					<div class="he-set"><p class="he-kicker">Or choose</p><div class="he-togs" id="ear-items"></div></div>
 					<div class="he-set" id="ear-opts" hidden></div>
+					<div class="he-set"><button type="button" class="he-btn is-quiet" id="ear-link">Copy a link to this</button><p class="he-small">The link opens this drill with the same things in play. Put it in session notes, or send it to someone.</p></div>
 				</section>
 
 				<section class="he-panel" aria-labelledby="ear-h-setup">

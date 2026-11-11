@@ -1473,9 +1473,44 @@
     resize = window.setTimeout(function () { if (way() === 'fb') { renderBoard(); } if (S.phase === 'revealed') { drawAnswer(); } }, 200);
   });
 
+  /* ---------- links ----------
+   * An address can open a drill with chosen things in play, so a set from Jack can be a link in session notes:
+   *   #drill/deg/1+3+5     the Degrees drill with those three in play
+   *   #drill/chord         a drill, with the mix as it was left
+   *   #today   #jam        Today's set, the Jam room
+   * Items are the ids the record uses. Ones the drill does not know are left out, and fewer than two changes nothing.
+   */
+  function linkFor() {
+    var at = S.strand === 'today' || S.strand === 'jam' ? S.strand : 'drill/' + S.drill + '/' + S.mix[S.drill].items.map(encodeURIComponent).join('+');
+    return window.location.href.split('#')[0] + '#' + at;
+  }
+  function route() {
+    var h = (window.location.hash || '').replace(/^#/, ''), parts = h.split('/');
+    if (parts[0] === 'today' || parts[0] === 'jam') { if (S.strand !== parts[0]) { chooseStrand(parts[0]); } return true; }
+    if (parts[0] !== 'drill' || !EAR.DRILLS[parts[1]]) { return false; }
+    var d = parts[1], strand = EAR.DRILLS[d].strand;
+    if (S.strand === 'jam') { jamStop(); }
+    if (HE.audio.playing || S.busy) { stop(); }
+    if (parts[2]) {
+      var want = parts[2].split('+').map(function (x) { try { return decodeURIComponent(x); } catch (e) { return ''; } });
+      var m = JSON.parse(JSON.stringify(S.mix)); m[d].items = want; S.mix = EAR.cleanMix(m);
+    }
+    S.strand = strand; S.drill = d; S.today = null; S.q = null; S.run = null;
+    newQuestion(); save(); renderAll(); say('');
+    return true;
+  }
+  window.addEventListener('hashchange', route);
+  if ($('link')) {
+    $('link').addEventListener('click', function () {
+      var url = linkFor(), b = this;
+      function done() { b.textContent = 'Copied'; window.setTimeout(function () { b.textContent = 'Copy a link to this'; }, 1800); }
+      try { navigator.clipboard.writeText(url).then(done, function () { window.prompt('Copy this link', url); }); } catch (e) { window.prompt('Copy this link', url); }
+    });
+  }
+
   /* ---------- starting up ---------- */
 
-  newQuestion();
+  if (!route()) { newQuestion(); }
   renderSetup();
   syncLevels();
   renderAll();

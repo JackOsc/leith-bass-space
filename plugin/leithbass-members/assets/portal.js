@@ -2519,6 +2519,8 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 			'<div class="mp-shed-top"><p class="kicker">Shed tools' + (L.next ? ' · Next session ' + esc(L.next) : '') + '</p><h2 class="mp-shed-title">The <em>Shed</em></h2>' +
 			(RO ? '<p class="mp-small">Their practice space between sessions. Private tools show as kept private.</p>' : '') + '</div>' +
 			slab +
+			// Today: each room's own short set, chosen from the record it keeps. One tap from Home.
+			(!RO && (L.todays || []).length ? '<div class="mp-todays" role="group" aria-label="Today’s sets"><span class="mp-kick">Today</span>' + L.todays.map(function (t) { return '<a class="mp-today" href="' + esc(t.url) + '">' + esc(t.name) + '</a>'; }).join('') + '</div>' : '') +
 			(on.length ? '<div class="mp-tiles">' + on.map(tileHtml).join('') + '</div>' : '<p class="mp-empty">No tools switched on yet.' + (RO ? '' : ' Choose some below.') + '</p>') +
 			(RO ? '' : '<div class="mp-shed-foot"><button type="button" class="mp-link" data-chooser aria-expanded="' + ui.chooser + '" aria-controls="mp-chooser">Choose your tools (' + on.length + ' of ' + ORDER.length + ')</button><span class="mp-small">Every tool says whether Jack can see it.</span></div>') +
 			renderChooser() + '</div>';

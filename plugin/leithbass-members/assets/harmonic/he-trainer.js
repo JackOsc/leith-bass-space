@@ -357,6 +357,48 @@
 		return { elements: elements, mixups: mixups, drills: drills, halves: halves, homes: homes };
 	}
 
+	/*
+	 * TODAY'S SET (1.13.0): a few elements chosen from the record, for a short sitting of Name it.
+	 *   work  up to three that have been met but are not yet recognised, the shakiest first
+	 *   keep  up to two recognised ones, the longest left alone first, so they are not forgotten
+	 *   new   the next one in the course's order that has never been asked (two, if nothing is being worked on)
+	 * Never fewer than three, and never one alone of its kind (major or minor), so there is always something
+	 * to choose between: the next in course order make it up.
+	 * Homes (Stage 1) are left out: one chord is not a thing to name among progressions. The same record on
+	 * the same day gives the same set, so it does not change under someone who comes back after a break.
+	 * Returns {elements: [ids in course order], why: {id: 'work' | 'keep' | 'new'}, n: questions in the set}.
+	 */
+	function today(log) {
+		var st = stats(log || []), lastAt = {};
+		(log || []).forEach(function (e) { if (!e.mode && e.ask !== 'home') { lastAt[e.el] = e.t || 0; } });
+		var pool = HE.ELEMENTS.filter(function (el) { return HE.isActive(el.id) && el.kind !== 'home' && el.kind !== 'form'; });
+		var why = {}, met = pool.filter(function (el) { return st.elements[el.id]; });
+		var rate = function (el) { var r = st.elements[el.id]; return r.last.filter(Boolean).length / r.last.length; };
+		met.filter(function (el) { return !st.elements[el.id].recognised; })
+			.sort(function (x, y) { return rate(x) - rate(y) || (lastAt[x.id] || 0) - (lastAt[y.id] || 0); })
+			.slice(0, 3).forEach(function (el) { why[el.id] = 'work'; });
+		met.filter(function (el) { return st.elements[el.id].recognised; })
+			.sort(function (x, y) { return (lastAt[x.id] || 0) - (lastAt[y.id] || 0); })
+			.slice(0, 2).forEach(function (el) { why[el.id] = 'keep'; });
+		var fresh = pool.filter(function (el) { return !st.elements[el.id]; }), working = Object.keys(why).filter(function (id) { return why[id] === 'work'; }).length;
+		fresh.slice(0, working ? 1 : 2).forEach(function (el) { why[el.id] = 'new'; });
+		// make it up to three: new ones first, then whatever has been left alone longest
+		var rest = fresh.concat(met.slice().sort(function (x, y) { return (lastAt[x.id] || 0) - (lastAt[y.id] || 0); }));
+		for (var i = 0; i < rest.length && Object.keys(why).length < 3; i++) { if (!why[rest[i].id]) { why[rest[i].id] = st.elements[rest[i].id] ? 'keep' : 'new'; } }
+		// With home given, its being major or minor already rules out the elements of the other kind. So an element
+		// alone of its kind in the set would be the only answer on offer: give each a neighbour of its own kind,
+		// the nearest in the course's order.
+		['major', 'minor'].forEach(function (mode) {
+			var mine = pool.filter(function (el) { return why[el.id] && el.mode === mode; });
+			if (mine.length !== 1) { return; }
+			var at = pool.indexOf(mine[0]), best = null;
+			pool.forEach(function (el, i) { if (el.mode === mode && !why[el.id] && (best === null || Math.abs(i - at) < Math.abs(best - at))) { best = i; } });
+			if (best !== null) { why[pool[best].id] = st.elements[pool[best].id] ? 'keep' : 'new'; }
+		});
+		var ids = pool.filter(function (el) { return why[el.id]; }).map(function (el) { return el.id; });
+		return { elements: ids, why: why, n: 12 };
+	}
+
 	// How many files a mix asks for, so the recording job can be sized.
 	function size(mix) {
 		var chords = 0;
@@ -368,5 +410,5 @@
 		return { chords: chords, drums: mix.feels.length * mix.tempos.length };
 	}
 
-	HE.trainer = { PRESETS: PRESETS, HOME_WAYS: HOME_WAYS, defaultMix: defaultMix, cleanMix: cleanMix, pick: pick, drill: drill, mark: mark, entry: entry, stats: stats, size: size };
+	HE.trainer = { PRESETS: PRESETS, HOME_WAYS: HOME_WAYS, defaultMix: defaultMix, cleanMix: cleanMix, pick: pick, drill: drill, mark: mark, entry: entry, stats: stats, today: today, size: size };
 }(typeof window !== 'undefined' ? window : globalThis));

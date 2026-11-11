@@ -3,7 +3,7 @@
  * Plugin Name: Leith Bass Members
  * Plugin URI: https://leithbass.space/members/
  * Description: The invite-only member portal for The Leith Bass Space: session notes, bookings, lesson credit, the Shed (practice tools and a shared library), Ear Training for Bass Players, Harmonic Elements (the Guide and the Dojo), and a home-screen app with a room for each. Works with the Leith Bass Space theme.
- * Version: 1.13.0-alpha.6
+ * Version: 1.13.0-alpha.7
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Jack Elliot
@@ -24,7 +24,7 @@ if ( function_exists( 'lbs_settings' ) ) {
 	return;
 }
 
-define( 'LBS_VERSION', '1.13.0-alpha.6' );
+define( 'LBS_VERSION', '1.13.0-alpha.7' );
 define( 'LBS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'LBS_URL', plugin_dir_url( __FILE__ ) );
 define( 'LBS_FILE', __FILE__ );
@@ -110,6 +110,16 @@ add_action( 'wp_enqueue_scripts', function () {
 				return 'pdf' === lbs_file_kind( $latest['files'][ $i ] ) ? lbs_file_url( $latest['id'], $i ) : null;
 			}, array_keys( $latest['files'] ) ) ) ) : array(),
 		);
+	}
+	// Today on Home (1.13.0): one row that opens each room's own Today's set. Only rooms this member can use.
+	if ( function_exists( 'lbs_portal_rooms' ) && ! empty( $data['signedIn'] ) ) {
+		$today_at = array( 'ear-training' => '#today', 'elements' => '#dojo/today', 'read' => '#dojo/today' );
+		$data['todays'] = array();
+		foreach ( lbs_portal_rooms() as $route => $room ) {
+			if ( ! empty( $room['open'] ) && isset( $today_at[ $route ] ) ) {
+				$data['todays'][] = array( 'name' => $room['short'], 'url' => lbs_portal_url( $route ) . $today_at[ $route ] );
+			}
+		}
 	}
 	// JSON keeps numbers and true/false as they are (wp_localize_script would turn them into strings).
 	wp_add_inline_script( 'lbs-portal', 'window.LBS=' . wp_json_encode( $data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES ) . ';', 'before' );

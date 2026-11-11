@@ -1165,3 +1165,9 @@ body.lbs-room .mp-offline { bottom: calc(4.25rem + env(safe-area-inset-bottom, 0
 .mp-prac-pips i.on { opacity: 1; background: var(--orange, #E87102); border-color: var(--orange, #E87102); }
 
 .mp-prac-row[aria-label="Lucky dip"] > b { flex-basis: 100%; }
+
+/* 1.13.0: Today on Home, a row of links to each room's set for the day */
+.mp-todays { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0.75rem 0; }
+.mp-todays .mp-kick { margin-right: 0.25rem; }
+.mp-today { display: inline-flex; align-items: center; min-height: 44px; padding: 0 0.9rem; border: 1.5px solid currentColor; color: inherit; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+.mp-today:hover, .mp-today:focus-visible { background: var(--orange, #E87102); border-color: var(--orange, #E87102); color: #090909; }

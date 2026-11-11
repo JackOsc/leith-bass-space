@@ -135,7 +135,7 @@
     mix: null, hadMix: !!saved.mix,
     log: [], queue: [], share: false,
     levels: { chords: saved.levels && saved.levels.chords >= 0 ? +saved.levels.chords : 0.8, drums: saved.levels && saved.levels.drums >= 0 ? +saved.levels.drums : 0.7, bass: saved.levels && saved.levels.bass >= 0 ? +saved.levels.bass : 0.8 },
-    mode: saved.mode === 'pair' || saved.mode === 'change' || saved.mode === 'home' ? saved.mode : 'name',   // what the Dojo asks: name it, find home, which is which, before and after
+    mode: saved.mode === 'pair' || saved.mode === 'change' || saved.mode === 'home' || saved.mode === 'today' ? saved.mode : 'name',   // what the Dojo asks: name it, find home, which is which, before and after
     countIn: saved.countIn !== false,
     round: null, last: null, n: 0,
     next: null,                   // the round after this one, chosen early so it can be got ready
@@ -203,10 +203,10 @@
         note = S.mode === 'pair' ? 'No two neighbours are both in this mix, so this pair is drawn from all of them. Add elements under The mix to choose.'
           : 'No transformation is in this mix, so this one is drawn from all of them.';
       }
-    } else { r = HE.trainer.pick(S.mix, library, S.log, last); }
+    } else { r = HE.trainer.pick(S.mode === 'today' ? todayMix() : S.mix, library, S.log, last); }
     if (!r && !drilling && S.mix.sound !== 'both') {
       // nothing of that kind for this mix: play what there is, and say so
-      r = HE.trainer.pick(extend(S.mix, { sound: 'both' }), library, S.log, last);
+      r = HE.trainer.pick(extend(S.mode === 'today' ? todayMix() : S.mix, { sound: 'both' }), library, S.log, last);
       note = S.mix.sound === 'recorded' ? 'Nothing is recorded for this mix yet, so the house band is playing this one. Notes for home with recordings are marked with a dot.' : '';
     }
     if (!r) { return null; }
@@ -503,6 +503,14 @@
     S.news = after && after.recognised && !(before && before.recognised)
       ? 'That’s ' + r.el.roman + ' recognised: four first-time answers from the last five, on two different days, with nothing shown.'
       : e.ok && streak >= 3 ? streak + ' in a row, first time.' : '';
+    if (S.mode === 'today' && S.today && !r.mode) {
+      S.today.asked++; if (e.ok) { S.today.right++; }
+      if (S.today.asked >= S.today.n) {
+        S.news = 'Today’s set is done: ' + S.today.right + ' of ' + S.today.n + ' first time. Carry on with a fresh set, or come back tomorrow.';
+        startToday(); S.stamp++; S.next = null;
+      }
+      renderModes();
+    }
     save();
     flush();
     renderRound();
@@ -976,6 +984,7 @@
   /* ---------- what the Dojo asks ---------- */
 
   var MODES = [
+    ['today', 'Today', ''],
     ['name', 'Name it', 'The band gives you home, then the loop plays. Name the element.'],
     ['home', 'Find home', 'A loop plays with nothing given. Find the key: home, and whether it is major or minor.'],
     ['pair', 'Which is which', 'Two neighbours take turns. Say which one comes first.'],
@@ -983,7 +992,9 @@
   ];
   function renderModes() {
     $('modes').innerHTML = MODES.map(function (m) { return tog('data-mode="' + m[0] + '"', m[1], S.mode === m[0]); }).join('');
-    $('mode-note').textContent = MODES.filter(function (m) { return m[0] === S.mode; })[0][2];
+    $('mode-note').textContent = S.mode === 'today' ? todayNote() : MODES.filter(function (m) { return m[0] === S.mode; })[0][2];
+    // (Today chooses its own elements, so the mix's list of them is put away while it is on)
+    app.classList.toggle('is-today', S.mode === 'today');
   }
   $('modes').addEventListener('click', function (e) {
     var b = e.target.closest('[data-mode]'); if (!b || !S.ready) { return; }
@@ -991,12 +1002,28 @@
     if (v === S.mode) { return; }
     if (S.owner === 'dojo' && (HE.audio.playing || S.busy)) { stop(); }
     S.mode = v;
+    if (v === 'today') { startToday(); }
     S.stamp++;
     save();
     renderModes();
     newRound();
     var again = app.querySelector('[data-mode="' + v + '"]'); if (again) { again.focus(); }
   });
+
+  /* Today's set: twelve rounds of Name it on a few elements chosen from the record (HE.trainer.today). The set is
+   * fixed when Today is opened and when a set is finished, not after every answer, so it does not shift mid sitting. */
+  function startToday() { var t = HE.trainer.today(S.log); S.today = { elements: t.elements, why: t.why, n: t.n, asked: 0, right: 0 }; }
+  function todayMix() { if (!S.today) { startToday(); } return extend(S.mix, { elements: S.today.elements }); }
+  function todayNote() {
+    if (!S.today) { startToday(); }
+    var by = { work: [], keep: [], 'new': [] };
+    S.today.elements.forEach(function (id) { by[S.today.why[id]].push(HE.byId(id).roman); });
+    var bits = [];
+    if (by.work.length) { bits.push('working on ' + by.work.join(', ')); }
+    if (by.keep.length) { bits.push('keeping ' + by.keep.join(', ')); }
+    if (by['new'].length) { bits.push('new: ' + by['new'].join(', ')); }
+    return 'Today’s set, ' + Math.min(S.today.asked + 1, S.today.n) + ' of ' + S.today.n + '. The band gives you home; name the element. Chosen from your record: ' + bits.join('; ') + '.';
+  }
 
   function renderRound() { renderDisplay(); syncAnswer(); renderResult(); renderTransport(); renderBehind(); }
 
@@ -1201,6 +1228,18 @@
           '<span>' + (r.recognised ? 'Recognised' : right + ' of last ' + r.last.length) + '</span></span></li>';
       }).join('');
     }
+    // The map: every element of the course by stage, and where each stands. A tap opens its page in the Guide.
+    $('map').innerHTML = HE.STAGES.filter(function (sg) { return !sg.retired; }).map(function (sg) {
+      var els = HE.ELEMENTS.filter(function (el) { return el.stage === sg.n && HE.isActive(el.id); });
+      if (!els.length) { return ''; }
+      var done = els.filter(function (el) { return st.elements[el.id] && st.elements[el.id].recognised; }).length;
+      return '<div class="he-map-stage"><div class="he-map-head"><b>' + sg.n + '. ' + esc(sg.name) + '</b><span>' + done + ' of ' + els.length + '</span>' +
+        (sg.n > 1 ? '<button type="button" class="he-map-go" data-map-stage="' + sg.n + '">Practise</button>' : '') + '</div><div class="he-map-els">' +
+        els.map(function (el) {
+          var r = st.elements[el.id], state = r ? (r.recognised ? 'got' : 'on') : 'none';
+          return '<a class="he-map-el is-' + state + '" href="#guide/' + el.id + '" title="' + esc(el.name) + '"><b>' + esc(el.roman) + '</b><span class="he-sr">' + esc(el.name) + ': ' + (state === 'got' ? 'recognised' : state === 'on' ? r.last.filter(Boolean).length + ' right of the last ' + r.last.length : 'not met yet') + '</span></a>';
+        }).join('') + '</div></div>';
+    }).join('');
     var top = st.mixups.slice(0, 3).map(function (m) {
       return HE.byId(m.was).roman + ' taken for ' + HE.byId(m.said).roman + (m.times > 1 ? ' (' + m.times + ' times)' : '');
     });
@@ -1333,10 +1372,22 @@
     renderDisplay(); syncAnswer(); renderResult();
   });
   $('guide').addEventListener('click', function (e) { var gb = e.target.closest('[data-ghear]'); if (gb) { guideHear(+gb.getAttribute('data-ghear')); } });
-  $('mix-link').addEventListener('click', function () {
+  $('copy-link').addEventListener('click', function () {
     var url = dojoLinkFor(), b = this;
     function done() { b.textContent = 'Copied'; window.setTimeout(function () { b.textContent = 'Copy a link to this mix'; }, 1800); }
     try { navigator.clipboard.writeText(url).then(done, function () { window.prompt('Copy this link', url); }); } catch (e) { window.prompt('Copy this link', url); }
+  });
+  $('map').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-map-stage]'); if (!b || !S.ready) { return; }
+    var n = +b.getAttribute('data-map-stage');
+    var ids = HE.ELEMENTS.filter(function (el) { return el.stage === n && HE.isActive(el.id); }).map(function (el) { return el.id; });
+    if (ids.length < 2) { return; }
+    if (S.owner === 'dojo' && (HE.audio.playing || S.busy)) { stop(); }
+    S.mix = HE.trainer.cleanMix(extend(S.mix, { elements: ids }), library); S.hadMix = true; S.mode = 'name'; S.stamp++;
+    save(); renderModes(); renderMix(); newRound();
+    say('Name it, with Stage ' + n + ' in play.');
+    $('modes').scrollIntoView({ block: 'start', behavior: 'auto' });
+    var go = $('go'); if (go) { go.focus({ preventScroll: true }); }
   });
   $('check').addEventListener('click', check);
   $('hit').addEventListener('click', homeHit);
@@ -1506,7 +1557,7 @@
   }
   // A link into the Dojo can say what to ask and of which elements: #dojo/name/major-lean+major-pull, #dojo/home,
   // #dojo/pair/... It sets the Dojo's mix, as "Test Stage 2 in the Dojo" does. (How a set from Jack arrives.)
-  var LINK_MODES = { name: 'name', home: 'home', pair: 'pair', change: 'change' };
+  var LINK_MODES = { name: 'name', home: 'home', pair: 'pair', change: 'change', today: 'today' };
   function dojoLink(rest) {
     var parts = rest.split('/'), mode = LINK_MODES[parts[0]], ids = (parts[mode ? 1 : 0] || '').split('+').filter(function (id) { return HE.isActive(id); });
     if (!mode && !ids.length) { return; }
@@ -1519,6 +1570,7 @@
     if (ids.length) { say('This link set the mix to ' + ids.length + (ids.length === 1 ? ' element' : ' elements') + '. Change it under The mix.'); }
   }
   function dojoLinkFor() {
+    if (S.mode === 'today') { return window.location.href.split('#')[0] + '#dojo/today'; }
     return window.location.href.split('#')[0] + '#dojo/' + S.mode + '/' + S.mix.elements.join('+');
   }
   function go(hash) {

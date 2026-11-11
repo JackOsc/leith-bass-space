@@ -510,7 +510,7 @@ function lbs_harmonic_trainer( $mode = 'page', $args = array() ) {
 					<div class="he-set"><p class="he-kicker">Start from</p><div class="he-togs" id="he-presets"></div></div>
 					<div class="he-set"><p class="he-kicker">Elements</p><div class="he-stages" id="he-stages"></div></div>
 					<div class="he-set"><p class="he-kicker">Home</p><div class="he-togs" id="he-homecue"></div><p class="he-small" id="he-homecue-note"></p></div>
-					<div class="he-set"><button type="button" class="he-btn is-quiet" id="he-mix-link">Copy a link to this mix</button><p class="he-small">The link opens the Dojo asking the same thing of the same elements. Put it in session notes or send it to a pupil.</p></div>
+					<div class="he-set"><button type="button" class="he-btn is-quiet" id="he-copy-link">Copy a link to this mix</button><p class="he-small">The link opens the Dojo asking the same thing of the same elements. Put it in session notes or send it to a pupil.</p></div>
 					<div class="he-set"><p class="he-kicker">Where home can be, in the cycle of fourths</p><div class="he-togs" id="he-keys"></div><div class="he-togs" id="he-key-sets"></div><p class="he-small" id="he-keys-note" hidden>A dot marks the notes for home and the tempos with recorded loops.</p></div>
 					<div class="he-set"><p class="he-kicker">Tempo</p><div class="he-togs" id="he-tempos"></div></div>
 					<div class="he-set"><p class="he-kicker">Feel</p><div class="he-togs" id="he-feels"></div></div>
@@ -530,6 +530,9 @@ function lbs_harmonic_trainer( $mode = 'page', $args = array() ) {
 				<section class="he-panel" aria-labelledby="he-h-rec">
 					<div class="he-ask-head"><h2 class="he-h" id="he-h-rec">Your record</h2><p class="he-small" id="he-rec-sum"></p></div>
 					<dl class="he-tiles" id="he-rec-tiles"></dl>
+					<h3 class="he-kicker" id="he-h-map">The map</h3>
+					<p class="he-small">Every element of the course, by stage. Orange is recognised, an outline is one you have met, grey is still to come. Tap one to read about it.</p>
+					<div class="he-map" id="he-map" aria-labelledby="he-h-map"></div>
 					<ul class="he-rec" id="he-rec-list"></ul>
 					<p class="he-small" id="he-rec-mix"></p>
 					<p class="he-small" id="he-rec-drills"></p>

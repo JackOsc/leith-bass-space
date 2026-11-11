@@ -206,6 +206,31 @@ Plugin 1.13.0-alpha.6 with theme 3.20.0-alpha.1 (the theme's first change in thi
 
 - The members' dashboard itself (the practice was driven on a cut down page). A real phone. WordPress. Whether the live site's saved copy overrides the new default.
 
+## alpha.7: Today and a Map in Elements, links into Ear Training, Today on Home
+
+- **Today's set in Elements.** `HE.trainer.today(log)` in `he-trainer.js` returns `{elements, why, n}`. `harmonic.js`: a fifth mode, `today` (`startToday()`, `todayMix()`, `todayNote()`); the set is fixed when Today is opened or a set is finished. The mix's element list is hidden while it is on. Link: `#dojo/today`. Rounds are ordinary Name it rounds in the record (`ask: 'element'`), so nothing new is saved.
+- **The map.** Drawn by `renderRecord()` into `#he-map`: stages 1 to 9, each element a link to its Guide page, and "Practise" (Stage 2 on) setting the mix to the stage.
+- **Ear Training links** (`route()`, `linkFor()` in `ear.js`; a button in `includes/ear.php`).
+- **Today on Home.** `LBS.todays` (name and address per open room) is added to the dashboard's config in `leithbass-members.php`; `renderHome()` draws the row.
+- **A bug of this release, fixed.** alpha.3's "Copy a link to this mix" button was given the id `he-mix-link`, which the "Change the mix" link already had. The tap handler was on the wrong one. The button is now `he-copy-link`. The earlier browser check missed it because it called the function, not the button.
+
+**Decisions taken on Jack's behalf (to confirm)**
+
+- Today's recipe: three to work on, two to keep, one new (two if nothing is in hand), twelve rounds, Name it only. Homes (Stage 1) are left out.
+- Today sits first in the row of modes. The room still opens on whatever was last used.
+- The map lives inside Your record, not on a tab of its own.
+- Today on Home is a plain row of links. It does not yet say what is in each set or whether today's is done (that needs each room's record on Home).
+
+**Checked**
+
+- Elements suite: 58,858 checks, passing (173 new, for Today). Metronome suite: 1,076, passing.
+- Headless Chromium, 390 by 844, no page errors: Today's note and pads, a Today link, the map (9 stages, 65 elements), Practise on Stage 3, a map link opening the Guide; Ear Training links for a drill with items, a drill alone, Today, nonsense ignored, one item ignored, and the copied address; both ids in Elements unique and the right button copying.
+- `php -l` on the changed PHP.
+
+**Not checked**
+
+- Today on Home on a real dashboard (needs WordPress). Read's `#dojo/today` was read in the code, not driven. A full set of twelve played through to "Today's set is done". Ear Training's and Read's Node suites are still to be updated and rerun.
+
 ## Audition page
 
 "Elements: audition page" (https://claude.ai/artifact/XzXJTLxZryKzfSfYM2wV1H), private to Jack. Built on 1.12.1's catalogue, so it still lists the 19 as they were. Jack's first reactions (11 Nov): Cue, Pedal and Bass are all useful; he suggested the Home hit; "step" is good; numerals should lead the names. His tick and cross answers per home are still to come.

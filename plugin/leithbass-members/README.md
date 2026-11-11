@@ -301,6 +301,12 @@ One release for the whole programme agreed on 11 Nov 2026 (`claude/leith-bass-sp
 - **Set list.** Under Setups, "Run these as a set list" steps through your saved setups in their order, one tap from song to song, with the song's name in big type and the next one shown. The click stops between songs. Up moves a setup earlier in the order.
 - **A setup as a link.** "Copy a link to what is set now" (under Setups) gives an address that opens the metronome with the same tempo and everything the click is doing: `…/metronome/?m=…`. The sound, the volumes and saved setups stay the reader's own, and a member's own Shelf loop does not travel. The theme says where the free metronome is (`lbs_tool_url`); without one the link opens the page it was made on.
 
+**One app:**
+
+- **Today on Home.** A row on the Shed's Home opens each room's own Today's set: Ear, Elements, Read. Only rooms the member can use are shown.
+- **Links into Ear Training**: `#drill/deg/1+3+5` (a drill and what is in play), `#drill/chord`, `#today`, `#jam`. "Copy a link to this" is under In play.
+- **Fixed:** the Elements "Copy a link to this mix" button (new in this release) shared an id with the "Change the mix" link, so the wrong one answered the tap.
+
 **The practice (the Shed's timer and diary):**
 
 - **Five in a row.** Clean and Slip buttons while the timer runs. A slip sends the count back to nothing. Three or more in a row ticks the diary's "three times in a row" for you.
@@ -309,6 +315,8 @@ One release for the whole programme agreed on 11 Nov 2026 (`claude/leith-bass-sp
 
 **Harmonic Elements:**
 
+- **Today** in the Dojo: twelve rounds of Name it on a few elements chosen from your record. Up to three you are working on (the shakiest first), up to two recognised ones left alone longest, and the next new one in the course's order. No element is ever alone of its kind (major or minor), so there is always a choice.
+- **The map** in Your record: every element by stage, marked recognised, met or still to come. Tap one for its Guide page. "Practise" beside a stage sets Name it to that stage.
 - **Home is established, then heard.** The Dojo asks one thing at a time. **Name it**: the band gives you home, and you name the element. **Find home**: nothing is given, and you find the key. Where a loop has two homes Find home says so, and either counts.
 - **Four ways for the band to establish home** in Name it (The mix → Home): **Cue** (two bars of the home chord, the default), **Pedal** (a low home note under the loop), **Bass** (the band's bass on each chord's root) and **Loop only**. Pedal and Bass are the house band's: a recorded loop gets the cue.
 - **Home hit.** While a loop is going round in Name it, one bar of the home chord is laid over it from the next bar line.

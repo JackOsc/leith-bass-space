@@ -107,6 +107,39 @@ ok(HE.trainer.cleanMix(Object.assign(HE.trainer.defaultMix(lib), { home: 'hidden
 ok(HE.trainer.cleanMix(Object.assign(HE.trainer.defaultMix(lib), { elements: ['axis-with-ii', 'major-lean', 'gospel-turn'] }), lib).elements.join() === 'major-lean', 'a saved mix loses elements that are out');
 for (let i = 0; i < 300; i++) { const x = HE.trainer.pick({ elements: ['suspended-cadence', 'major-lean'], keys: [0, 5], tempos: [90], feels: ['Rock 8ths'], voicing: 'triads', sound: 'both' }, lib, [], null); ok(x.el.id === 'major-lean', 'pick'); }
 
+// 5. Today's set
+{
+  const DAY = 86400000, T0 = 1.7e12, ln = (el, ok, d) => ({ el, ok, t: T0 + d * DAY, ask: 'element', element: ok, home: true });
+  const pool = HE.ELEMENTS.filter(el => HE.isActive(el.id) && el.kind !== 'home' && el.kind !== 'form').map(el => el.id);
+  const paired = tt => ['major', 'minor'].every(m => tt.elements.filter(id => HE.byId(id).mode === m).length !== 1);
+  const has = (tt, ids) => ids.every(id => tt.elements.indexOf(id) !== -1);
+  let t = HE.trainer.today([]);
+  ok(t.n === 12 && t.elements.length <= 5 && has(t, pool.slice(0, 2)) && t.elements.every(id => t.why[id] === 'new') && paired(t), 'an empty record: the first of the course, all new, none alone of its kind');
+  ok(JSON.stringify(HE.trainer.today([])) === JSON.stringify(t), 'the same record gives the same set');
+  // one recognised (4 of 5 over two days), one shaky, one worse
+  const got = pool[0], shaky = pool[1], worse = pool[2];
+  const log = [ln(got, true, 0), ln(got, true, 0), ln(got, true, 1), ln(got, false, 1), ln(got, true, 1), ln(shaky, true, 2), ln(shaky, false, 2), ln(worse, false, 3), ln(worse, false, 3)];
+  ok(HE.trainer.stats(log).elements[got].recognised === true, 'the test record has one recognised');
+  t = HE.trainer.today(log);
+  ok(t.why[got] === 'keep' && t.why[shaky] === 'work' && t.why[worse] === 'work' && t.elements.filter(id => t.why[id] === 'new').length >= 1 && t.elements.length <= 6 && paired(t), 'keep, work, work and something new');
+  ok(t.elements.join() === pool.filter(id => t.elements.indexOf(id) !== -1).join(), 'in the course\'s order');
+  // many being worked on: only three, the shakiest
+  const many = []; pool.slice(0, 8).forEach((id, i) => { for (let k = 0; k < 4; k++) { many.push(ln(id, k < i % 4, i)); } });
+  t = HE.trainer.today(many);
+  const work = t.elements.filter(id => t.why[id] === 'work');
+  ok(work.length === 3 && work.every(id => HE.trainer.stats(many).elements[id].last.filter(Boolean).length <= 1) && t.elements.filter(id => t.why[id] === 'new').length >= 1 && paired(t), 'three to work on, the shakiest, and something new');
+  // Find home lines and drills do not count as having met an element
+  t = HE.trainer.today([{ el: pool[5], ok: true, t: T0, ask: 'home' }, { el: pool[6], ok: true, t: T0, mode: 'pair' }]);
+  ok(t.elements.join() === HE.trainer.today([]).elements.join(), 'Find home and the drills leave Today as it was');
+  // everything recognised: two kept (the longest left), padded to three
+  const all = []; pool.forEach((id, i) => { [0, 0, 1, 1, 1].forEach(d => all.push(ln(id, true, i * 2 + d))); });
+  t = HE.trainer.today(all);
+  ok(t.elements.length >= 3 && t.elements.length <= 5 && t.elements.every(id => t.why[id] === 'keep') && has(t, pool.slice(0, 2)) && paired(t), 'all recognised: the ones left alone longest come back');
+  ok(t.elements.every(id => HE.isActive(id) && HE.byId(id).kind !== 'home'), 'never a home, never one that is out');
+  // a set can always be asked
+  for (const lg of [[], log, many, all]) { const tt = HE.trainer.today(lg), mix = Object.assign(HE.trainer.defaultMix(lib), { elements: tt.elements }); for (let i = 0; i < 40; i++) { const x = HE.trainer.pick(mix, lib, lg, null); ok(x && tt.elements.indexOf(x.el.id) !== -1, 'a round from today\'s set'); } ok(paired(tt), 'none alone of its kind'); }
+}
+
 console.log('hearings checked', hearingCount, '| loops with more than one home', multi);
 console.log('checks', checks, 'failed', fails.length); fails.slice(0, 20).forEach(f => console.log('  ' + f));
 process.exit(fails.length ? 1 : 0);
