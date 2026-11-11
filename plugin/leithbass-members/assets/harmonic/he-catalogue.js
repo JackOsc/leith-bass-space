@@ -212,8 +212,10 @@
 	E(5, 'i ♭VI', 'The dark shadow', 'Home, shadow (♭VI for iv)', '1.m.2 b6.M.2', '1.m7.2 b6.M7.2', '{5} rising a semitone to {b6}, the same darkening as in i iv but with the bass falling instead.');
 
 	// Stage 6. Shadow molecules
-	E(6, 'I vi IV V', 'The fifties progression', 'Home, lean, pull, shadow (vi for I)', '1.M.1 6.m.1 4.M.1 5.M.1', '1.M7.1 6.m7.1 4.M7.1 5.7.1', 'Two falling thirds, one step, one falling fifth.');
-	E(6, 'I vi ii V', 'The fifties, strengthened', 'Home, pull, shadow (vi for I, ii for IV)', '1.M.1 6.m.1 2.m.1 5.M.1', '1.M7.1 6.m7.1 2.m7.1 5.7.1', 'The {2} in the bass where {4} was.');
+	// The two fifties progressions go round, but each time round the V pulls to the I: one home (Nov 2026, Claude's call
+	// for Jack to confirm). The four chords are the pop axis's, and the axis has two homes because it has no such pull.
+	E(6, 'I vi IV V', 'The fifties progression', 'Home, lean, pull, shadow (vi for I)', '1.M.1 6.m.1 4.M.1 5.M.1', '1.M7.1 6.m7.1 4.M7.1 5.7.1', 'Two falling thirds, one step, one falling fifth.', { shape: 'cadence' });
+	E(6, 'I vi ii V', 'The fifties, strengthened', 'Home, pull, shadow (vi for I, ii for IV)', '1.M.1 6.m.1 2.m.1 5.M.1', '1.M7.1 6.m7.1 2.m7.1 5.7.1', 'The {2} in the bass where {4} was.', { shape: 'cadence' });
 	E(6, 'I iii IV V', 'The rising line', 'Home, lean, pull, shadow (iii for I)', '1.M.1 3.m.1 4.M.1 5.M.1', '1.M7.1 3.m7.1 4.M7.1 5.7.1', 'The bass rising {1}, {3}, {4}, {5}.');
 	E(6, 'I IV iii V', 'The surprise shadow', 'Home, lean, pull, shadow (iii for I)', '1.M.1 4.M.1 3.m.1 5.M.1', '1.M7.1 4.M7.1 3.m7.1 5.7.1', 'The bass stepping down from {4} to {3}.');
 	E(6, 'IV V iii vi', 'The ascending soul cell', 'Lean, pull, shadow (iii, vi) (home absent)', '4.M.1 5.M.1 3.m.1 6.m.1', '4.M7.1 5.7.1 3.m7.1 6.m7.1', 'V moving to iii before vi. It avoids a direct V to I arrival.');

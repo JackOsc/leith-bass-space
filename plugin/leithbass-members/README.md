@@ -317,6 +317,8 @@ One release for the whole programme agreed on 11 Nov 2026 (`claude/leith-bass-sp
 
 **Harmonic Elements:**
 
+- **Eleven new cards in the Guide**, in the course's full form, for the elements folded into Stages 6 to 9. Their listening leads are to be checked against the recordings.
+- **The fifties progression and the fifties, strengthened have one home.** 22 loops have more than one, and the list is pinned in the tests.
 - **Today** in the Dojo: twelve rounds of Name it on a few elements chosen from your record. Up to three you are working on (the shakiest first), up to two recognised ones left alone longest, and the next new one in the course's order. No element is ever alone of its kind (major or minor), so there is always a choice.
 - **The map** in Your record: every element by stage, marked recognised, met or still to come. Tap one for its Guide page. "Practise" beside a stage sets Name it to that stage.
 - **Home is established, then heard.** The Dojo asks one thing at a time. **Name it**: the band gives you home, and you name the element. **Find home**: nothing is given, and you find the key. Where a loop has two homes Find home says so, and either counts.

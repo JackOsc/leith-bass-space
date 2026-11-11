@@ -3,7 +3,7 @@
  * Plugin Name: Leith Bass Members
  * Plugin URI: https://leithbass.space/members/
  * Description: The invite-only member portal for The Leith Bass Space: session notes, bookings, lesson credit, the Shed (practice tools and a shared library), Ear Training for Bass Players, Harmonic Elements (the Guide and the Dojo), and a home-screen app with a room for each. Works with the Leith Bass Space theme.
- * Version: 1.13.0-alpha.9
+ * Version: 1.13.0-alpha.10
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Jack Elliot
@@ -24,7 +24,7 @@ if ( function_exists( 'lbs_settings' ) ) {
 	return;
 }
 
-define( 'LBS_VERSION', '1.13.0-alpha.9' );
+define( 'LBS_VERSION', '1.13.0-alpha.10' );
 define( 'LBS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'LBS_URL', plugin_dir_url( __FILE__ ) );
 define( 'LBS_FILE', __FILE__ );

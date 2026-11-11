@@ -73,7 +73,7 @@ HE.ELEMENTS.forEach(el => ['triads', 'sevenths'].forEach(v => {
     });
   });
 }));
-ok(multi === 24, 'loops with more than one home: ' + multi);
+ok(multi === 22, 'loops with more than one home: ' + multi);
 // the cases that prompted the changes
 const cc = HE.byId('cadential-cell');
 ok(HE.trainer.mark({ el: cc, keyPc: 0, voicing: 'sevenths', ask: 'home' }, { homePc: 7, mode: 'major', elId: null }).verdict === 'not-yet', 'ii V I in C is not in G');
@@ -138,6 +138,19 @@ for (let i = 0; i < 300; i++) { const x = HE.trainer.pick({ elements: ['suspende
   ok(t.elements.every(id => HE.isActive(id) && HE.byId(id).kind !== 'home'), 'never a home, never one that is out');
   // a set can always be asked
   for (const lg of [[], log, many, all]) { const tt = HE.trainer.today(lg), mix = Object.assign(HE.trainer.defaultMix(lib), { elements: tt.elements }); for (let i = 0; i < 40; i++) { const x = HE.trainer.pick(mix, lib, lg, null); ok(x && tt.elements.indexOf(x.el.id) !== -1, 'a round from today\'s set'); } ok(paired(tt), 'none alone of its kind'); }
+}
+
+// 6. The homes the course accepts, written down (Nov 2026). Semitones above the element's own home, M or m.
+//    Computed from the catalogue, then two taken out by hand (the fifties progressions: their V pulls to their I).
+//    If this fails, a change to the catalogue has moved a home: decide whether that was meant, then change this list.
+{
+  const HOMES = {"major-lean":["0M","5M"],"dorian-lean":["0m","5M"],"minor-lean":["0m","5m"],"major-pull":["0M","7M"],"mixolydian-pull":["0M","7m"],"modal-minor-pull":["0m","7m"],"suspended-cadence":["0M","2m","7M"],"backwards-cadence":["0M","7M"],"relative-shadow":["0M","9m"],"upper-shadow":["0M","4m"],"relative-major":["0m","3M"],"dark-shadow":["0m","8M"],"ascending-soul-cell":["0M","9m"],"pop-axis":["0M","9m"],"axis-minor-view":["0M","9m"],"mixolydian-shift":["0M","10M"],"minor-shift":["0m","10M"],"neo-soul-shift":["0M","2m"],"lydian-shift":["0M","2M"],"mixolydian-cadence":["0M","5M"],"descending-soul-cycle":["0M","9m"],"borrowed-minor-lean":["0M","5m"],"major-mediant":["0M","4M"],"flat-submediant":["0M","8M"],"dorian-loop":["0m","10M"]};
+  const now = {};
+  HE.ELEMENTS.filter(e => HE.isActive(e.id) && e.kind !== 'form').forEach(e => { const h = HE.keyHearings(e, 'triads'); if (h.length > 1) { now[e.id] = h.map(x => x.offset + (x.mode === 'minor' ? 'm' : 'M')); } });
+  ok(JSON.stringify(Object.keys(now).sort()) === JSON.stringify(Object.keys(HOMES).sort()), 'the loops with more than one home are the ones on the list');
+  Object.keys(HOMES).forEach(id => ok(JSON.stringify(now[id]) === JSON.stringify(HOMES[id]), id + ' has the homes on the list: ' + JSON.stringify(now[id])));
+  ['fifties-progression', 'fifties-strengthened'].forEach(id => ok(HE.keyHearings(HE.byId(id), 'triads').length === 1 && HE.keyHearings(HE.byId(id), 'sevenths').length === 1, id + ' has one home'));
+  ok(HE.keyHearings(HE.byId('pop-axis'), 'triads').length === 2, 'the pop axis keeps two');
 }
 
 console.log('hearings checked', hearingCount, '| loops with more than one home', multi);

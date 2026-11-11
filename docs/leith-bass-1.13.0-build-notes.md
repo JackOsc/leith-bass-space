@@ -261,6 +261,18 @@ Plugin 1.13.0-alpha.9, theme 3.20.0-alpha.2.
 - **The course text.** Not rewritten. `claude/harmonic-elements-course-text-changes-1.13.0.md` lists every change it needs (steps, the "Whose home is it?" section in full, the eleven cards with their draft lines, the eight taken out, the conventions), in the form of the 1.9.0 list. The Guide patch script stays in use until the text is changed. Reason: eleven cards and one section are waiting for Jack's words, so a rewrite now would be done twice.
 - **Theme**: the default text of the Harmonic Elements page ("How it works" list and the opening) now describes Name it, Find home, Today, links and the map, and no longer mentions "a further set of molecules". As with the metronome page, **saved text in Site Content wins over these defaults**.
 
+## alpha.10: the eleven cards, the list of homes, numerals
+
+Jack, 11 Nov evening: numerals lead; complete the other three open points without him, for review.
+
+- **Eleven full Guide cards**, written through the patch script (it now reads `he-catalogue.js` beside the Guide for the spellings and the fixed and open notes). No page says "draft" any more. The `draft` flag stays on the elements in the catalogue as a marker of whose words they are; nothing on screen reads it.
+- **The fifties progression and the fifties, strengthened have one home** (`shape: 'cadence'` in the catalogue). Loops with more than one home: 22 (was 24).
+- **The accepted homes are pinned** in the Elements suite (section 6). A catalogue change that moves a home now fails a test.
+- **Numerals lead**: checked across the screens, nothing to change.
+- Details and the songs to check: section 6 of `claude/harmonic-elements-course-text-changes-1.13.0.md`.
+- Checked: Elements suite 58,703 checks passing (fewer than before because two loops lost a hearing); Ear Training 16,852 passing; six Guide pages opened in the browser (five new cards and the fifties progression), each with its paragraphs and no draft note; the patch run three times with the same result.
+- Not checked: the listening leads against recordings. How any of it sounds.
+
 ## Audition page
 
 "Elements: audition page" (https://claude.ai/artifact/XzXJTLxZryKzfSfYM2wV1H), private to Jack. Built on 1.12.1's catalogue, so it still lists the 19 as they were. Jack's first reactions (11 Nov): Cue, Pedal and Bass are all useful; he suggested the Home hit; "step" is good; numerals should lead the names. His tick and cross answers per home are still to come.

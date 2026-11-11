@@ -96,7 +96,16 @@ Wherever the text says how the Dojo marks an answer, it should now say:
 - A card's "Key" row is now "Home, as the course hears it".
 - **Today** is a short set chosen from your record. **The map** shows every element by stage.
 
-## 6. Still open for Jack
+## 6. Settled on 11 Nov (evening), for Jack to fine tune
+
+Jack: numerals lead; for the rest, "do your best to complete without my input now to get the thing built for review and I can fine-tune after."
+
+1. **Numerals lead.** Checked on every screen: answer buttons, the reveal, the record, the map, the mix, Guide titles and contents, Ear Training's Progressions. All show the numerals first and the name second ("I IV · The major lean"). Nothing needed changing. Prose in the course text that uses a name alone is unchanged.
+2. **The eleven cards are written** in the course's full form (In C, Built from, Motion, Fixed and open, Sound, Note choice, Listen for, Contrast with, Listening leads), in `tools/harmonic-elements-guide-patch-1.13.js`. The table in section 3 has the listening lines; the rest is in the script and on the pages. **Listening leads are from memory and must be checked against the recordings**: "Lean on Me", "Like a Rolling Stone", "Here, There and Everywhere" (the climb); "Moondance", "Light My Fire" (the Dorian step); "All Along the Watchtower", "Layla", "Running Up That Hill" (the Aeolian cadence); "Mad World", "Wonderwall", "Boulevard of Broken Dreams" (the Dorian loop); "Smoke on the Water", "The House of the Rising Sun" (the minor rock cell); "Purple Haze", "Get It On" (the rock cell); "My Funny Valentine", "Stairway to Heaven" (the line cliché); "Satin Doll", "Misty", "Cherokee" (the ii V into IV); "Ain't Misbehavin'", "It Could Happen to You" (the diminished passing chord); "Mr. P.C.", "Equinox" (the minor blues turn). The fifties in minor has none: Claude was not sure enough of any.
+3. **The homes the course accepts are written down**, in section 6 of `tests/harmonic-elements-rules-test-1.13.js`. The list is the one the catalogue computes, less two: **the fifties progression (I vi IV V) and the fifties, strengthened (I vi ii V) now have one home.** They go round, but every time round the V pulls to the I. Their chords are the pop axis's, and the axis keeps two homes because it has no such pull. Everything else stands: the two chord bonds each have the other reading; the backwards cadence and the Mixolydian cadence are each other's; the relative pairs; the pop axis, its minor view, the ascending soul cell and the Dorian loop; the descending soul cycle from A minor; the borrowed minor lean from F minor. 22 loops in all (25 counting the three whose own home never sounds).
+4. **"Whose home is it?"** stands as drafted in section 2.
+
+## 7. Still Jack's to change, when he reviews
 
 1. His answers from the audition page: for each loop with more than one home, which homes the course accepts. Until then the app's list is the one computed from the catalogue (24 loops).
 2. Names and listening lines for the eleven in section 3.
