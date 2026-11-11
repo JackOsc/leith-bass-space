@@ -9,7 +9,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
-const { HOUSE, parsePitch, pitchName, slugify, rasterise, embedFonts } = require('./render.js');
+const { HOUSE, parsePitch, pitchName, slugify, rasterise, embedFonts, show } = require('./render.js');
 
 const DEFAULT_INSTRUMENT = {
   name: 'standard four-string bass', writtenOctaveOffset: 12,
@@ -368,13 +368,13 @@ function panelSvg(spec, panel, lilySvg) {
   const frame = f.plain
     ? `<rect x="0" y="0" width="${width}" height="${height}" fill="${paper}"/>`
     : `<rect x="${HOUSE.borderWidth / 2 + 1}" y="${HOUSE.borderWidth / 2 + 1}" width="${width - HOUSE.borderWidth - 2}" height="${height - HOUSE.borderWidth - 2}" rx="${HOUSE.borderRadius}" fill="${paper}" stroke="${HOUSE.orange}" stroke-width="${HOUSE.borderWidth}"/>
-  <text x="${f.side}" y="${HOUSE.pad.panel + HOUSE.type.heading * 0.73 + 4}" class="heading">${esc(panel.heading)}</text>`;
+  <text x="${f.side}" y="${HOUSE.pad.panel + HOUSE.type.heading * 0.73 + 4}" class="heading">${show(panel.heading)}</text>`;
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="${id}-title ${id}-desc">
   <title id="${id}-title">${esc(panel.altText)}</title>
   <desc id="${id}-desc">${esc(panel.description)}</desc>
   <style>
-    .heading { font-family: 'Oswald', 'Inter', Arial, sans-serif; font-weight: 700; font-size: ${HOUSE.type.heading}px; fill: ${HOUSE.charcoal}; letter-spacing: .4px; }
+    .heading { font-family: 'Oswald', 'LBS Signs SemiBold', 'Inter', Arial, sans-serif; font-weight: 700; font-size: ${HOUSE.type.heading}px; fill: ${HOUSE.charcoal}; letter-spacing: .4px; }
   </style>
   ${frame}
   <svg x="${f.side}" y="${f.top}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" viewBox="${vx} ${vy} ${vw} ${vh}" color="${HOUSE.charcoal}" style="color:${HOUSE.charcoal}">

@@ -129,8 +129,19 @@ test('courtesy flag shows a natural the barline would otherwise hide', () => {
 process.stdout.write('Case, text and meter\n');
 test('chord labels Bb7 and Em keep their exact case', () => {
   const svg = svgOf(spec([{ label: 'Bb7', notes: [{ string: 'A', fret: 1 }] }, { label: 'Em', notes: [{ string: 'E', fret: 0 }] }]));
-  assert.match(svg, />Bb7</); assert.match(svg, />Em</);
+  assert.match(svg, />B\u266D7</); assert.match(svg, />Em</);
   assert.doesNotMatch(svg, /text-transform/);
+});
+test('flats and sharps are shown as real signs in labels, and words are left alone (3.1)', () => {
+  const { signs } = require('./render.js');
+  const cases = { 'Bb': 'B\u266D', 'Bbm': 'B\u266Dm', 'Bbmaj7 to Eb7': 'B\u266Dmaj7 to E\u266D7', 'F#m': 'F\u266Fm', 'Gb, not F#': 'G\u266D, not F\u266F', 'Ab major': 'A\u266D major',
+    'Abbey Road': 'Abbey Road', 'Absolutely': 'Absolutely', 'Ebony': 'Ebony', 'TAB': 'TAB', 'Add9': 'Add9', 'Bbb': 'B\u266D\u266D', 'Eb/G': 'E\u266D/G', 'B\u266D already': 'B\u266D already' };
+  for (const [from, to] of Object.entries(cases)) assert.strictEqual(signs(from), to, from);
+  const svg = svgOf(spec([{ label: 'Gbmaj7', notes: [{ string: 'E', fret: 2, spelling: 'Gb2' }] }], { noteNames: true }));
+  assert.match(svg, />G\u266Dmaj7</); assert.match(svg, /class="note-name">G\u266D</); assert.match(svg, /LBS Signs/);
+  // the two sign fonts hold the three signs and nothing that could stand in for a letter
+  const out = require('child_process').spawnSync('python3', ['-c', "from fontTools.ttLib import TTFont;import sys;print([sorted(TTFont(f).getBestCmap()) for f in sys.argv[1:]])", path.join(__dirname, '../assets/fonts/lbs-signs-400.ttf'), path.join(__dirname, '../assets/fonts/lbs-signs-600.ttf')], { encoding: 'utf8' });
+  if (out.status === 0) assert.strictEqual(out.stdout.trim(), '[[32, 9837, 9838, 9839], [32, 9837, 9838, 9839]]');
 });
 test('XML characters in titles and headings are escaped', () => {
   const svg = svgOf({ title: 'Rock & <Roll>', timeSignature: null, panels: [{ heading: 'A & B "quote"', measures: [{ notes: [{ string: 'E', fret: 0 }] }] }] });
@@ -374,6 +385,29 @@ test('portal text follows the session notes template and lists the PDF first', (
   assert.throws(() => portalText({ date: 'x' }), /member is required/);
 });
 const asyncTests = [];
+asyncTests.push(['a link block holds a QR code and the address in words; signs in text are set in the signs font (3.1)', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lbs-ws-'));
+  const sheet = { title: 'Bb and F#', blocks: [
+    { type: 'paragraph', text: 'Bb7 pulls to Eb. Abbey Road.' },
+    { type: 'link', label: 'Practise it', text: 'In the app.', url: 'https://leithbass.space/members/elements/#dojo/name/major-lean+major-pull' },
+  ] };
+  const file = path.join(dir, 'sheet.json');
+  fs.writeFileSync(file, JSON.stringify(sheet));
+  const { docxPath } = await build(file, dir, {});
+  const JSZip = require(require.resolve('jszip', { paths: [require('child_process').execSync('npm root -g').toString().trim()] }));
+  const zip = await JSZip.loadAsync(fs.readFileSync(docxPath));
+  const xml = await zip.file('word/document.xml').async('string');
+  assert.match(xml, /LBS Signs SemiBold/); assert.match(xml, /LBS Signs"/); assert.match(xml, />\u266D</); assert.match(xml, /Abbey Road/);
+  assert.match(xml, /leithbass\.space\/members\/elements</);
+  const media = Object.keys(zip.files).filter((n) => /^word\/media\/.+\.png$/.test(n));
+  assert.strictEqual(media.length, 1);
+  const png = await zip.file(media[0]).async('nodebuffer');
+  assert.strictEqual(png.readUInt32BE(0), 0x89504e47); assert.ok(png.readUInt32BE(16) === png.readUInt32BE(20) && png.readUInt32BE(16) >= 29 * 8);
+  for (const bad of ['http://leithbass.space/', 'leithbass.space', 'https://x y']) {
+    fs.writeFileSync(file, JSON.stringify({ title: 'T', blocks: [{ type: 'link', url: bad }] }));
+    await assert.rejects(() => build(file, dir, {}), /https address/);
+  }
+}]);
 asyncTests.push(['pagebreak sets page-break-before (no empty page-break paragraph); sections switch to landscape', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lbs-ws-'));
   const sheet = { title: 'Session 1 note', blocks: [

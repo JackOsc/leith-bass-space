@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.1.0 · 11 November 2026
+
+Part of the programme agreed with Jack on 11 Nov 2026 (the review in the Project, section on the worksheets skill).
+
+### Added
+- **Real flat and sharp signs.** `Bb`, `F#` and `Ebmaj7` in headings, labels, note names, captions, tables and body text print as B♭, F♯ and E♭maj7. Inter and Oswald have no such glyphs, so two small fonts, `lbs-signs-400.ttf` and `lbs-signs-600.ttf`, carry the three signs (flat, natural, sharp), cut from DejaVu Sans 2.37 and renamed "LBS Signs" as its licence asks. They are embedded in the DOCX and, with `--embed-fonts`, in SVGs that use a sign. The rule (`signs()` in render.js) only takes a `b` as a flat where a note or chord name can end, so "Abbey" and "Ebony" are untouched.
+- **`link` block** in worksheets: a QR code, a label, a line of text and the address in words. For a drill in the app with chosen things in play, a metronome setup, a backing track. The code is made with the `qrcode` package (setup.sh installs it) and written as a one bit PNG by the builder.
+
+### Changed
+- A chord label such as `Bb7` now prints as B♭7 (it printed as typed before). Data, audits and file names are unchanged.
+
+### Checked
+- 52 acceptance tests pass (two new, one changed). A test sheet in B♭ was built to PDF and looked at: signs in the title (Oswald), headings, body, bold, callout, table, figure title, caption, chord labels and note names. Both QR codes were read back out of the PDF by a scanner.
+- LilyPond was not installed for this run, so the engraved groove tests that need it were skipped, as the test file reports.
+
+### Not done in 3.1 (still on the list)
+- Continuous figures across a page, a chart page, a rhythm only line, an element card for Harmonic Elements, and page flow checks beyond the last page warning.
+
 ## 3.0.0 · 31 October 2026
 
 Requested by Jack: correct the fretboard string weights, say "session" rather than "lesson", and make notation and TAB less big and clumsy (reference: a printed chord-harmony book page with a 1.7 mm staff space). Plus a full review of the skill and the problems found in recent session notes.

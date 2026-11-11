@@ -48,6 +48,18 @@ function fail(message) {
   throw new Error(message);
 }
 
+// Music signs in words people read (3.1). "Bb" and "F#" in a heading, a label or a sentence are shown with the real
+// flat and sharp signs, which Inter and Oswald do not have: the two small "LBS Signs" fonts carry them. Data is
+// untouched: pitches in JSON stay "Bb2". A flat is only taken as one where a note or chord name can end
+// ("Bb", "Bb7", "Bbm", "Bbmaj7", "Ab major"), so a word such as "Abbey" is left alone. A sign typed as itself is kept.
+function signs(value) {
+  return String(value)
+    .replace(/(^|[^A-Za-z])([A-G])(bb|b)(?=$|[^a-z#b]|m(?:aj|in|\d|[^a-z]|$)|dim|sus|aug|add)/g, (m, pre, letter, acc) => pre + letter + acc.replace(/b/g, '\u266D'))
+    .replace(/(^|[^A-Za-z])([A-G])(##|#)/g, (m, pre, letter, acc) => pre + letter + acc.replace(/#/g, '\u266F'));
+}
+// text for the page: signs first, then made safe for SVG
+function show(value) { return esc(signs(value)); }
+
 function esc(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -502,25 +514,25 @@ function renderPanel(spec, panel) {
     ? `<rect x="0" y="0" width="${width}" height="${layout.height}" fill="${paper}"/>`
     : `<rect x="${HOUSE.borderWidth / 2 + 1}" y="${HOUSE.borderWidth / 2 + 1}" width="${width - HOUSE.borderWidth - 2}" height="${layout.height - HOUSE.borderWidth - 2}" rx="${HOUSE.borderRadius}" fill="${paper}" stroke="${HOUSE.orange}" stroke-width="${HOUSE.borderWidth}"/>`}
   <style>
-    .heading { font-family: 'Oswald', 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 700; font-size: ${T.heading}px; fill: ${HOUSE.charcoal}; letter-spacing: .4px; }
-    .measure-label { font-family: 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.label}px; fill: ${HOUSE.accentInk}; }
-    .note-name { font-family: 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.name}px; fill: ${HOUSE.charcoal}; }
-    .finger { font-family: 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.finger}px; fill: ${HOUSE.accentInk}; }
+    .heading { font-family: 'Oswald', 'LBS Signs SemiBold', 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 700; font-size: ${T.heading}px; fill: ${HOUSE.charcoal}; letter-spacing: .4px; }
+    .measure-label { font-family: 'Inter', 'LBS Signs SemiBold', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.label}px; fill: ${HOUSE.accentInk}; }
+    .note-name { font-family: 'Inter', 'LBS Signs SemiBold', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.name}px; fill: ${HOUSE.charcoal}; }
+    .finger { font-family: 'Inter', 'LBS Signs SemiBold', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.finger}px; fill: ${HOUSE.accentInk}; }
     .tab-number { font-family: 'DejaVu Sans Mono', monospace; font-weight: 700; font-size: ${T.tab}px; fill: ${HOUSE.charcoal}; }
-    .tab-label { font-family: 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.tabClef}px; fill: ${HOUSE.charcoal}; }
-    .section-label { font-family: 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.rowLabel}px; fill: ${HOUSE.muted}; letter-spacing: 1px; }
+    .tab-label { font-family: 'Inter', 'LBS Signs SemiBold', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.tabClef}px; fill: ${HOUSE.charcoal}; }
+    .section-label { font-family: 'Inter', 'LBS Signs SemiBold', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.rowLabel}px; fill: ${HOUSE.muted}; letter-spacing: 1px; }
     .music-line { stroke: ${HOUSE.charcoal}; stroke-width: 2.4; }
     .ledger { stroke: ${HOUSE.charcoal}; stroke-width: 2.8; }
     .stem { stroke: ${HOUSE.charcoal}; stroke-width: 2.8; }
     .bar { stroke: ${HOUSE.charcoal}; stroke-width: 3; }
   </style>
 `;
-  if (!plain) svg += `  <text x="${h.left}" y="${HOUSE.pad.panel + T.heading * CAP + 4}" class="heading">${esc(panel.heading)}</text>\n`;
+  if (!plain) svg += `  <text x="${h.left}" y="${HOUSE.pad.panel + T.heading * CAP + 4}" class="heading">${show(panel.heading)}</text>\n`;
 
   // measure labels (chord symbols) sit over the first note of the bar
   panel.measures.forEach((measure, i) => {
     if (!measure.label) return;
-    svg += `<text x="${geometry[i].xs[0] - headHalfWidth}" y="${layout.labelY}" class="measure-label">${esc(measure.label)}</text>`;
+    svg += `<text x="${geometry[i].xs[0] - headHalfWidth}" y="${layout.labelY}" class="measure-label">${show(measure.label)}</text>`;
   });
 
   if (layout.notation) {
@@ -570,7 +582,7 @@ function renderPanel(spec, panel) {
   panel.measures.forEach((measure, measureIndex) => {
     measure.notes.forEach((note, noteIndex) => {
       const x = geometry[measureIndex].xs[noteIndex];
-      if (spec.noteNames) svg += `<text x="${x}" y="${layout.nameY}" text-anchor="middle" class="note-name">${esc(note.parsed.letter + note.parsed.accidental)}</text>`;
+      if (spec.noteNames) svg += `<text x="${x}" y="${layout.nameY}" text-anchor="middle" class="note-name">${show(note.parsed.letter + note.parsed.accidental)}</text>`;
       if (note.finger !== null) svg += `<text x="${x}" y="${layout.fingerY}" text-anchor="middle" class="finger">${note.finger}</text>`;
     });
   });
@@ -626,6 +638,8 @@ const FONT_FILES = {
   inter400: path.join(FONT_DIR, 'inter-latin-400-normal.ttf'),
   inter600: path.join(FONT_DIR, 'inter-latin-600-normal.ttf'),
   mono700: path.join(FONT_DIR, 'DejaVuSansMono-Bold.ttf'),
+  signs400: path.join(FONT_DIR, 'lbs-signs-400.ttf'),
+  signs600: path.join(FONT_DIR, 'lbs-signs-600.ttf'),
 };
 
 function loadResvg() {
@@ -711,6 +725,8 @@ function embedFonts(svg) {
     face('Inter', 400, FONT_FILES.inter400),
     face('Inter', 600, FONT_FILES.inter600),
     face('DejaVu Sans Mono', 700, FONT_FILES.mono700),
+    // (only when a sign is on the page: an empty subset would be dead weight)
+    ...(/[\u266D-\u266F]/.test(characters) ? [face('LBS Signs', 400, FONT_FILES.signs400), face('LBS Signs SemiBold', 400, FONT_FILES.signs600)] : []),
   ].join('\n    ');
   return svg.replace('<style>', `<style>\n    ${faces}`);
 }
@@ -858,6 +874,8 @@ if (require.main === module) main();
 
 module.exports = {
   HOUSE,
+  signs,
+  show,
   embedFonts,
   loadAndValidate,
   rasterise,

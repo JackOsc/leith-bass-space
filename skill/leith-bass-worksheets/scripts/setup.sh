@@ -20,7 +20,7 @@ fi
 
 command -v pyftsubset >/dev/null && echo "fonttools: ok" || { pip install fonttools --break-system-packages -q 2>/dev/null && echo "fonttools: installed" || echo "fonttools: missing (--embed-fonts unavailable)"; }
 command -v soffice >/dev/null && echo "libreoffice: ok" || echo "libreoffice: missing (PDF export unavailable; DOCX still works)"
-for pkg in docx jszip; do
+for pkg in docx jszip qrcode; do
   node -e "require(require.resolve('$pkg',{paths:[require('child_process').execSync('npm root -g').toString().trim()]}))" 2>/dev/null && echo "$pkg: ok" \
     || { npm install -g "$pkg" >/dev/null 2>&1 && echo "$pkg: installed" || echo "$pkg: FAILED (worksheets need it)"; }
 done

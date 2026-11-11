@@ -4,7 +4,7 @@
 //   node scripts/diagram.js <diagram.json> [--out-dir dir] [--png] [--scale 2] [--embed-fonts]
 const fs = require('fs');
 const path = require('path');
-const { HOUSE, rasterise, embedFonts, parsePitch, pitchName, slugify } = require('./render.js');
+const { HOUSE, rasterise, embedFonts, parsePitch, pitchName, slugify, show } = require('./render.js');
 
 const DEFAULT_STRINGS = [
   { name: 'E', openMidi: 28 }, { name: 'A', openMidi: 33 }, { name: 'D', openMidi: 38 }, { name: 'G', openMidi: 43 },
@@ -29,12 +29,12 @@ function keys(value, allowed, where) {
 
 function style(paper, frame) {
   return `<style>
-    .heading { font-family: 'Oswald', 'Inter', Arial, sans-serif; font-weight: 700; font-size: 34px; fill: ${HOUSE.charcoal}; letter-spacing: .4px; }
-    .note-line { font-family: 'Inter', Arial, sans-serif; font-weight: 400; font-size: 20px; fill: ${HOUSE.muted}; }
-    .string-name { font-family: 'Inter', Arial, sans-serif; font-weight: 600; font-size: 21px; fill: ${HOUSE.charcoal}; }
-    .fret-number { font-family: 'Inter', Arial, sans-serif; font-weight: 600; font-size: 20px; fill: ${HOUSE.accentInk}; }
-    .marker-label { font-family: 'Inter', Arial, sans-serif; font-weight: 600; font-size: 20px; }
-    .legend { font-family: 'Inter', Arial, sans-serif; font-weight: 400; font-size: 20px; fill: ${HOUSE.charcoal}; }
+    .heading { font-family: 'Oswald', 'LBS Signs SemiBold', 'Inter', Arial, sans-serif; font-weight: 700; font-size: 34px; fill: ${HOUSE.charcoal}; letter-spacing: .4px; }
+    .note-line { font-family: 'Inter', 'LBS Signs', Arial, sans-serif; font-weight: 400; font-size: 20px; fill: ${HOUSE.muted}; }
+    .string-name { font-family: 'Inter', 'LBS Signs SemiBold', Arial, sans-serif; font-weight: 600; font-size: 21px; fill: ${HOUSE.charcoal}; }
+    .fret-number { font-family: 'Inter', 'LBS Signs SemiBold', Arial, sans-serif; font-weight: 600; font-size: 20px; fill: ${HOUSE.accentInk}; }
+    .marker-label { font-family: 'Inter', 'LBS Signs SemiBold', Arial, sans-serif; font-weight: 600; font-size: 20px; }
+    .legend { font-family: 'Inter', 'LBS Signs', Arial, sans-serif; font-weight: 400; font-size: 20px; fill: ${HOUSE.charcoal}; }
     .string { stroke: ${HOUSE.charcoal}; }
     .fret { stroke: ${HOUSE.muted}; stroke-width: 2.4; }
     .nut { stroke: ${HOUSE.charcoal}; stroke-width: 9; }
@@ -55,7 +55,7 @@ function marker(role, x, y, label, radius = 17.5) {
   else if (r.shape === 'diamond') shape = `<path d="M ${x} ${y - radius - 4} L ${x + radius + 4} ${y} L ${x} ${y + radius + 4} L ${x - radius - 4} ${y} Z" fill="${r.fill}"/>`;
   else shape = `<circle cx="${x}" cy="${y}" r="${radius}" fill="${r.fill}"/>`;
   const size = label && label.length > 2 ? 16 : 20;
-  const text = label ? `<text x="${x}" y="${y + size * 0.36}" text-anchor="middle" class="marker-label" style="font-size:${size}px" fill="${r.text}">${esc(label)}</text>` : '';
+  const text = label ? `<text x="${x}" y="${y + size * 0.36}" text-anchor="middle" class="marker-label" style="font-size:${size}px" fill="${r.text}">${show(label)}</text>` : '';
   return shape + text;
 }
 
@@ -65,7 +65,7 @@ function legend(roles, y, left, labels) {
   for (const role of roles) {
     const text = (labels && labels[role]) || ROLES[role].legend;
     out += marker(role, x + 14, y - 6, '', 13);
-    out += `<text x="${x + 38}" y="${y}" class="legend">${esc(text)}</text>`;
+    out += `<text x="${x + 38}" y="${y}" class="legend">${show(text)}</text>`;
     x += 38 + text.length * 10.6 + 34;
   }
   return out;
@@ -145,10 +145,10 @@ function renderFretboard(input) {
   const bottom = top + (rows.length - 1) * gap;
   const xFor = (fret) => (fret === 0 ? boardLeft - openColumn / 2 - 6 : boardLeft + (fret - Math.max(first, 1) + 0.5) * cell);
 
-  let body = frame === 'plain' ? '' : `<text x="${left}" y="67" class="heading">${esc(heading)}</text>`;
+  let body = frame === 'plain' ? '' : `<text x="${left}" y="67" class="heading">${show(heading)}</text>`;
   if (input.showOrientation !== false) {
     const tuning = strings.map((s) => s.name).join(' ');
-    body += `<text x="${left}" y="${104 + shift}" class="note-line">Player's view, as in TAB: highest string at the top. Tuning ${esc(tuning)}.</text>`;
+    body += `<text x="${left}" y="${104 + shift}" class="note-line">Player's view, as in TAB: highest string at the top. Tuning ${show(tuning)}.</text>`;
   }
   // side markers under the board, as on the edge of a real neck, so they never sit behind a note marker
   for (let f = Math.max(first, 1); f <= last; f += 1) {
@@ -224,7 +224,7 @@ function renderKeyboard(input) {
     if (highlights.has(p.midi)) fail(`Two highlights share ${h.pitch}.`);
     highlights.set(p.midi, { ...h, role, label: h.label === undefined ? `${p.letter}${p.accidental}` : h.label });
   });
-  let body = frame === 'plain' ? '' : `<text x="${left}" y="67" class="heading">${esc(heading)}</text>`;
+  let body = frame === 'plain' ? '' : `<text x="${left}" y="67" class="heading">${show(heading)}</text>`;
   const whiteX = new Map(whites.map((m, i) => [m, left + i * keyW]));
   whites.forEach((m) => { body += `<rect x="${whiteX.get(m)}" y="${top}" width="${keyW}" height="${keyH}" class="key-white"/>`; });
   const blackX = new Map();

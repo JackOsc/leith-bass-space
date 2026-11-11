@@ -1,6 +1,8 @@
-# Leith Bass Space house style guide, edition 1.0 (text extract, with skill amendments 1.1)
+# Leith Bass Space house style guide, edition 1.0 (text extract, with skill amendments 1.1 and 1.2)
 
 > **Amendments 1.1 (31 October 2026), made in the worksheet skill at Jack's request (sessions, and less bulky notation):** (a) in worksheets and session notes, Jack's time with a pupil is a *session*, not a lesson (website wording is unchanged); (b) notation is sized by its staff (1.8 mm staff space by default, matching book engraving) rather than by panel width; (c) document figures are plain (no orange box, no heading inside the image), while web panels keep the cream panel and orange border. Changed passages are marked [1.1]. The master PDF/DOCX in the Project has not been updated yet.
+
+> **Amendments 1.2 (11 November 2026), made in the worksheet skill:** (a) flats and sharps are printed with the real signs (B♭, F♯), never as the letters b and #, in every figure and document; the signs come from the bundled "LBS Signs" fonts because Inter and Oswald have none; (b) a worksheet may end with one or two links into the app, each a QR code with a label, a line of text and the address in words. A code is never the only way to reach something: the address is always printed beside it.
 >
 > Text extracted from the PDF edition dated 19 September 2026. Tables are flattened; the PDF is the master. Note: the contents list on page 1 names nine sections, but the body has ten (notation colour is its own section 3, so later numbers shift by one).
 

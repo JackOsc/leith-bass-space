@@ -7,7 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync, spawnSync } = require('child_process');
-const { HOUSE, validateSpec, renderFiles } = require('./render.js');
+const { HOUSE, validateSpec, renderFiles, signs } = require('./render.js');
 const { renderDiagramFiles, LABEL_UNITS } = require('./diagram.js');
 const { validateGroove, renderGrooveFiles } = require('./groove.js');
 
@@ -27,6 +27,27 @@ const {
 } = docx;
 
 const FONT_DIR = path.join(__dirname, '..', 'assets', 'fonts');
+
+// A QR code as a PNG (3.1), for a "link" block: the page a pupil should open on their phone. The pattern comes
+// from the qrcode package; the PNG is written here, one bit per pixel, so nothing has to be rasterised.
+function qrPng(url) {
+  const zlib = require('zlib');
+  const qr = req('qrcode').create(url, { errorCorrectionLevel: 'M' });
+  const n = qr.modules.size, quiet = 4, scale = 8, size = (n + quiet * 2) * scale, rowBytes = Math.ceil(size / 8);
+  const raw = Buffer.alloc((rowBytes + 1) * size, 0xff);
+  for (let y = 0; y < size; y++) {
+    raw[y * (rowBytes + 1)] = 0;   // (each row starts with its filter type: none)
+    for (let x = 0; x < size; x++) {
+      const mx = Math.floor(x / scale) - quiet, my = Math.floor(y / scale) - quiet;
+      if (mx >= 0 && my >= 0 && mx < n && my < n && qr.modules.get(my, mx)) raw[y * (rowBytes + 1) + 1 + (x >> 3)] &= ~(0x80 >> (x & 7));
+    }
+  }
+  const crcTable = Array.from({ length: 256 }, (_, i) => { let c = i; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+  const crc = (buf) => { let c = 0xffffffff; for (const b of buf) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  const chunk = (type, data) => { const len = Buffer.alloc(4); len.writeUInt32BE(data.length); const body = Buffer.concat([Buffer.from(type), data]); const sum = Buffer.alloc(4); sum.writeUInt32BE(crc(body)); return Buffer.concat([len, body, sum]); };
+  const head = Buffer.alloc(13); head.writeUInt32BE(size, 0); head.writeUInt32BE(size, 4); head[8] = 1; head[9] = 0;   // 1 bit, greyscale
+  return { data: Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', head), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]), modules: n };
+}
 const C = {
   ink: '111111', secondary: '333333', muted: '625F59', accentInk: 'A84912', orange: 'D86B25',
   cream: 'F5EFE2', rule: 'D9D4CA',
@@ -60,10 +81,18 @@ function contentMm(orientation) {
 // Inline markup: **bold**, *italic*. Everything else is literal (chord symbols keep their case).
 function runs(text, base = {}) {
   if (typeof text !== 'string') fail('Text must be a string.');
-  return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean).map((part) => {
-    if (part.startsWith('**')) return new TextRun({ ...base, text: part.slice(2, -2), font: 'Inter SemiBold' });
-    if (part.startsWith('*') && part.length > 2) return new TextRun({ ...base, text: part.slice(1, -1), italics: true });
-    return new TextRun({ ...base, text: part });
+  // The flat, natural and sharp signs are set in the small signs font beside whatever the words are in (3.1):
+  // Inter and Oswald have no such glyphs, and a reader's own fallback font would not match from one machine to the next.
+  const withSigns = (run) => {
+    const heavy = run.font === 'Inter SemiBold' || run.bold || base.heavySigns;
+    const { heavySigns, ...clean } = run;
+    return String(run.text).split(/([\u266D-\u266F]+)/).filter(Boolean).map((piece) =>
+      new TextRun(/[\u266D-\u266F]/.test(piece) ? { ...clean, text: piece, font: heavy ? 'LBS Signs SemiBold' : 'LBS Signs' } : { ...clean, text: piece }));
+  };
+  return signs(text).split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean).flatMap((part) => {
+    if (part.startsWith('**')) return withSigns({ ...base, text: part.slice(2, -2), font: 'Inter SemiBold' });
+    if (part.startsWith('*') && part.length > 2) return withSigns({ ...base, text: part.slice(1, -1), italics: true });
+    return withSigns({ ...base, text: part });
   });
 }
 
@@ -125,7 +154,7 @@ class Builder {
     const w = Math.round(mm * PX_PER_MM);
     const h = Math.round((w * height) / width);
     const out = [];
-    if (title) out.push(this.p({ style: 'FigureTitle', keepNext: true, keepLines: true, children: runs(title) }));
+    if (title) out.push(this.p({ style: 'FigureTitle', keepNext: true, keepLines: true, children: runs(title, { heavySigns: true }) }));
     out.push(this.p({
       alignment: align === 'center' ? AlignmentType.CENTER : AlignmentType.LEFT,
       keepNext: Boolean(caption),
@@ -218,6 +247,38 @@ class Builder {
     return this.figure(p, mm, block.alt, block.caption, block.title, block.align || 'center');
   }
 
+  // A link to open on a phone: a QR code beside a label, a line of text and the address in words.
+  // For a drill in the app with chosen things in play, a metronome setup, a backing track.
+  link(block, index) {
+    keys(block, ['type', 'url', 'label', 'text', 'show'], `blocks[${index}]`);
+    if (typeof block.url !== 'string' || !/^https:\/\/[^\s]+$/.test(block.url)) fail(`blocks[${index}].url must be an https address.`);
+    if (block.url.length > 600) fail(`blocks[${index}].url is too long for a code that scans easily (600 characters at most).`);
+    const qr = qrPng(block.url);
+    // 30 mm across up to 45 modules, then bigger, so a long address still has modules a phone can read
+    const mm = qr.modules <= 45 ? 30 : qr.modules <= 65 ? 38 : 46, px = Math.round(mm * 96 / 25.4);
+    const contentTwips = Math.round(this.maxMm * MM), left = Math.round((mm + 6) * MM), right = contentTwips - left;
+    const none = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, borders = { top: none, bottom: none, left: none, right: none };
+    const shown = block.show || block.url.replace(/^https:\/\//, '').replace(/[?#].*$/, '').replace(/\/$/, '');
+    const out = [];
+    if (this.breakNext) out.push(this.p({ spacing: { before: 0, after: 0, line: 40, lineRule: LineRuleType.EXACT }, children: [] }));
+    out.push(new Table({
+      width: { size: contentTwips, type: WidthType.DXA }, columnWidths: [left, right],
+      rows: [new TableRow({ cantSplit: true, children: [
+        new TableCell({ width: { size: left, type: WidthType.DXA }, borders, verticalAlign: VerticalAlign.CENTER, margins: { top: 60, bottom: 60, left: 0, right: 120 },
+          children: [new Paragraph({ spacing: { after: 0 }, children: [new ImageRun({ type: 'png', data: qr.data, transformation: { width: px, height: px },
+            altText: { title: 'QR code', description: `QR code for ${shown}`, name: `qr-${index}.png` } })] })] }),
+        new TableCell({ width: { size: right, type: WidthType.DXA }, borders, verticalAlign: VerticalAlign.CENTER, margins: { top: 60, bottom: 60, left: 120, right: 0 },
+          children: [
+            ...(block.label ? [new Paragraph({ spacing: { after: 40 }, children: runs(block.label, { font: 'Inter SemiBold', color: C.accentInk }) })] : []),
+            ...(block.text ? [new Paragraph({ spacing: { after: 60 }, children: runs(block.text) })] : []),
+            new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: shown, size: 18, color: C.muted })] }),
+          ] }),
+      ] })],
+    }), new Paragraph({ spacing: { after: 120 }, children: [] }));
+    this.links = (this.links || []).concat([{ url: block.url, label: block.label || '' }]);
+    return out;
+  }
+
   table(block, index) {
     keys(block, ['type', 'headers', 'rows', 'columnWidths'], `blocks[${index}]`);
     const contentTwips = Math.round(this.maxMm * MM);
@@ -259,7 +320,7 @@ class Builder {
     switch (block.type) {
       case 'heading':
         keys(block, ['type', 'text', 'level'], `blocks[${index}]`);
-        return [this.p({ heading: block.level === 3 ? HeadingLevel.HEADING_3 : HeadingLevel.HEADING_2, children: runs(block.text) })];
+        return [this.p({ heading: block.level === 3 ? HeadingLevel.HEADING_3 : HeadingLevel.HEADING_2, children: runs(block.text, { heavySigns: true }) })];
       case 'paragraph':
         keys(block, ['type', 'text'], `blocks[${index}]`);
         return [this.p({ children: runs(block.text) })];
@@ -279,7 +340,7 @@ class Builder {
         return [this.p({
           style: 'Callout',
           children: [
-            ...(block.label ? [new TextRun({ text: `${block.label}  `, font: 'Inter SemiBold', color: C.accentInk })] : []),
+            ...(block.label ? runs(`${block.label}  `, { font: 'Inter SemiBold', color: C.accentInk }) : []),
             ...runs(block.text),
           ],
         })];
@@ -288,11 +349,12 @@ class Builder {
       case 'groove': return this.groove(block, index);
       case 'image': return this.image(block, index);
       case 'table': return this.table(block, index);
+      case 'link': return this.link(block, index);
       case 'pagebreak':
         keys(block, ['type'], `blocks[${index}]`);
         this.breakNext = true;
         return [];
-      default: return fail(`blocks[${index}]: unknown type "${block.type}". Use heading, paragraph, steps, bullets, callout, notation, groove, diagram, image, table, pagebreak or section.`);
+      default: return fail(`blocks[${index}]: unknown type "${block.type}". Use heading, paragraph, steps, bullets, callout, notation, groove, diagram, image, table, link, pagebreak or section.`);
     }
   }
 
@@ -322,8 +384,8 @@ class Builder {
     const sections = [];
     let current = { orientation: this.orientation, children: [] };
     const push = (...items) => current.children.push(...items);
-    if (s.kicker) push(this.p({ style: 'Kicker', children: [new TextRun(s.kicker)] }));
-    push(this.p({ heading: HeadingLevel.TITLE, children: runs(s.title) }));
+    if (s.kicker) push(this.p({ style: 'Kicker', children: runs(s.kicker, { heavySigns: true }) }));
+    push(this.p({ heading: HeadingLevel.TITLE, children: runs(s.title, { heavySigns: true }) }));
     if (s.aim) push(this.p({ style: 'Aim', children: runs(s.aim) }));
     if (s.meta) push(this.p({ style: 'Meta', children: runs(s.meta) }));
     s.blocks.forEach((b, i) => {
@@ -363,6 +425,8 @@ class Builder {
         { name: 'Oswald', data: fontData('oswald-latin-700-normal.ttf'), characterSet: '00' },
         { name: 'Inter', data: fontData('inter-latin-400-normal.ttf'), characterSet: '00' },
         { name: 'Inter SemiBold', data: fontData('inter-latin-600-normal.ttf'), characterSet: '00' },
+        { name: 'LBS Signs', data: fontData('lbs-signs-400.ttf'), characterSet: '00' },
+        { name: 'LBS Signs SemiBold', data: fontData('lbs-signs-600.ttf'), characterSet: '00' },
       ],
       styles: {
         default: { document: { run: { font: 'Inter', size: body, color: C.ink }, paragraph: { spacing: { after: 140, line: 300, lineRule: LineRuleType.AUTO } } } },
