@@ -368,3 +368,34 @@
 .he.he-full { padding: 0.75rem 16px calc(2.5rem + env(safe-area-inset-bottom, 0px)); min-height: 100vh; min-height: 100svh; align-content: start; }
 /* (room for the dock, so it never sits on the last thing on the page) */
 .he.he-full.has-dock { padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px)); }
+
+/* 1.13.0: the home hit beside the transport, and "Hear it from each home" in the answer */
+.he .he-hit { margin-top: .5rem; }
+.he .he-hit .he-small { display: block; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.he .he-hear { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.he .he-hear .he-small { flex-basis: 100%; }
+
+/* 1.13.0, on a phone: one question and its Check on one screen. The ways of asking go on one row
+   (it scrolls sideways if it must), the notes that explain a question step aside, the key is drawn
+   smaller, and Check sits beside Show me. */
+@media (max-width: 40rem) {
+	.he #he-modes { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-bottom: .25rem; }
+	.he #he-modes::-webkit-scrollbar { display: none; }
+	.he #he-modes .he-tog { flex: 0 0 auto; white-space: nowrap; }
+	.he #he-mode-note, .he #he-q-el-note, .he #he-els-note, .he .he-hit .he-small { display: none; }
+	.he .he-hit { margin-top: .35rem; width: 100%; }
+	.he .he-glyph { font-size: 4.75rem; }
+	.he .he-display { gap: .55rem; }
+	.he .he-go { min-height: 56px; }
+	.he #he-els .he-grp { display: none; }
+	.he #he-ask-home .he-more { display: none; }
+	.he #he-homes .he-pick, .he #he-kmodes .he-pick { min-height: 44px; }
+	/* the home hit sits on the band's line */
+	.he .he-ask:has(> #he-go) { display: grid; grid-template-columns: 1fr auto; column-gap: .5rem; align-items: center; }
+	.he .he-ask:has(> #he-go) > #he-go, .he .he-ask:has(> #he-go) > .he-status { grid-column: 1 / -1; }
+	.he .he-ask:has(> #he-go) > .he-hit { width: auto; margin-top: 0; min-height: 44px; padding: 0 .8rem; }
+	.he .he-commit { display: grid; grid-template-columns: 2fr 1fr; gap: .5rem; align-items: stretch; }
+	.he .he-commit .he-shows { display: flex; flex-wrap: wrap; gap: .35rem; margin: 0; }
+	.he .he-commit .he-shows .he-btn { flex: 1 1 auto; }
+}
+.he .he-g-hear { margin: 1rem 0; }

@@ -36,7 +36,8 @@
  *   accents ['accent','normal','soft','mute', ...] one per beat;
  *   sound 'woodblock'|'claves'|'cowbell'|'rim'|'hat'|'beep'|'click';
  *   vol {accent, beat, sub, groove} 0-1;
- *   which 'all'|'backbeat'|'one' (which beats click); every 1-4 (beat one: once every N bars);
+ *   which 'all'|'alt'|'backbeat'|'one' (which beats click: 'alt' is every other beat from beat one, 1 and 3 in four);
+ *   every 1-16 (beat one: once every N bars);
  *   where 'on'|'and'|'e'|'a'|'mid'|'last' (where in the beat: on it, a sixteenth either side of the "and", or a triplet's middle or last);
  *   gap {on, off} bars of click, then bars of silence;
  *   mute null | {kind:'random', share 0-100, keepOne, wholeBars}          Random mute
@@ -65,6 +66,111 @@
 	'use strict';
 
 	var LEVELS = ['accent', 'normal', 'soft', 'mute'];
+	/*
+	 * THIN THE CLICK. A click on every beat shows where you rush or drag, but it does the timekeeping for
+	 * you. Taking it away by stages hands the job back: every beat, every other beat, beat one, then beat
+	 * one of every second bar, third, fourth, eighth and sixteenth, all at the same tempo. (After Molly
+	 * Gebrian, Learn Faster, Perform Better, 2024, chapter 14.)
+	 */
+	var THIN = [
+		{ which: 'all', every: 1 }, { which: 'alt', every: 1 }, { which: 'one', every: 1 }, { which: 'one', every: 2 },
+		{ which: 'one', every: 3 }, { which: 'one', every: 4 }, { which: 'one', every: 8 }, { which: 'one', every: 16 }
+	];
+	/*
+	 * INTERLEAVED CLICKING UP (Molly Gebrian's method, Learn Faster, Perform Better, chapter 16). A passage is
+	 * cut into chunks. Each step adds a chunk, and within a step the tempo climbs from the start to the goal.
+	 * At each tempo you play either the new chunk alone or a run of chunks ending with it, so the older a
+	 * chunk is the less often it comes round. Each tempo is played once.
+	 *   interleave({chunks, start, goal, by, back}) -> [{step, tempo, from, to}]   (chunks numbered from 1)
+	 * Her figure, as a rule: at step n, with the tempo k steps above the start, n = 1 plays chunk 1; odd k
+	 * plays chunk n alone; even k plays from chunk (1 if m is 0, else n - m) to n, where m = (k / 2) mod (n - 1).
+	 * Every step ends on the whole run so far at the goal, as her text says (the figure's last step stops
+	 * short of that). "back" builds from the last chunk instead, for a passage whose end is the hard part.
+	 */
+	function interleave(o) {
+		var n = clamp(Math.round(+o.chunks || 4), 1, 16), by = clamp(Math.abs(Math.round(+o.by || 5)), 1, 60);
+		var start = clamp(Math.round(+o.start || 60), BOTTOM, TOP), goal = clamp(Math.round(+o.goal || start * 2), start, TOP);
+		var tempos = [], t, out = [];
+		for (t = start; t < goal; t += by) { tempos.push(t); }
+		tempos.push(goal);
+		for (var step = 1; step <= n; step++) {
+			var last = null;
+			for (var k = 0; k < tempos.length; k++) {
+				var from = step;
+				if (step === 1) { from = 1; }
+				else if (k % 2 === 0) { var m = (k / 2) % (step - 1); from = m === 0 ? 1 : step - m; }
+				last = { step: step, tempo: tempos[k], from: from, to: step };
+				out.push(last);
+			}
+			if (last.from !== 1) { out.push({ step: step, tempo: goal, from: 1, to: step }); }
+		}
+		// from the end: chunk i of the build is chunk n + 1 - i of the passage, and a run is still played forwards
+		if (o.back) { out.forEach(function (r) { var a = n + 1 - r.to, b = n + 1 - r.from; r.from = a; r.to = b; }); }
+		return out;
+	}
+	/*
+	 * A SETUP AS A LINK. link(saved) gives a short string to put in an address (?m=...), and unlink(string)
+	 * gives back saved settings, brought through upgrade() so that nothing but what the metronome
+	 * understands gets in. The tempo and what the click does travel; the sound, the volumes and the
+	 * player's own setups stay at home.
+	 */
+	var LINK_KEYS = ['bpm', 'meter', 'sub', 'swing', 'accents', 'which', 'every', 'where', 'gap', 'random', 'gradual', 'up', 'thin', 'inter', 'countIn', 'groove'];
+	function link(saved) {
+		var o = {}, base = upgrade({ v: 2 });
+		LINK_KEYS.forEach(function (k) {
+			var v = saved[k];
+			if (v === undefined || v === null || JSON.stringify(v) === JSON.stringify(base[k])) { return; }
+			// (a recorded loop from the Shelf is a member's own: only the house drummer and the written patterns travel)
+			if (k === 'groove' && !(v.kind === 'feel' || (v.id && !v.url))) { return; }
+			o[k] = v;
+		});
+		o.bpm = saved.bpm;
+		var text = JSON.stringify(o);
+		var b64 = typeof btoa === 'function' ? btoa(unescape(encodeURIComponent(text))) : Buffer.from(text, 'utf8').toString('base64');
+		return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+	}
+	function unlink(code) {
+		if (typeof code !== 'string' || !/^[A-Za-z0-9_-]{4,3000}$/.test(code)) { return null; }
+		try {
+			var b64 = code.replace(/-/g, '+').replace(/_/g, '/');
+			var text = typeof atob === 'function' ? decodeURIComponent(escape(atob(b64))) : Buffer.from(b64, 'base64').toString('utf8');
+			var o = JSON.parse(text), clean = { v: 2 };
+			if (!o || typeof o !== 'object' || Array.isArray(o)) { return null; }
+			LINK_KEYS.forEach(function (k) { if (o[k] !== undefined) { clean[k] = o[k]; } });
+			if (clean.groove && !(typeof clean.groove === 'object' && (clean.groove.kind === 'feel' || (clean.groove.id && !clean.groove.url)))) { delete clean.groove; }
+			if (clean.accents && !(Array.isArray(clean.accents) && clean.accents.length <= 16 && clean.accents.every(function (a) { return LEVELS.indexOf(a) !== -1; }))) { delete clean.accents; }
+			if (clean.meter !== undefined && !(typeof clean.meter === 'string' && /^\d{1,2}\/\d{1,2}(:[0-9+]{1,12})?$/.test(clean.meter))) { delete clean.meter; }
+			var out = upgrade(clean);
+			delete out.setups;
+			return out;
+		} catch (e) { return null; }
+	}
+	/*
+	 * COUNT IT OFF. The player is given a tempo and taps four beats with nothing sounding, as if counting a
+	 * band in. counted(times in ms, target) says what they tapped: the tempo (from the middle one of the
+	 * three gaps, so one ragged tap doesn't decide it), how far off the target that is in bpm and in per
+	 * cent, and how even the three gaps were.
+	 */
+	function counted(times, target) {
+		if (!times || times.length < 4) { return null; }
+		var t = times.slice(-4), gaps = [t[1] - t[0], t[2] - t[1], t[3] - t[2]].sort(function (a, b) { return a - b; });
+		if (gaps[0] <= 0) { return null; }
+		var bpm = 60000 / gaps[1], off = bpm - target;
+		return { bpm: Math.round(bpm), off: Math.round(off), percent: Math.round(off / target * 100), spread: Math.round((gaps[2] - gaps[0]) / gaps[1] * 100),
+			verdict: Math.abs(off / target) <= 0.03 ? 'on' : off > 0 ? 'fast' : 'slow' };
+	}
+	// Where Click up is heading: the tempo asked for, or 5% past it ("so the goal feels manageable under pressure").
+	function upStop(up) {
+		if (!up || up.stopAt === '' || up.stopAt == null || !+up.stopAt) { return null; }
+		var goal = +up.stopAt, dir = +up.by < 0 ? -1 : 1;
+		return clamp(Math.round(up.past ? goal * (1 + 0.05 * dir) : goal), BOTTOM, TOP);
+	}
+	// The next tempo when the player steps Click up by hand: one step on (or back), never past where it is heading.
+	function upNext(bpm, up, back) {
+		var by = +up.by || 5, to = bpm + (back ? -by : by), stop = upStop(up);
+		if (stop != null && !back && (to - stop) * (by < 0 ? -1 : 1) > 0) { to = stop; }
+		return clamp(Math.round(to), BOTTOM, TOP);
+	}
 	var TOP = 300, BOTTOM = 20;
 	var SOUNDS = { woodblock: 'Woodblock', claves: 'Claves', cowbell: 'Cowbell', rim: 'Cross stick', hat: 'Hi hat', beep: 'Beep', click: 'Click' };
 	var RECORDED = { woodblock: 1, claves: 1, cowbell: 1, rim: 1, hat: 1 };
@@ -324,8 +430,8 @@
 			swing: clamp(+o.swing || 0, 0, 1),
 			sound: SOUNDS[o.sound] ? o.sound : 'woodblock',
 			vol: Object.assign({ accent: 1, beat: 0.8, sub: 0.5, groove: 0.8 }, o.vol || {}),
-			which: ['all', 'backbeat', 'one'].indexOf(o.which) >= 0 ? o.which : 'all',
-			every: clamp(+o.every || 1, 1, 4) | 0,
+			which: ['all', 'alt', 'backbeat', 'one'].indexOf(o.which) >= 0 ? o.which : 'all',
+			every: clamp(+o.every || 1, 1, 16) | 0,
 			where: ['on', 'and', 'e', 'a', 'mid', 'last'].indexOf(o.where) >= 0 ? o.where : 'on',
 			gap: o.gap && +o.gap.on > 0 && +o.gap.off > 0 ? { on: clamp(o.gap.on | 0, 1, 16), off: clamp(o.gap.off | 0, 1, 16) } : null,
 			mute: muteOf(o.mute),
@@ -355,10 +461,17 @@
 			accents: Array.isArray(s.accents) ? s.accents : null,
 			sound: SOUNDS[s.sound] ? s.sound : 'woodblock',
 			vol: Object.assign({ accent: 1, beat: 0.8, sub: 0.5, groove: 0.8 }, s.vol || {}),
-			which: 'all', every: clamp(+s.every || 1, 1, 4), where: 'on', gap: typeof s.gap === 'string' ? s.gap : '0',
+			which: 'all', every: clamp(+s.every || 1, 1, 16), where: 'on', gap: typeof s.gap === 'string' ? s.gap : '0',
 			random: { on: false, share: 30, keepOne: false, bars: false },
 			gradual: { on: false, to: 75, over: 32, keepOne: false, bars: false },
-			up: { on: false, by: 4, every: 4, stopAt: '', ladder: false },
+			// ("ready": the tempo moves when the player says so, not by the clock. "past": aim 5% past the tempo asked for.)
+			up: { on: false, by: 4, every: 4, stopAt: '', ladder: false, ready: false, past: false },
+			// Thin the click: a walk through THIN, a stage at a time
+			thin: { on: false, stage: 0 },
+			// Count it off: tap a tempo cold, between two tempos
+			count: { on: false, from: 60, to: 140 },
+			// Interleaved clicking up: the passage, and how far through the schedule the player is
+			inter: { on: false, chunks: 4, beats: 4, start: 60, goal: 120, by: 5, back: false, at: 0 },
 			countIn: s.countIn ? 1 : 0, groove: s.groove || null, offsetMs: +s.offsetMs || 0,
 			hideSilent: !!s.hideSilent, flash: !!s.flash, vibrate: !!s.vibrate,
 			setups: Array.isArray(s.setups) ? s.setups : []
@@ -381,7 +494,18 @@
 			// a pattern was either on Kyle's kit or synthesised; now it names its kit
 			if (out.groove && out.groove.kind === 'pattern') { out.groove = { kind: 'pattern', id: out.groove.id, kit: out.groove.kit === true ? 'kyle' : (typeof out.groove.kit === 'string' ? out.groove.kit : 'studio') }; }
 		} else {
-			if (['all', 'backbeat', 'one'].indexOf(s.which) >= 0) { out.which = s.which; }
+			if (['all', 'alt', 'backbeat', 'one'].indexOf(s.which) >= 0) { out.which = s.which; }
+			if (s.inter && typeof s.inter === 'object') {
+				var it = s.inter;
+				out.inter = { on: !!it.on, chunks: clamp(Math.round(+it.chunks || 4), 2, 16), beats: clamp(Math.round(+it.beats || 4), 1, 32), start: clamp(Math.round(+it.start || 60), BOTTOM, TOP),
+					goal: clamp(Math.round(+it.goal || 120), BOTTOM, TOP), by: clamp(Math.abs(Math.round(+it.by || 5)), 1, 60), back: !!it.back, at: Math.max(0, Math.round(+it.at || 0)) };
+				if (out.inter.goal < out.inter.start) { out.inter.goal = out.inter.start; }
+			}
+			if (s.count && typeof s.count === 'object') {
+				var cf = clamp(Math.round(+s.count.from || 60), BOTTOM, TOP), ct = clamp(Math.round(+s.count.to || 140), BOTTOM, TOP);
+				out.count = { on: !!s.count.on, from: Math.min(cf, ct), to: Math.max(cf, ct) };
+			}
+			if (s.thin && typeof s.thin === 'object') { out.thin = { on: !!s.thin.on, stage: clamp(Math.round(+s.thin.stage || 0), 0, THIN.length - 1) }; }
 			if (['on', 'and', 'e', 'a', 'mid', 'last'].indexOf(s.where) >= 0) { out.where = s.where; }
 			['random', 'gradual', 'up'].forEach(function (k) { if (s[k] && typeof s[k] === 'object') { Object.assign(out[k], s[k]); } });
 		}
@@ -982,7 +1106,7 @@
 				if (muted) { st.gone++; }
 			}
 			var sounds = !muted && !off;
-			var chosen = counting || o.which === 'all' || (o.which === 'backbeat' && st.beat % 2 === 1) || (o.which === 'one' && st.beat === 0 && st.bar % o.every === 0);
+			var chosen = counting || o.which === 'all' || (o.which === 'alt' && st.beat % 2 === 0) || (o.which === 'backbeat' && st.beat % 2 === 1) || (o.which === 'one' && st.beat === 0 && st.bar % o.every === 0);
 			// with beat one kept, the most that can go is every beat but the first
 			var cap = mu && mu.keepOne && !mu.wholeBars ? 1 - 1 / o.beats.length : 1;
 			var up = o.clickUp, info = {
@@ -1282,7 +1406,7 @@
 	root.LBSMetronome = {
 		create: create, GROOVES: GROOVES, SOUNDS: SOUNDS, RECORDED: RECORDED, LEVELS: LEVELS, TOP: TOP, BOTTOM: BOTTOM, LEAD: LEAD,
 		setup: function (o) { cfg.base = o.base || ''; cfg.version = o.version || ''; },
-		band: band, upgrade: upgrade, tap: tap, draw: draw, Bag: Bag,
+		band: band, upgrade: upgrade, tap: tap, draw: draw, Bag: Bag, THIN: THIN, upStop: upStop, upNext: upNext, interleave: interleave, counted: counted, link: link, unlink: unlink,
 		_defaults: defaults, _subPositions: subPositions, _placeOf: placeOf, _levels: { CLICK_GAIN: CLICK_GAIN, DRAWN_DB: DRAWN_DB, KIT_DB: KIT_DB }
 	};
 }(typeof window !== 'undefined' ? window : this));

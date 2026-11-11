@@ -1137,3 +1137,17 @@ body.lbs-room .mp-offline { bottom: calc(4.25rem + env(safe-area-inset-bottom, 0
   body.lbs-room .site-header, body.lbs-room .site-nav { display: none; }
   body.lbs-room .mp-room, html.lbs-app body.lbs-room .mp-room { padding-top: env(safe-area-inset-top, 0px); }
 }
+
+/* 1.13.0: a guided row on the metronome's face (Thin the click; Click up a step at a time) */
+.mp-m-guide { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; padding: 0.6rem 0.8rem; background: var(--surface-raised); box-shadow: inset 3px 0 0 var(--orange, #E87102); font-size: 0.9rem; line-height: 1.4; }
+.mp-m-guide span { flex: 1 1 11rem; }
+.mp-m-guide button { min-height: 44px; }
+.mp-m-inter .mp-m-inter-say { flex-basis: 100%; margin: 0; font: 700 1.25rem/1.2 var(--font-display, 'Oswald', sans-serif); text-transform: uppercase; letter-spacing: 0.02em; }
+.mp-m-inter .mp-m-inter-say b { color: var(--orange, #E87102); }
+.mp-m-inter-boxes { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px; }
+.mp-m-inter-boxes i { font-style: normal; min-width: 2rem; padding: 0.3rem 0; text-align: center; font-size: 0.8rem; border: 1px solid currentColor; opacity: 0.4; }
+.mp-m-inter-boxes i.on { opacity: 1; background: var(--orange, #E87102); border-color: var(--orange, #E87102); color: #090909; font-weight: 600; }
+.mp-m-inter-boxes i.new { outline: 2px solid var(--ink, #F3F1EB); outline-offset: 1px; }
+.mp-m-inter-set { flex-basis: 100%; }
+.mp-m-inter-set summary { cursor: pointer; padding: 0.5rem 0; min-height: 44px; display: flex; align-items: center; }
+.mp-m-count-tap { min-width: 7rem; min-height: 56px !important; }

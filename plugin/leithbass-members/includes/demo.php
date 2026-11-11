@@ -22,6 +22,8 @@ function lbs_shed_sound_data() {
 	return array(
 		'he'  => LBS_URL . 'assets/harmonic/',
 		'ver' => LBS_VERSION,
+		// where the free metronome is, so that a setup can be shared as a link anyone can open (1.13.0)
+		'metUrl' => esc_url_raw( (string) apply_filters( 'lbs_tool_url', '', 'metronome' ) ),
 	);
 }
 

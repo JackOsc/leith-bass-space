@@ -318,6 +318,8 @@ function lbs_he_clean_entry( $e ) {
 	if ( isset( $e['keyMode'] ) && $scale( $e['keyMode'] ) ) { $out['keyMode'] = $e['keyMode']; }
 	if ( isset( $e['saidMode'] ) && $scale( $e['saidMode'] ) ) { $out['saidMode'] = $e['saidMode']; }
 	if ( isset( $e['showed'] ) && in_array( $e['showed'], array( 'key', 'element' ), true ) ) { $out['showed'] = $e['showed']; }
+	// What was asked (1.13.0): the element with home established by the band, or the key alone (Find home).
+	if ( isset( $e['ask'] ) && in_array( $e['ask'], array( 'element', 'home' ), true ) ) { $out['ask'] = $e['ask']; }
 	return $out;
 }
 
@@ -465,6 +467,7 @@ function lbs_harmonic_trainer( $mode = 'page', $args = array() ) {
 				<div class="he-ask">
 					<button type="button" class="he-go" id="he-go" aria-pressed="false"><i aria-hidden="true"></i><span id="he-go-label">Play the loop</span></button>
 					<p class="he-who-plays"><span class="he-kicker">The band</span><span id="he-band"></span></p>
+					<button type="button" class="he-btn is-quiet he-hit" id="he-hit" hidden>Home hit<span class="he-small"> one bar of the home chord over the loop</span></button>
 					<p class="he-status" id="he-status" role="status"></p>
 				</div>
 
@@ -475,7 +478,7 @@ function lbs_harmonic_trainer( $mode = 'page', $args = array() ) {
 					<details class="he-more"><summary>What am I choosing?</summary><p class="he-small">The key: home, and whether home is major or minor. Home is the one note that feels like rest: find it on your bass first. Then listen to the chord on it, major or minor. Plenty of loops can be heard from more than one home (the same chords, with a different chord feeling like rest), and any hearing the course allows counts.</p><p class="he-small">The numerals count from home on the major scale, so ♭III is always a minor third above home, in a major key or a minor one. In C minor, Cm E♭ F is i ♭III IV: ♭III is in the key, and the major IV is its Dorian colour.</p></details>
 				</section>
 
-				<section class="he-ask" aria-labelledby="he-q-el">
+				<section class="he-ask" id="he-ask-el" aria-labelledby="he-q-el">
 					<div class="he-ask-head"><h2 class="he-h" id="he-q-el">What's the element?</h2><p class="he-small" id="he-q-el-note">The chords, as roman numerals from home.</p></div>
 					<p class="he-small" id="he-els-note" hidden></p>
 					<div class="he-els" id="he-els" role="group" aria-labelledby="he-q-el"></div>
@@ -507,6 +510,7 @@ function lbs_harmonic_trainer( $mode = 'page', $args = array() ) {
 					<div class="he-set"><p class="he-kicker">Start from</p><div class="he-togs" id="he-presets"></div></div>
 					<div class="he-set"><p class="he-kicker">Elements</p><div class="he-stages" id="he-stages"></div></div>
 					<div class="he-set"><p class="he-kicker">Home</p><div class="he-togs" id="he-homecue"></div><p class="he-small" id="he-homecue-note"></p></div>
+					<div class="he-set"><button type="button" class="he-btn is-quiet" id="he-mix-link">Copy a link to this mix</button><p class="he-small">The link opens the Dojo asking the same thing of the same elements. Put it in session notes or send it to a pupil.</p></div>
 					<div class="he-set"><p class="he-kicker">Where home can be, in the cycle of fourths</p><div class="he-togs" id="he-keys"></div><div class="he-togs" id="he-key-sets"></div><p class="he-small" id="he-keys-note" hidden>A dot marks the notes for home and the tempos with recorded loops.</p></div>
 					<div class="he-set"><p class="he-kicker">Tempo</p><div class="he-togs" id="he-tempos"></div></div>
 					<div class="he-set"><p class="he-kicker">Feel</p><div class="he-togs" id="he-feels"></div></div>

@@ -135,7 +135,7 @@
     mix: null, hadMix: !!saved.mix,
     log: [], queue: [], share: false,
     levels: { chords: saved.levels && saved.levels.chords >= 0 ? +saved.levels.chords : 0.8, drums: saved.levels && saved.levels.drums >= 0 ? +saved.levels.drums : 0.7, bass: saved.levels && saved.levels.bass >= 0 ? +saved.levels.bass : 0.8 },
-    mode: saved.mode === 'pair' || saved.mode === 'change' ? saved.mode : 'name',   // what the Dojo asks: name it, which is which, before and after
+    mode: saved.mode === 'pair' || saved.mode === 'change' || saved.mode === 'home' ? saved.mode : 'name',   // what the Dojo asks: name it, find home, which is which, before and after
     countIn: saved.countIn !== false,
     round: null, last: null, n: 0,
     next: null,                   // the round after this one, chosen early so it can be got ready
@@ -196,21 +196,32 @@
 
   // Choose a round to follow "last". Null if the mix allows nothing at all.
   function pickRound(last) {
-    var note = '', r;
-    if (S.mode !== 'name') {
+    var note = '', r, drilling = S.mode === 'pair' || S.mode === 'change';
+    if (drilling) {
       r = HE.trainer.drill(S.mode, S.mix, library, last);
       if (r && r.widened) {
         note = S.mode === 'pair' ? 'No two neighbours are both in this mix, so this pair is drawn from all of them. Add elements under The mix to choose.'
           : 'No transformation is in this mix, so this one is drawn from all of them.';
       }
     } else { r = HE.trainer.pick(S.mix, library, S.log, last); }
-    if (!r && S.mode === 'name' && S.mix.sound !== 'both') {
+    if (!r && !drilling && S.mix.sound !== 'both') {
       // nothing of that kind for this mix: play what there is, and say so
       r = HE.trainer.pick(extend(S.mix, { sound: 'both' }), library, S.log, last);
       note = S.mix.sound === 'recorded' ? 'Nothing is recorded for this mix yet, so the house band is playing this one. Notes for home with recordings are marked with a dot.' : '';
     }
     if (!r) { return null; }
     dress(r, last);
+    if (!r.mode) {
+      // Name it: the band establishes home and the element is the question. Find home: nothing is given, and the key is the question.
+      r.ask = S.mode === 'home' ? 'home' : 'element';
+      r.homeGiven = r.ask === 'element';
+      if (r.ask === 'home') { r.elementGiven = false; }
+      // how home is established: the mix's way, or the cue where the band's bass can't follow a recording's own timing
+      var way = r.ask === 'element' ? (S.mix.home || 'cued') : 'plain';
+      if ((way === 'pedal' || way === 'bass') && !(r.chord && r.chord.source === 'synth')) { way = 'cued'; }
+      r.homeWay = way;
+      r.homeBass = way === 'pedal' || way === 'bass' ? way : '';
+    }
     r.played = false;
     r.map = null;
     r.turn = 0;      // a drill: which of its two loops is sounding
@@ -230,11 +241,13 @@
     // (someone who has never answered a loop is told what to do with one)
     say(r.note || (S.log.length || S.n ? '' : r.mode === 'pair' ? 'New here? Press play. Two loops take turns: say which of them comes first.'
       : r.mode === 'change' ? 'New here? Press play. The first loop is named for you: say what the second one is.'
-      : 'New here? Press play, find the one note that feels like rest, say whether it is major or minor, then name the chords.'));
+      : r.ask === 'home' ? 'New here? Press play, find the one note that feels like rest on your bass, then say whether its chord is major or minor.'
+      : 'New here? Press play. The band gives you home first. Then name what the chords do around it.'));
     S.round = r;
     S.phase = 'guess'; S.fb = null; S.first = null; S.firstAnswer = null; S.tries = 0; S.shown = false; S.outcome = null; S.news = '';
     S.showed = { key: false, el: false };
-    S.ans = { homePc: r.homeGiven ? r.keyPc : null, mode: null, elId: r.elementGiven ? r.el.id : null };
+    // (Name it: the key is given whole. Find home: the element isn't asked, so it is filled in out of sight.)
+    S.ans = { homePc: r.homeGiven ? r.keyPc : null, mode: r.ask === 'element' ? r.el.mode : null, elId: r.ask === 'home' || r.elementGiven ? r.el.id : null };
     buildAnswer();
     renderRound();
     prepare(r, true);
@@ -262,7 +275,7 @@
 
   // The home cue: two bars of the home chord (major or minor, as the course hears the loop), held, by the
   // house band on the round's own sound, over the round's drums. Named loops only: a drill gives home away.
-  function cued(r) { return !!r && !r.mode && S.mix && S.mix.home === 'cued'; }
+  function cued(r) { return !!r && !r.mode && r.homeWay === 'cued'; }
   function cueRound(r) {
     if (r.homeCue) { return r.homeCue; }
     var el = { id: 'home-cue-' + r.el.mode, stage: 0, roman: r.el.mode === 'minor' ? 'i' : 'I', name: 'Home', rel: '', kind: 'home', long: 'repeat',
@@ -276,6 +289,74 @@
       drum: drum, bars: 2
     };
     return r.homeCue;
+  }
+
+  // The band's bass under a loop, as a way of establishing home: 'pedal' is a low home note held through
+  // every bar; 'bass' is the root of each chord, twice a bar. (A score for the house band: see source.more.)
+  var SEMI = { '1': 0, '#1': 1, 'b2': 1, '2': 2, 'b3': 3, '3': 4, '4': 5, '#4': 6, 'b5': 6, '5': 7, '#5': 8, 'b6': 8, '6': 9, 'b7': 10, '7': 11 };
+  function lowNote(pc) { return 28 + ((pc - 4 + 12) % 12); }   // from the open E string up to the D sharp above it
+  function homeBassSpec(r) {
+    var strikes = [], beat = 0, b;
+    if (r.homeBass === 'pedal') {
+      for (b = 0; b < r.bars; b++) { strikes.push({ beat: b * 4, len: 3.9, notes: [lowNote(r.keyPc)], vel: 0.8 }); }
+    } else {
+      HE.chords(r.el, r.voicing).forEach(function (c) {
+        var len = c.bars * 4, pc = (r.keyPc + SEMI[c.deg]) % 12;
+        for (var k = 0; k < len; k += 2) { strikes.push({ beat: beat + k, len: Math.min(2, len - k) - 0.12, notes: [lowNote(pc)], vel: k === 0 ? 0.9 : 0.75 }); }
+        beat += len;
+      });
+    }
+    return { bpm: r.bpm, bars: r.bars, parts: [{ inst: 'ebass', strikes: strikes }] };
+  }
+  // Home hit: one bar of the home chord, held, laid over the loop from its next bar line. Like asking for your note.
+  function homeHit() {
+    var r = S.round;
+    if (!r || r.ask !== 'element' || S.owner !== 'dojo' || !HE.audio.playing || !HE.audio.rate) { return; }
+    var cue = cueRound(r);
+    var one = extend(cue, { el: extend(cue.el, { id: cue.el.id + '-hit', tri: [{ deg: '1', qual: cue.el.tri[0].qual, bars: 1 }] }), bars: 1, drum: null });
+    one.chord = extend(cue.chord, { el: one.el.id, bars: 1 });
+    HE.synth.chords(one, { sampleRate: HE.audio.rate }).then(function (part) {
+      var when = 0, now = HE.audio.now(), x = r.sounding;
+      if (x && x.startsAt && x.barDur) { when = x.startsAt + Math.ceil((now + 0.08 - x.startsAt) / x.barDur) * x.barDur; }
+      HE.audio.level('hit', S.levels.chords);
+      HE.audio.shot(part, 'hit', when || undefined);
+    }).catch(function () { /* no hit: the loop carries on */ });
+  }
+  // A loop as heard from one of its homes, with the band's bass on the roots, for "Hear it from": the same
+  // chords, phrased from that home's first chord. Each hearing lists its chords from its own home already.
+  function hearingRound(r, h) {
+    var chords = h.chords.map(function (c) { return { deg: c.deg, qual: c.qual, bars: c.bars }; });
+    var el = { id: 'heard-' + chords.map(function (c) { return c.deg + c.qual + c.bars; }).join('_'), stage: 0, roman: h.label, name: '', rel: '', kind: 'molecule',
+      tri: chords, sev: null, tip: '', romans: h.romans.slice(), mode: h.mode, long: 'repeat', aliases: [] };
+    var pc = (r.keyPc + h.offset) % 12, bars = HE.bars(el, 'triads');
+    var sound = r.chord && r.chord.source === 'synth' && r.chord.sound ? r.chord.sound : HE.synth.soundFor(r.feel);
+    return {
+      el: el, keyPc: pc, bpm: r.bpm, feel: r.feel, voicing: 'triads', bars: bars, homeBass: 'bass', heard: true,
+      chord: { kind: 'chords', source: 'synth', el: el.id, keyPc: pc, bpm: r.bpm, voicing: 'triads', bars: bars, label: 'house band', path: '', sound: sound, playing: S.mix.playing, take: 0 },
+      drum: r.drum && r.drum.source === 'synth' ? r.drum : extend(HE.library.houseDrums(r.feel, r.bpm), { kit: '', groove: 0 })
+    };
+  }
+  function hearFrom(i) {
+    var r = S.round; if (!r || r.mode || S.phase !== 'revealed') { return; }
+    var h = HE.keyHearings(r.el, r.voicing)[i]; if (!h) { return; }
+    try { HE.audio.unlock(); } catch (e) { return; }
+    HE.audio.level('chords', S.levels.chords); HE.audio.level('drums', S.levels.drums); HE.audio.level('bass', S.levels.bass || 0.8);
+    S.owner = 'dojo'; S.busy = true; renderTransport();
+    var hr = hearingRound(r, h);
+    HE.audio.play(hr, source, HE.audio.playing ? { at: 'loop' } : { countIn: S.countIn }).then(function () { S.busy = false; renderTransport(); wake(true); tick(); })
+      .catch(function () { S.busy = false; renderTransport(); });
+  }
+
+  // The same, from a page of the Guide: the element on the page, in the key, tempo and feel its player is set to.
+  function guideHear(i) {
+    if (!G.el) { return; }
+    var h = HE.keyHearings(G.el, 'triads')[i]; if (!h) { return; }
+    try { HE.audio.unlock(); } catch (e) { return; }
+    HE.audio.level('chords', S.levels.chords); HE.audio.level('drums', S.levels.drums); HE.audio.level('bass', S.levels.bass || 0.8);
+    S.owner = 'guide'; S.busy = true; renderTransport(); jamTransport();
+    var hr = hearingRound({ keyPc: G.keyPc, bpm: G.bpm, feel: G.feel, chord: null, drum: null }, h);
+    HE.audio.play(hr, source, HE.audio.playing ? { at: 'loop' } : { countIn: S.countIn }).then(function () { S.busy = false; jamTransport(); wake(true); tick(); })
+      .catch(function () { S.busy = false; jamTransport(); });
   }
 
   // If a recording can't be fetched, the round carries on with the house band's version of the same loop.
@@ -302,6 +383,7 @@
     noteRate();
     HE.audio.level('chords', S.levels.chords);
     HE.audio.level('drums', S.levels.drums);
+    HE.audio.level('bass', S.levels.bass || 0.8);
     var r = S.round;
     if (!r.played) { r.played = true; S.n++; }
     S.owner = 'dojo';
@@ -318,6 +400,7 @@
     playing.then(function (res) {
       S.busy = false;
       if (res && r === S.round) {
+        r.sounding = res;   // where its bars fall, for the home hit
         // a recording says how long it is, and how its chords fill the bars, only once it has been decoded
         if (!r.mode) { r.bars = res.bars; r.map = heardMap(r, res); }
         renderDisplay(); renderBehind();
@@ -350,6 +433,7 @@
 
   // Everything there is to answer has been answered: the key (home and major or minor) and the element. A drill asks only the element.
   function answered() { return !!S.ans.elId && (!!S.round.mode || (S.ans.homePc !== null && !!S.ans.mode)); }
+  // (Name it and Find home each ask one thing, so each has one thing to show: the answer)
   // Which half was shown before the answer: 'key', 'element' or null.
   function showedHalf() { return S.showed.key ? 'key' : S.showed.el ? 'element' : null; }
 
@@ -367,7 +451,7 @@
   function showHalf(which) {
     if (!S.ready || S.phase !== 'guess') { return; }
     var r = S.round;
-    if (r.mode) { conclude(null, true); return; }
+    if (r.mode || r.ask) { conclude(null, true); return; }
     if (which === 'key') {
       S.showed.key = true;
       S.ans.homePc = r.keyPc; S.ans.mode = r.el.mode;
@@ -525,17 +609,17 @@
     $('band').textContent = whoLine(r);
 
     var home = $('d-home'), mode = $('d-mode'), roman = $('d-roman'), name = $('d-name');
-    var picked = S.ans.elId ? padItem(S.ans.elId) : null;
+    var picked = S.ans.elId && r.ask !== 'home' ? padItem(S.ans.elId) : null;
     if (revealed) {
       home.textContent = spelled.tonic; mode.textContent = r.mode ? '' : r.el.mode; roman.textContent = r.el.roman; name.textContent = subName(r.el);
     } else {
       home.textContent = r.mode ? spelled.tonic : S.ans.homePc === null ? '?' : HE.keyByPc(S.ans.homePc).name;
       mode.textContent = r.mode ? '' : S.ans.mode || (S.ans.homePc === null ? '' : 'major or minor?');
       roman.textContent = picked ? picked.label : '?';
-      name.textContent = picked ? picked.sub : 'Pencilled in until you check.';
+      name.textContent = picked ? picked.sub : r.ask === 'home' ? 'The key is the question here.' : 'Pencilled in until you check.';
     }
     // (a drill gives home away: it is the element that is being asked) Whatever has been shown is written solid.
-    home.classList.toggle('is-outline', !revealed && !r.mode && !S.showed.key);
+    home.classList.toggle('is-outline', !revealed && !r.mode && !S.showed.key && r.ask !== 'element');
     roman.classList.toggle('is-outline', !revealed && !S.showed.el);
 
     var turns = $('d-turns');
@@ -693,7 +777,7 @@
 
   // What is asked, and the line under it, for each thing the Dojo does.
   var ASKS = {
-    name: ['What’s the element?', 'The chords, as roman numerals from home. Choose major or minor first, and they are shown as they sound from a home of that kind.'],
+    name: ['What’s the element?', 'The band has given you home. Name what the chords do around it, as roman numerals from home.'],
     pair: ['Which comes first?', 'Two neighbours take turns, a pass each. Name the one that starts.'],
     change: ['What did it become?', 'The first loop is given. Name what it turns into.']
   };
@@ -737,19 +821,25 @@
     // With one note for home in the mix there is no note to choose, so the twelve buttons step aside: major or minor is still asked.
     $('homes').hidden = r.homeGiven;
     // (a drill says where home is, so that question steps aside altogether)
-    $('ask-home').hidden = !!r.mode;
-    $('q-home-note').textContent = r.homeGiven
-      ? 'Home is on ' + HE.keyByPc(r.keyPc).name + ': the only note for home in the mix. Is it major or minor?'
-      : 'Find the note that feels like rest, then hear whether its chord is major or minor.';
+    $('ask-home').hidden = !!r.mode || r.ask === 'element';
+    $('ask-el').hidden = r.ask === 'home';
+    $('hit').hidden = r.ask !== 'element';
+
+    var homesHere = r.mode ? 1 : HE.keyHearings(r.el, r.voicing).length;
+    $('q-home-note').textContent = r.ask === 'home' && homesHere > 1
+      ? 'This loop has ' + (homesHere === 2 ? 'two' : homesHere) + ' homes. Find one: any of them counts.'
+      : 'The note that feels like rest, then major or minor.';
     $('q-el').textContent = ASKS[r.mode || 'name'][0];
     $('q-el-note').textContent = r.elementGiven ? 'One element in the mix, so it is given.' : ASKS[r.mode || 'name'][1];
     $('check').disabled = revealed || !answered();
     // two halves to show, one at a time: in a drill there is only the one
-    $('show-key').hidden = !!r.mode;
+    $('show-key').hidden = !!r.mode || r.ask === 'element';
+    $('show-key').textContent = r.ask === 'home' ? 'Show me' : 'The key';
     $('show-key').disabled = revealed || S.showed.key;
     // (a drill has one thing to show: the answer)
-    $('show-label').hidden = !!r.mode;
-    $('show-el').textContent = r.mode ? 'Show me' : 'The element';
+    $('show-label').hidden = !!r.mode || !!r.ask;
+    $('show-el').hidden = r.ask === 'home';
+    $('show-el').textContent = r.mode || r.ask ? 'Show me' : 'The element';
     $('show-el').setAttribute('aria-label', r.mode ? 'Show me the answer' : 'Show me the element');
     $('show-el').disabled = revealed || S.showed.el || (!r.mode && r.elementGiven);
     renderDock();
@@ -779,7 +869,20 @@
         if (bringIntoView) { box.scrollIntoView({ block: 'nearest', behavior: 'auto' }); }
         return;
       }
+      if (r.ask === 'element') {
+        box.innerHTML = '<div class="he-tags"><span class="he-tag is-no">Element · not yet</span></div><p>Not that one. The loop is still going: ask for a home hit if you have lost home, then listen to where the bass would go.</p>';
+        box.hidden = false;
+        if (bringIntoView) { box.scrollIntoView({ block: 'nearest', behavior: 'auto' }); }
+        return;
+      }
       var other = S.ans.mode === 'major' ? 'minor' : 'major';
+      if (r.ask === 'home') {
+        box.innerHTML = '<div class="he-tags"><span class="he-tag is-no">Key · ' + (S.fb.note ? 'note yes, ' + other : 'not yet') + '</span></div><p>' +
+          (S.fb.note ? 'Home’s note is right, but the chord on it is ' + other + '.' : 'Home is somewhere else. Hum the note you would end on, then find it on your bass.') + ' The loop is still going.</p>';
+        box.hidden = false;
+        if (bringIntoView) { box.scrollIntoView({ block: 'nearest', behavior: 'auto' }); }
+        return;
+      }
       var keyLine = S.fb.home ? '' : S.fb.note ? 'Home’s note is right, but the chord on it is ' + other + '.' : 'Home is somewhere else.';
       var line = S.fb.home && !S.fb.element ? 'The key is right. The element isn’t that one.'
         : !S.fb.home && S.fb.element ? 'Right element. ' + keyLine
@@ -811,7 +914,14 @@
         hearingLine(r, own) + ', and both count.' + after;
     } else {
       head = 'Right';
-      sub = S.tries === 1 ? 'The key and the element, first time.' : 'Got there on try ' + S.tries + '. Only a first-time answer goes on the record as recognised.';
+      sub = S.tries === 1 ? (r.ask === 'home' ? 'Home, first time.' : r.ask === 'element' ? 'First time.' : 'The key and the element, first time.') : 'Got there on try ' + S.tries + '. Only a first-time answer goes on the record as recognised.';
+    }
+    // Hear it from each home: the same chords with the band's bass on the roots, phrased from that home.
+    var homes = HE.keyHearings(r.el, r.voicing), hear = '';
+    if (HE.synth.supported && !isForm(r)) {
+      hear = '<div><dt>' + (homes.length > 1 ? 'Hear it from each home' : 'Hear it with the bass') + '</dt><dd class="he-hear">' + homes.map(function (h, i) {
+        return '<button type="button" class="he-btn is-quiet" data-act="hear" data-h="' + i + '">' + esc(HE.keyName(r.el, h, r.keyPc)) + '</button>';
+      }).join('') + (homes.length > 1 ? '<span class="he-small">The chords don’t change. The bass decides.</span>' : '') + '</dd></div>';
     }
     var others = otherHearings(r.el, r.keyPc, r.voicing, null);
     html = '<p class="he-verdict">' + esc(head) + '</p>' +
@@ -824,7 +934,8 @@
         : spelled.chords.map(function (c) { return esc(c.name); }).join(', ')) + '</dd></div>' +
       '<div><dt>Built from</dt><dd>' + esc(r.el.rel) + '</dd></div>' +
       '<div><dt>' + (r.el.teaches ? 'What it teaches' : 'Listen for') + '</dt><dd>' + esc(HE.tip(r.el, r.keyPc, r.voicing)) + '</dd></div>' +
-      (others.length ? '<div><dt>Also heard as</dt><dd>' + others.join('; ') + '. Any of these counts.</dd></div>' : '') +
+      (others.length ? '<div><dt>Also heard as</dt><dd>' + others.join('; ') + '. Any of these counts in Find home.</dd></div>' : '') +
+      hear +
       '</dl>' +
       '<div class="he-after"><button type="button" class="he-btn is-sound" data-act="next">Next loop</button>' +
       guideButton(r.el) + '</div>';
@@ -865,7 +976,8 @@
   /* ---------- what the Dojo asks ---------- */
 
   var MODES = [
-    ['name', 'Name it', 'A loop plays. Find the key (home, major or minor), then name the element.'],
+    ['name', 'Name it', 'The band gives you home, then the loop plays. Name the element.'],
+    ['home', 'Find home', 'A loop plays with nothing given. Find the key: home, and whether it is major or minor.'],
     ['pair', 'Which is which', 'Two neighbours take turns. Say which one comes first.'],
     ['change', 'Before and after', 'A loop you know, then the same loop with something done to it. Name what it became.']
   ];
@@ -905,10 +1017,12 @@
 
   var SOUNDS = [['both', 'Recordings and the house band'], ['recorded', 'Recordings only'], ['synth', 'House band only']];
   var PLAYING = [['feel', 'In the feel'], ['held', 'Held']];
-  var HOME_CUE = [['hidden', 'Find it'], ['cued', 'Cue it']];
+  var HOME_CUE = [['cued', 'Cue'], ['pedal', 'Pedal'], ['bass', 'Bass'], ['plain', 'Loop only']];
   var HOME_CUE_NOTE = {
-    hidden: 'The loop starts straight away, and home is yours to find.',
-    cued: 'Before each loop the band plays two bars of the home chord, held, as the course hears it. Then the loop comes in. A first step for finding home: then try without.'
+    cued: 'Name it: before each loop the band plays two bars of the home chord, held. Then the loop comes in.',
+    pedal: 'Name it: a low home note is held under the whole loop, as a bass might. (Recorded loops get the cue instead.)',
+    bass: 'Name it: the band’s bass plays the root of each chord. Good for soloing over the changes. (Recorded loops get the cue instead.)',
+    plain: 'Name it: the loop alone. Home is named on the screen, and the home hit is there if you want to hear it.'
   };
   var PLAYING_NOTE = {
     feel: 'The chords are played the way the feel would have them: stabs, strums, a skank on the off beats.',
@@ -959,8 +1073,8 @@
         '</div>';
     }).join('');
 
-    $('homecue').innerHTML = HOME_CUE.map(function (v) { return tog('data-homecue="' + v[0] + '"', v[1], (mix.home || 'hidden') === v[0]); }).join('');
-    $('homecue-note').textContent = HOME_CUE_NOTE[mix.home || 'hidden'];
+    $('homecue').innerHTML = HOME_CUE.map(function (v) { return tog('data-homecue="' + v[0] + '"', v[1], (mix.home || 'cued') === v[0]); }).join('');
+    $('homecue-note').textContent = HOME_CUE_NOTE[mix.home || 'cued'];
     var dots = REC_KEYS.length > 0 && REC_KEYS.length < 12;
     $('keys').innerHTML = HE.KEYS.map(function (k) { return tog('data-key="' + k.pc + '"', k.name, has(mix.keys, k.pc), dots && has(REC_KEYS, k.pc) ? 'is-note is-rec' : 'is-note'); }).join('');
     $('keys-note').hidden = !dots;
@@ -986,7 +1100,7 @@
       tog('data-band-all="kits"', 'All kits', !mix.kits, 'is-link');
     $('band-sum').textContent = count(mix.players, ALL_SOUNDS, 'sound', 'sounds') + ' · ' + count(mix.kits, ALL_KITS, 'kit', 'kits') + (mix.playing === 'held' ? ' · held' : '');
 
-    $('mix-sum').textContent = mix.elements.length + (mix.elements.length === 1 ? ' element' : ' elements') + ' · ' + mix.keys.length + (mix.keys.length === 1 ? ' note for home' : ' notes for home') + (mix.home === 'cued' ? ' · home cued' : '');
+    $('mix-sum').textContent = mix.elements.length + (mix.elements.length === 1 ? ' element' : ' elements') + ' · ' + mix.keys.length + (mix.keys.length === 1 ? ' note for home' : ' notes for home') + ' · home: ' + ({ cued: 'cue', pedal: 'pedal', bass: 'bass', plain: 'loop only' }[mix.home || 'cued']);
   }
 
   function mixChanged(focusSel) {
@@ -1208,7 +1322,7 @@
     var m = b.getAttribute('data-kmode');
     S.ans.mode = S.ans.mode === m ? null : m; S.fb = null;
     // an element already picked that has no place from this kind of home is let go (unless it was shown)
-    if (S.ans.elId && !S.showed.el && !S.round.elementGiven && !padItems(S.ans.mode).some(function (x) { return x.elId === S.ans.elId; })) { S.ans.elId = null; }
+    if (S.ans.elId && S.round.ask !== 'home' && !S.showed.el && !S.round.elementGiven && !padItems(S.ans.mode).some(function (x) { return x.elId === S.ans.elId; })) { S.ans.elId = null; }
     buildEls();
     renderDisplay(); syncAnswer(); renderResult();
     var again = app.querySelector('[data-kmode="' + m + '"]'); if (again) { again.focus(); }
@@ -1218,12 +1332,21 @@
     S.ans.elId = b.getAttribute('data-el'); S.fb = null;
     renderDisplay(); syncAnswer(); renderResult();
   });
+  $('guide').addEventListener('click', function (e) { var gb = e.target.closest('[data-ghear]'); if (gb) { guideHear(+gb.getAttribute('data-ghear')); } });
+  $('mix-link').addEventListener('click', function () {
+    var url = dojoLinkFor(), b = this;
+    function done() { b.textContent = 'Copied'; window.setTimeout(function () { b.textContent = 'Copy a link to this mix'; }, 1800); }
+    try { navigator.clipboard.writeText(url).then(done, function () { window.prompt('Copy this link', url); }); } catch (e) { window.prompt('Copy this link', url); }
+  });
   $('check').addEventListener('click', check);
+  $('hit').addEventListener('click', homeHit);
   $('show-key').addEventListener('click', function () { showHalf('key'); });
   $('show-el').addEventListener('click', function () { showHalf('element'); });
   $('result').addEventListener('click', function (e) {
     var to = e.target.closest('[data-act="guide"]');
     if (to) { go('guide/' + to.getAttribute('data-id')); return; }
+    var hb = e.target.closest('[data-act="hear"]');
+    if (hb) { hearFrom(+hb.getAttribute('data-h')); return; }
     var b = e.target.closest('[data-act="next"]'); if (!b) { return; }
     next();
     $('go').focus({ preventScroll: true });
@@ -1377,8 +1500,26 @@
     var arriving = S.view !== '';
     showView(m[1]);
     if (m[1] === 'guide') { openGuide(m[2] || '', arriving); }
+    else if (m[2] && S.mix && S.linked !== m[2]) { S.linked = m[2]; dojoLink(m[2]); }
     else if (arriving) { app.scrollIntoView({ block: 'nearest', behavior: 'auto' }); }
     return true;
+  }
+  // A link into the Dojo can say what to ask and of which elements: #dojo/name/major-lean+major-pull, #dojo/home,
+  // #dojo/pair/... It sets the Dojo's mix, as "Test Stage 2 in the Dojo" does. (How a set from Jack arrives.)
+  var LINK_MODES = { name: 'name', home: 'home', pair: 'pair', change: 'change' };
+  function dojoLink(rest) {
+    var parts = rest.split('/'), mode = LINK_MODES[parts[0]], ids = (parts[mode ? 1 : 0] || '').split('+').filter(function (id) { return HE.isActive(id); });
+    if (!mode && !ids.length) { return; }
+    if (S.owner === 'dojo' && (HE.audio.playing || S.busy)) { stop(); }
+    if (mode) { S.mode = mode; }
+    if (ids.length) { S.mix.elements = ids; S.hadMix = true; }
+    S.stamp++;
+    save();
+    renderModes(); renderMix(); newRound();
+    if (ids.length) { say('This link set the mix to ' + ids.length + (ids.length === 1 ? ' element' : ' elements') + '. Change it under The mix.'); }
+  }
+  function dojoLinkFor() {
+    return window.location.href.split('#')[0] + '#dojo/' + S.mode + '/' + S.mix.elements.join('+');
   }
   function go(hash) {
     if (window.location.hash === '#' + hash) { route(); } else { window.location.hash = hash; }
@@ -1421,16 +1562,34 @@
   function extras(stage) {
     return HE.ELEMENTS.filter(function (el) { return el.stage === stage && !CARDED[el.id]; });
   }
+  // The order the Guide is read in (1.13.0). The course text is written as a document: front matter, the
+  // method, the elements, reference. In the app the elements are what people come for, so the Guide opens
+  // with four short pages (what the course is, the idea, the relationships, whose home), then the elements,
+  // then the rest of the method, then reference, where the two pages about the document itself now sit.
+  // Only the order and the headings change: every page keeps its id and its words.
+  var START_PAGES = ['about', 'method-the-idea', 'method-the-relationships', 'method-whose-home-is-it'];
+  var REF_PAGES = ['organised', 'conventions'];
+  function shortTitle(t) { return String(t).replace(/^\d+\.\s*/, ''); }   // "4. Two more lenses": the numbers are the document's order
+  var PARTS = null;
+  function guideParts() {
+    if (PARTS) { return PARTS; }
+    var by = {};
+    GUIDE.front.concat(GUIDE.method, GUIDE.reference).forEach(function (p) { by[p.id] = p; });
+    function pick(ids) { return ids.filter(function (id) { return !!by[id]; }).map(function (id) { return by[id]; }); }
+    function rest(list) { return list.filter(function (p) { return START_PAGES.indexOf(p.id) === -1 && REF_PAGES.indexOf(p.id) === -1; }); }
+    PARTS = { start: pick(START_PAGES), method: rest(GUIDE.front).concat(rest(GUIDE.method)), reference: pick(REF_PAGES).concat(GUIDE.reference) };
+    return PARTS;
+  }
   function guideOrder() {
-    var out = [];
-    GUIDE.front.forEach(function (p) { out.push(p.id); });
-    GUIDE.method.forEach(function (p) { out.push(p.id); });
+    var out = [], parts = guideParts();
+    parts.start.forEach(function (p) { out.push(p.id); });
     ALL_STAGES.forEach(function (s) {
       out.push(s.id);
       s.cards.forEach(function (id) { out.push(id); });
       extras(s.n).forEach(function (el) { out.push(el.id); });
     });
-    GUIDE.reference.forEach(function (p) { out.push(p.id); });
+    parts.method.forEach(function (p) { out.push(p.id); });
+    parts.reference.forEach(function (p) { out.push(p.id); });
     return out;
   }
   function guideFind(id) {
@@ -1441,10 +1600,10 @@
     for (i = 0; i < ALL_STAGES.length; i++) {
       if (ALL_STAGES[i].id === id) { return { kind: 'stage', stageInfo: ALL_STAGES[i], stage: ALL_STAGES[i].n, title: ALL_STAGES[i].title }; }
     }
-    var parts = [['front', 'Start here'], ['method', GUIDE.methodTitle], ['reference', GUIDE.referenceTitle]];
+    var gp = guideParts(), parts = [['start', 'Start here'], ['method', shortTitle(GUIDE.methodTitle.replace(/^Part \w+\.\s*/, ''))], ['reference', shortTitle(GUIDE.referenceTitle.replace(/^Part \w+\.\s*/, ''))]];
     for (i = 0; i < parts.length; i++) {
-      hit = GUIDE[parts[i][0]].filter(function (p) { return p.id === id; })[0];
-      if (hit) { return { kind: 'text', page: hit, part: parts[i][1], title: hit.title }; }
+      hit = gp[parts[i][0]].filter(function (p) { return p.id === id; })[0];
+      if (hit) { return { kind: 'text', page: hit, part: parts[i][1], title: shortTitle(hit.title) }; }
     }
     if (HE.isActive(id) && !CARDED[id]) {
       hit = HE.byId(id);
@@ -1458,7 +1617,7 @@
   var CHEVRON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><polyline points="3,6 8,11 13,6"></polyline></svg>';
 
   function here(id) { return G.id === id ? ' aria-current="page"' : ''; }
-  function pageLink(p) { return '<button type="button" class="he-g-link" data-go="' + esc(p.id) + '"' + here(p.id) + '>' + esc(p.title) + '</button>'; }
+  function pageLink(p) { return '<button type="button" class="he-g-link" data-go="' + esc(p.id) + '"' + here(p.id) + '>' + esc(shortTitle(p.title)) + '</button>'; }
   function elementLink(id, roman, name) {
     return '<button type="button" class="he-tog" data-go="' + esc(id) + '"' + here(id) + '>' +
       (roman ? '<b>' + esc(roman) + '</b><span>' + esc(name) + '</span>' : '<b>' + esc(name) + '</b>') + '</button>';
@@ -1469,9 +1628,9 @@
   }
 
   function renderIndex() {
-    var html = '<p class="he-kicker">Start here</p><div class="he-g-list">' + GUIDE.front.map(pageLink).join('') + '</div>' +
-      '<p class="he-kicker">' + esc(GUIDE.methodTitle) + '</p><div class="he-g-list">' + GUIDE.method.map(pageLink).join('') + '</div>' +
-      '<p class="he-kicker">' + esc(GUIDE.elementsTitle) + '</p><div class="he-g-lede he-small">' + GUIDE.elementsIntro + '</div>' +
+    var gp = guideParts(), bare = function (t) { return String(t).replace(/^Part \w+\.\s*/, ''); };
+    var html = '<p class="he-kicker">Start here</p><div class="he-g-list">' + gp.start.map(pageLink).join('') + '</div>' +
+      '<p class="he-kicker">' + esc(bare(GUIDE.elementsTitle)) + '</p><div class="he-g-lede he-small">' + GUIDE.elementsIntro + '</div>' +
       '<div class="he-stages">' + ALL_STAGES.map(function (s) {
         var open = !!G.open[s.n], n = s.cards.length + extras(s.n).length;
         return '<div class="he-stage">' +
@@ -1480,7 +1639,8 @@
           (open ? '<div class="he-stage-els">' + stageLinks(s) + '</div>' : '') +
           '</div>';
       }).join('') + '</div>' +
-      '<p class="he-kicker">' + esc(GUIDE.referenceTitle) + '</p><div class="he-g-list">' + GUIDE.reference.map(pageLink).join('') + '</div>';
+      '<p class="he-kicker">' + esc(bare(GUIDE.methodTitle)) + '</p><div class="he-g-list">' + gp.method.map(pageLink).join('') + '</div>' +
+      '<p class="he-kicker">' + esc(bare(GUIDE.referenceTitle)) + '</p><div class="he-g-list">' + gp.reference.map(pageLink).join('') + '</div>';
     $('g-index').innerHTML = html;
   }
 
@@ -1538,7 +1698,7 @@
     HE.PAIRS.forEach(function (p) { if (p[0] === el.id) { near.push(HE.byId(p[1])); } else if (p[1] === el.id) { near.push(HE.byId(p[0])); } });
     if (near.length) { paras.push(['Contrast with', near.map(function (x) { return esc(x.roman) + ' (' + esc(x.name.replace(/^The /, 'the ')) + ')'; }).join(', ') + '.']); }
     var others = otherHearings(el, 0, 'triads', null);
-    if (others.length) { paras.push(['Whose home', 'The same chords can also be heard as ' + others.join('; or ') + '. In the Dojo, any of these counts.']); }
+    if (others.length) { paras.push(['Whose home', 'The same chords can also be heard as ' + others.join('; or ') + '. In Find home, any of these counts. The chords don’t settle it: the bass does. <a href="#guide/method-whose-home-is-it">Whose home is it?</a>']); }
     return { rows: rows, paras: paras };
   }
 
@@ -1552,7 +1712,7 @@
       if (found.el) { html += '<section class="he-jam" id="he-jam" aria-label="Play along"></section>'; }
       if (c) {
         // the key the course hears it in, and any other hearing the Dojo accepts
-        var keyRows = !found.el ? [] : [['Key', esc(HE.keyName(found.el, HE.keyHearings(found.el, 'triads')[0], 0))]];
+        var keyRows = !found.el ? [] : [['Home, as the course hears it', esc(HE.keyName(found.el, HE.keyHearings(found.el, 'triads')[0], 0))]];
         var heardAs = found.el ? otherHearings(found.el, 0, 'triads', null) : [];
         if (heardAs.length) { keyRows.push(['Also heard as', heardAs.join('; ')]); }
         html += '<dl class="he-g-facts">' + c.rows.map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + r[1] + '</dd></div>'; }).join('') +
@@ -1565,7 +1725,14 @@
         var facts = factsFor(found.el);
         html += '<dl class="he-g-facts">' + facts.rows.map(function (r) { return '<div><dt>' + esc(r[0]) + '</dt><dd>' + r[1] + '</dd></div>'; }).join('') + '</dl>' +
           '<div class="he-g-text">' + facts.paras.map(function (p) { return '<p><b>' + esc(p[0]) + '.</b> ' + p[1] + '</p>'; }).join('') + '</div>' +
-          '<p class="he-small">The course has no card for this one yet. This page is put together from the catalogue, and its name and its listen for line are stand-ins.</p>';
+          '<p class="he-small">The course has no card for this one yet. This page is put together from the catalogue, and its wording is a draft.</p>';
+      }
+      // Hear it from each home: the page's loop with the band's bass on the roots, phrased from each home it has.
+      if (found.el && HE.synth.supported && found.el.kind !== 'form' && found.el.kind !== 'home') {
+        var gh = HE.keyHearings(found.el, 'triads');
+        html += '<div class="he-g-hear"><p class="he-kicker">' + (gh.length > 1 ? 'Hear it from each home' : 'Hear it with the bass') + '</p><div class="he-hear">' + gh.map(function (h, i) {
+          return '<button type="button" class="he-btn is-quiet" data-ghear="' + i + '">' + esc(HE.keyName(found.el, h, G.keyPc)) + '</button>';
+        }).join('') + (gh.length > 1 ? '<span class="he-small">The same chords each time, at the tempo and feel set above. The bass decides where home is. <a href="#guide/method-whose-home-is-it">Whose home is it?</a></span>' : '') + '</div></div>';
       }
       if (found.el) { html += testButton(found.stage); }
     } else if (found.kind === 'stage') {
@@ -1579,7 +1746,7 @@
         testButton(s.n);
     } else {
       html += '<p class="he-kicker">' + esc(found.part) + '</p>' +
-        '<h2 class="he-g-title"><span class="he-g-name is-big">' + esc(found.page.id === 'about' ? GUIDE.title : found.page.title) + '</span></h2>' +
+        '<h2 class="he-g-title"><span class="he-g-name is-big">' + esc(found.page.id === 'about' ? GUIDE.title : shortTitle(found.page.title)) + '</span></h2>' +
         '<div class="he-g-text">' + found.page.html + '</div>';
     }
     box.innerHTML = html + pager();
@@ -1588,6 +1755,9 @@
 
   // Open a page of the guide ('' is the contents). Wide screens show the contents and a page side by side.
   function openGuide(id, bringIntoView) {
+    // (a link to an element that has been merged into another opens the one it became)
+    var gone = id ? HE.byId(id) : null;
+    if (gone && gone.into && !HE.isActive(id)) { id = pageOf(gone.into) || id; }
     var found = id ? guideFind(id) : null;
     if (!found) { id = ''; }
     if (S.owner === 'guide' && (HE.audio.playing || S.busy)) { stop(); }
@@ -2010,6 +2180,10 @@
   }
   // The player asks a source for "more" than chords and drums: here, the reference bass.
   source.more = function (round, c) {
+    // the band's bass establishing home in the Dojo (a pedal, or the roots)
+    if (round.homeBass) {
+      return HE.synth.score(homeBassSpec(round), c).then(function (p) { return [{ name: 'bass', buffer: p.buffer, lead: 0, length: p.length, gain: p.gain }]; });
+    }
     if (!round.bassLine) { return null; }
     var learn = Promise.resolve();
     if (round.chord && round.chord.source === 'file' && !(round.map && round.map.length)) {
@@ -2109,7 +2283,7 @@
     if (first) {
       flush();
       // Start where the address says, or where this visitor was last, or in the Guide.
-      if (!route()) { showView(saved.view === 'dojo' ? 'dojo' : 'guide'); if (S.view === 'guide') { openGuide('', false); } }
+      if (!route()) { showView(saved.view === 'guide' ? 'guide' : 'dojo'); if (S.view === 'guide') { openGuide('', false); } }
     } else if (GUIDE) {
       // the recordings have arrived: the Guide's player can offer them
       jamSetup();

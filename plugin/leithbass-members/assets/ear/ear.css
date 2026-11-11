@@ -129,3 +129,11 @@
 .ear-jam-more { border-top: 1px solid var(--he-rule); padding-top: 0.5rem; }
 .ear-jam-more > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font: 700 1rem/1 var(--he-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--he-ink); }
 .ear-jam-more[open] > summary { margin-bottom: 0.25rem; }
+
+/* 1.13.0: on a phone the strands are one row that scrolls sideways, with their names whole
+   ("Chord flavours" and "Progressions" were cut off in a three column grid). */
+@media (max-width: 39.99rem) {
+	.ear .ear-strands { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+	.ear .ear-strands::-webkit-scrollbar { display: none; }
+	.ear .ear-strands .he-tab { flex: 0 0 auto; overflow: visible; text-overflow: clip; padding: 0 0.7rem; min-height: 44px; }
+}

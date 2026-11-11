@@ -20,9 +20,10 @@
  *
  * A mix is {elements:[id], keys:[pc], tempos:[bpm], feels:[name], voicing:'triads'|'sevenths'|'both',
  *           sound:'both'|'recorded'|'synth', players:[id] | null, kits:[id] | null, playing:'feel'|'held',
- *           home:'hidden'|'cued'}.
+ *           home:'cued'|'pedal'|'bass'|'plain'}.
  *           "keys" are where home can be: its note (each element says whether home is major or minor).
- *           "home" is 'cued' when the house band plays two bars of the home chord before each loop. "sound" says whether recordings,
+ *           "home" is how the band establishes home in Name it: 'cued' is two bars of the home chord before each loop,
+ *           'pedal' a low home note held under it, 'bass' the band's bass on the roots, 'plain' the loop alone. "sound" says whether recordings,
  *           the house band (kept as 'synth' in saved mixes) or both can come up. "players" and "kits" are
  *           which of the house band's chord sounds and drum kits can (null is all of them, so new ones
  *           join in by themselves), and "playing" is whether its chords comp in the feel or are held.
@@ -45,11 +46,16 @@
 		{ id: 'lean-pull', name: 'Lean and Pull', elements: ids(function (el) { return el.stage === 2 || el.stage === 3; }) },
 		// The course's core route, less the blues form.
 		{ id: 'core', name: 'Core route', elements: ['major-lean', 'dorian-lean', 'minor-lean', 'major-pull', 'modal-minor-pull', 'functional-minor-pull', 'cadential-cell', 'relative-shadow', 'pop-axis', 'minor-shift'] },
-		{ id: 'more', name: 'More molecules', elements: ids(function (el) { return el.stage > 10; }) }
+		// the loops that can be heard from more than one home: what Find home is for
+		{ id: 'two-homes', name: 'Two homes', elements: ids(function (el) { return el.kind !== 'home' && !el.homeAbsent && HE.keyHearings(el, 'triads').length > 1; }) }
 	];
 	// The forms, while they are in the app, are a preset of their own and left out of Everything (one pass of a form is a long listen).
 	if (HE.SHOW_FORMS) { PRESETS.push({ id: 'forms', name: 'Forms', elements: ids(function (el) { return el.kind === 'form'; }) }); }
 	PRESETS.push({ id: 'all', name: 'Everything', elements: ids(function (el) { return el.kind !== 'form'; }) });
+
+	// How the band establishes home while an element is being named: two bars of the home chord first; a low home
+	// note held under the loop; the band's bass on each chord's root; or nothing but the loop itself.
+	var HOME_WAYS = ['cued', 'pedal', 'bass', 'plain'];
 
 	function defaultMix(library) {
 		// Start on the tone centres and the tempo that have recordings, if any do.
@@ -58,7 +64,7 @@
 		var mid = tempos[Math.floor(tempos.length / 2)];
 		return {
 			elements: PRESETS[2].elements.slice(), keys: recorded.length ? recorded : [0, 5, 10, 3],
-			tempos: [mid], feels: library.feels(), voicing: 'triads', sound: 'both', players: null, kits: null, playing: 'feel', home: 'hidden'
+			tempos: [mid], feels: library.feels(), voicing: 'triads', sound: 'both', players: null, kits: null, playing: 'feel', home: 'cued'
 		};
 	}
 
@@ -86,7 +92,8 @@
 			sound: ['both', 'recorded', 'synth'].indexOf(mix.sound) !== -1 ? mix.sound : 'both',
 			players: band(mix.players, 'SOUNDS'), kits: band(mix.kits, 'KITS'),
 			playing: mix.playing === 'held' ? 'held' : 'feel',
-			home: mix.home === 'cued' ? 'cued' : 'hidden'
+			// how the band establishes home in Name it. ('hidden' was 1.9.0's default, when Name it also asked for the key: that is Find home now.)
+			home: HOME_WAYS.indexOf(mix.home) !== -1 ? mix.home : 'cued'
 		};
 	}
 
@@ -248,16 +255,25 @@
 			return { verdict: hit ? 'right' : 'not-yet', home: true, note: true, element: hit, heardAs: null };
 		}
 		var heard = HE.keyHearings(round.el, round.voicing);
+		if (round.ask === 'home') { answer = { homePc: answer.homePc, mode: answer.mode, elId: round.el.id }; }   // Find home: the key alone is asked
 		var pcOf = function (h) { return (round.keyPc + h.offset) % 12; };
 		var match = heard.filter(function (h) { return pcOf(h) === answer.homePc && h.mode === answer.mode; })[0] || null;
 		var note = heard.some(function (h) { return pcOf(h) === answer.homePc; });
 		var element = HE.sameSound(round.el, round.voicing).indexOf(answer.elId) !== -1;
+		// Name it (1.13.0): home is established, so an element is only right if it is this loop from this home: the
+		// element itself, or another that is the very same loop on the same home. (The major pull is the major
+		// lean's sound from another home, but with home given on C, "I V" is not what C to F is.)
+		if (round.ask === 'element' && element && answer.elId !== round.el.id) {
+			element = HE.hearings(round.el, round.keyPc, round.voicing).some(function (x) { return x.el.id === answer.elId && x.tonicPc === round.keyPc && x.el.mode === round.el.mode; });
+		}
 		var right = !!match && element;
 		var own = right && match.own && answer.elId === round.el.id;
+		// ("others": how many more homes the loop has than the one just found)
 		return {
 			verdict: right ? (own ? 'right' : 'hearing') : 'not-yet',
 			home: !!match, note: note, element: element,
-			heardAs: right && !own ? { hearing: match, tonicPc: pcOf(match), elId: answer.elId } : null
+			heardAs: right && !own ? { hearing: match, tonicPc: pcOf(match), elId: answer.elId } : null,
+			others: Math.max(0, heard.length - 1)
 		};
 	}
 
@@ -284,6 +300,9 @@
 			// the key (1.9.0): whether the course's home is major or minor, what was said, and what was shown
 			e.keyMode = round.el.mode;
 			e.saidMode = firstAnswer && firstAnswer.mode ? firstAnswer.mode : null;
+			// what was asked (1.13.0): 'element' with home established by the band, or 'home' with the key alone to find
+			if (round.ask === 'home' || round.ask === 'element') { e.ask = round.ask; }
+			if (round.ask === 'home') { e.saidEl = null; }
 			if (showed) { e.showed = showed; }
 		}
 		return e;
@@ -295,10 +314,18 @@
 		var elements = {}, pairs = {}, drills = { pair: { n: 0, ok: 0 }, change: { n: 0, ok: 0 } };
 		// rounds where one half was shown first: how often the other half was right first time
 		var halves = { key: { n: 0, ok: 0 }, element: { n: 0, ok: 0 } };
+		// Find home (1.13.0): finding the key of a loop is counted on its own, and is not naming the element
+		var homes = { n: 0, ok: 0, elements: {} };
 		log.forEach(function (e) {
 			if (!HE.byId(e.el)) { return; }
 			if (e.mode) {
 				if (drills[e.mode]) { drills[e.mode].n++; if (e.ok) { drills[e.mode].ok++; } }
+				return;
+			}
+			if (e.ask === 'home') {
+				var hm = homes.elements[e.el] || (homes.elements[e.el] = { n: 0, ok: 0 });
+				homes.n++; hm.n++;
+				if (e.ok) { homes.ok++; hm.ok++; }
 				return;
 			}
 			if (e.showed && halves[e.showed]) {
@@ -327,7 +354,7 @@
 			var p = k.split('>');
 			return { was: p[0], said: p[1], times: pairs[k] };
 		}).sort(function (a, b) { return b.times - a.times; });
-		return { elements: elements, mixups: mixups, drills: drills, halves: halves };
+		return { elements: elements, mixups: mixups, drills: drills, halves: halves, homes: homes };
 	}
 
 	// How many files a mix asks for, so the recording job can be sized.
@@ -341,5 +368,5 @@
 		return { chords: chords, drums: mix.feels.length * mix.tempos.length };
 	}
 
-	HE.trainer = { PRESETS: PRESETS, defaultMix: defaultMix, cleanMix: cleanMix, pick: pick, drill: drill, mark: mark, entry: entry, stats: stats, size: size };
+	HE.trainer = { PRESETS: PRESETS, HOME_WAYS: HOME_WAYS, defaultMix: defaultMix, cleanMix: cleanMix, pick: pick, drill: drill, mark: mark, entry: entry, stats: stats, size: size };
 }(typeof window !== 'undefined' ? window : globalThis));

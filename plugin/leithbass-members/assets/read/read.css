@@ -163,3 +163,9 @@
   .rd .he-status:empty { display: none; }
   .rd .he-ask { gap: 0.45rem; }
 }
+
+/* 1.13.0: on a phone the switch, the strands and the drills are a full 44 px tall to tap (they were 34 to 36).
+   Together that costs 26 px of height; Write it's Check still clears the app's bottom bar. */
+@media (max-width: 39.99rem) {
+	.rd #rd-tabs .he-tab, .rd .rd-strands .he-tab, .rd #rd-drills .he-tog { min-height: 44px; }
+}

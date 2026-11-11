@@ -1179,7 +1179,7 @@
 		compound: [[1, 'Beats'], [3, 'Eighths'], [6, 'Sixteenths']],
 		odd: [[1, 'Groups'], [2, 'Every eighth']]
 	};
-	var MET_EVERY = [[1, 'Every bar'], [2, 'Every 2'], [3, 'Every 3'], [4, 'Every 4']];
+	var MET_EVERY = [[1, 'Every bar'], [2, 'Every 2'], [3, 'Every 3'], [4, 'Every 4'], [8, 'Every 8'], [16, 'Every 16']];
 	var MET_WHERE = {
 		simple: [['on', 'On it'], ['e', 'The “e”'], ['and', 'The “and”'], ['a', 'The “a”'], ['mid', 'Triplet, middle'], ['last', 'Triplet, last']],
 		compound: [['on', 'On it'], ['mid', 'Second eighth'], ['last', 'Third eighth']],
@@ -1192,12 +1192,34 @@
 	var MET_STARTERS = [
 		['Plain click', {}],
 		['2 and 4', { which: 'backbeat' }],
+		['Offbeat click', { where: 'and' }],
+		['Beat one only', { which: 'one' }],
+		['Thin the click', { thin: { on: true, stage: 0 }, hideSilent: true }],
 		['Bar on, bar off', { gap: '1-1' }],
 		['Fade the click', { gradual: { on: true, to: 75, over: 32, keepOne: false, bars: false } }],
-		['Build speed', { up: { on: true, by: 4, every: 4, stopAt: '', ladder: true } }],
+		['Interleaved clicking up', { inter: { on: true } }],
+		['Count it off', { count: { on: true } }],
+		['Build speed', { up: { on: true, by: 5, every: 4, stopAt: '', ladder: false, ready: true, past: false } }],
 		['Swing, brushes', { which: 'backbeat', groove: { kind: 'feel', feel: 'Swing', groove: 0, kit: 'brushes', name: 'Swing' } }]
 	];
 	var metOpts = MET ? MET.upgrade(store('lbs-met')) : {};
+	// A link can carry a setup: ?m=... (made by "Copy a link to what is set now"). It replaces what the click does
+	// and the tempo, and leaves the sound, the volumes and the player's own saved setups as they are.
+	var metFromLink = false;
+	if (MET) {
+		try {
+			var linked = MET.unlink(new URL(location.href).searchParams.get('m') || '');
+			if (linked) {
+				metOpts = MET.upgrade(Object.assign({}, linked, { v: 2, sound: metOpts.sound, vol: metOpts.vol, offsetMs: metOpts.offsetMs, flash: metOpts.flash, vibrate: metOpts.vibrate, hideSilent: metOpts.hideSilent || !!(linked.random.on || linked.gradual.on || linked.thin.on), setups: metOpts.setups }));
+				metFromLink = true;
+			}
+		} catch (e) { /* the metronome as it was left */ }
+	}
+	// The address that opens the metronome with what is set now: the free page if the site has one, or this page.
+	function metLink() {
+		var base = L.metUrl || (location.origin + location.pathname + (L.solo ? '' : '?tab=practice&tool=metronome'));
+		return base + (base.indexOf('?') === -1 ? '?' : '&') + 'm=' + MET.link(metOpts);
+	}
 	var metUi = { tap: {}, last: 0, startedAt: 0, beat: -1, fn: '', typing: false, now: 0, reached: 0, played: '', warm: false, he: false };
 	var metLean = !!((navigator.connection || {}).saveData);
 
@@ -1236,7 +1258,8 @@
 			accents: o.accents, sound: o.sound, vol: o.vol, which: o.which, every: +o.every, where: metWhere(mi),
 			gap: gap ? { on: gap[0], off: gap[1] } : null,
 			mute: r.on ? { kind: 'random', share: +r.share, keepOne: !!r.keepOne, wholeBars: !!r.bars } : gr.on ? { kind: 'gradual', to: +gr.to, over: +gr.over, keepOne: !!gr.keepOne, wholeBars: !!gr.bars } : null,
-			clickUp: up.on && +up.by ? { by: +up.by, every: +up.every, stopAt: up.stopAt === '' ? null : +up.stopAt, ladder: !!up.ladder } : null,
+			// (stepped by hand, Click up is Next and Back on the face: the engine just plays the tempo it is given)
+			clickUp: up.on && +up.by && !up.ready ? { by: +up.by, every: +up.every, stopAt: MET.upStop(up), ladder: !!up.ladder } : null,
 			countIn: o.countIn, groove: g, offsetMs: +o.offsetMs
 		};
 	}
@@ -1278,9 +1301,20 @@
 		for (var i = 2; i <= n; i += 2) { ev.push(i); }
 		return ev.length < 2 ? 'Beat 2' : ev.slice(0, -1).join(', ') + ' and ' + ev[ev.length - 1];
 	}
+	// Every other beat, from beat one: "1 and 3" in four.
+	function altName(n) {
+		var od = [];
+		for (var i = 1; i <= n; i += 2) { od.push(i); }
+		return od.length < 2 ? 'Beat 1' : od.slice(0, -1).join(', ') + ' and ' + od[od.length - 1];
+	}
+	// The stage of Thin the click that is set, in words.
+	function thinName(stage, n) {
+		var t = MET.THIN[stage];
+		return t.which === 'all' ? 'Every beat' : t.which === 'alt' ? altName(n) : t.every > 1 ? 'Beat one, every ' + t.every + ' bars' : 'Beat one';
+	}
 	function whichName(n) {
 		var o = metOpts;
-		return o.which === 'backbeat' ? backbeatName(n) : o.which === 'one' ? (+o.every > 1 ? 'Beat one, every ' + o.every + ' bars' : 'Beat one') : 'Every beat';
+		return o.which === 'alt' ? altName(n) : o.which === 'backbeat' ? backbeatName(n) : o.which === 'one' ? (+o.every > 1 ? 'Beat one, every ' + o.every + ' bars' : 'Beat one') : 'Every beat';
 	}
 	function whereName(mi) {
 		var w = metWhere(mi);
@@ -1330,7 +1364,9 @@
 		return '<button type="button" class="mp-m-sw" role="switch" aria-checked="' + !!on + '" data-m-sw="' + key + '"><span><b>' + esc(label) + '</b>' + (hint ? '<small>' + esc(hint) + '</small>' : '') + '</span><i class="mp-sw" aria-hidden="true"></i></button>';
 	}
 	/* A number to type, with a button either side and a few quick picks. path: 'random.share' and the like. */
-	var MET_NUM = { 'random.share': [0, 100, 30], 'gradual.to': [0, 100, 75], 'gradual.over': [1, 999, 32], 'up.by': [-60, 60, 4], 'up.every': [1, 64, 4], 'up.stopAt': [20, 300, ''] };
+	var MET_NUM = { 'random.share': [0, 100, 30], 'gradual.to': [0, 100, 75], 'gradual.over': [1, 999, 32], 'up.by': [-60, 60, 4], 'up.every': [1, 64, 4], 'up.stopAt': [20, 300, ''],
+		'count.from': [20, 300, 60], 'count.to': [20, 300, 140],
+		'inter.chunks': [2, 16, 4], 'inter.beats': [1, 32, 4], 'inter.start': [20, 300, 60], 'inter.goal': [20, 300, 120], 'inter.by': [1, 60, 5] };
 	function metNumField(path, label, unit, step, picks) {
 		var p = path.split('.'), val = metOpts[p[0]][p[1]], lim = MET_NUM[path], id = 'mp-m-' + p.join('-');
 		return '<div class="mp-m-num"><label for="' + id + '">' + esc(label) + '</label><div class="mp-m-step">' +
@@ -1355,11 +1391,69 @@
 	}
 	function metUpBody() {
 		var u = metOpts.up, cur = metOpts.bpm, behind = u.stopAt !== '' && (+u.stopAt - cur) * (+u.by < 0 ? -1 : 1) <= 0;
-		return '<div class="mp-m-two">' + metNumField('up.by', 'Change by', 'bpm', 1) + metNumField('up.every', 'Every', 'bars', 1) + '</div>' +
-			metNumField('up.stopAt', 'Stop at', 'bpm', 5) +
-			metSwitch('up.ladder', u.ladder, 'Ladder', 'Up a step, then back half a step, so each new tempo is followed by an easier one.') +
-			(behind ? '<p class="mp-note">Stop at is ' + (+u.by < 0 ? 'above' : 'below') + ' the tempo showing, so it will be passed over.</p>' : '') +
-			'<p class="mp-note">It starts from the tempo showing. A minus number brings the tempo down. Leave Stop at empty and it keeps going, as far as ' + (+u.by < 0 ? MET.BOTTOM : MET.TOP) + '.</p>';
+		var goal = u.stopAt !== '' && +u.stopAt ? +u.stopAt : 0, small = Math.abs(+u.by) < 3;
+		return metSwitch('up.ready', u.ready, 'Step when ready', 'The tempo moves when you tap Next, not by the clock. Play each tempo once, and move on when it was clean.') +
+			(u.ready ? metNumField('up.by', 'Change by', 'bpm', 1, [3, 5, 10]) : '<div class="mp-m-two">' + metNumField('up.by', 'Change by', 'bpm', 1, [3, 5, 10]) + metNumField('up.every', 'Every', 'bars', 1) + '</div>') +
+			(small ? '<p class="mp-note">A step of 1 or 2 is too small to feel. About 5 is usual: each new tempo should feel slightly faster, not a lot.</p>' : '') +
+			metNumField('up.stopAt', 'Goal', 'bpm', 5) +
+			(goal ? '<div class="mp-m-picks"><button type="button" data-met="up-half">Start at half the goal (' + Math.max(MET.BOTTOM, Math.round(goal / 2)) + ')</button></div>' : '') +
+			metSwitch('up.past', u.past, 'Go 5% past the goal', 'So the goal itself feels manageable under pressure.' + (goal ? ' It will stop at ' + MET.upStop(Object.assign({}, u, { past: true })) + '.' : '')) +
+			(u.ready ? '' : metSwitch('up.ladder', u.ladder, 'Ladder', 'Up a step, then back half a step, so each new tempo is followed by an easier one.')) +
+			'<p class="mp-note">Start slow enough that a mistake is impossible: half the goal or slower. If it goes wrong twice at one tempo, start slower or play a smaller chunk.</p>' +
+			(behind ? '<p class="mp-note">The goal is ' + (+u.by < 0 ? 'above' : 'below') + ' the tempo showing, so it will be passed over.</p>' : '') +
+			'<p class="mp-note">It starts from the tempo showing. A minus number brings the tempo down. Leave the goal empty and it keeps going, as far as ' + (+u.by < 0 ? MET.BOTTOM : MET.TOP) + '.</p>';
+	}
+	// A guided row on the face, with Back and Next: a hand-stepped Click up, or Thin the click.
+	function metGuideRow(n) {
+		var o = metOpts, h = '';
+		if (o.thin && o.thin.on) {
+			var st = o.thin.stage, last = MET.THIN.length - 1;
+			h += '<div class="mp-m-guide" role="group" aria-label="Thin the click"><span><b>Thin the click</b> ' + (st + 1) + ' of ' + (last + 1) + ' · ' + esc(thinName(st, n)) + '</span>' +
+				'<button type="button" class="mp-btn-ghost sm" data-met="thin-back"' + (st ? '' : ' disabled') + '>Back</button>' +
+				'<button type="button" class="mp-btn-ghost sm" data-met="thin-next"' + (st < last ? '' : ' disabled') + '>Next</button>' +
+				'<button type="button" class="mp-x" data-met="thin-off" aria-label="Leave Thin the click">Done</button></div>';
+		}
+		if (o.count && o.count.on) {
+			var cs = metUi.count || (metUi.count = { target: countTarget(), taps: [], got: null }), got = cs.got;
+			h += '<div class="mp-m-guide mp-m-inter" role="group" aria-label="Count it off">' +
+				'<span><b>Count it off</b> no click: tap four beats, as if counting the band in</span>' +
+				'<p class="mp-m-inter-say">' + (got ? 'You tapped <b>' + got.bpm + '</b> for ' + cs.target + (got.verdict === 'on' ? ': there' : ': ' + Math.abs(got.off) + ' ' + got.verdict) : 'Tap four at <b>' + cs.target + '</b>') + '</p>' +
+				(got && got.spread > 12 ? '<p class="mp-note">Your four taps were uneven, so take the number lightly.</p>' : '') +
+				'<button type="button" class="mp-btn sm mp-m-count-tap" data-met="count-tap">' + (cs.taps.length && !got ? 4 - cs.taps.length + ' to go' : 'Tap') + '</button>' +
+				'<button type="button" class="mp-btn-ghost sm" data-met="count-hear">Hear ' + cs.target + '</button>' +
+				'<button type="button" class="mp-btn-ghost sm" data-met="count-next">Another</button>' +
+				'<button type="button" class="mp-x" data-met="count-off" aria-label="Leave Count it off">Done</button>' +
+				'<details class="mp-m-inter-set"' + (metUi.countSet ? ' open' : '') + '><summary>Between which tempos</summary><div class="mp-m-two">' + metNumField('count.from', 'From', 'bpm', 5) + metNumField('count.to', 'To', 'bpm', 5) + '</div>' +
+				'<p class="mp-note">A tempo is drawn between the two. Within 3% counts as there. A counted off tempo that is right is half a bandleader’s job.</p></details></div>';
+		}
+		if (o.inter && o.inter.on) {
+			var it = o.inter, sched = MET.interleave(it), at = Math.min(it.at, sched.length - 1), rep = sched[at], boxes = '';
+			for (var c = 1; c <= it.chunks; c++) { boxes += '<i class="' + (c >= rep.from && c <= rep.to ? 'on' : '') + (c === (it.back ? rep.from : rep.to) ? ' new' : '') + '">' + c + '</i>'; }
+			var steps = sched.filter(function (r) { return r.step === rep.step; }), within = steps.indexOf(rep) + 1;
+			var what = rep.from === rep.to ? 'chunk ' + rep.to : 'chunks ' + rep.from + ' to ' + rep.to;
+			h += '<div class="mp-m-guide mp-m-inter" role="group" aria-label="Interleaved clicking up">' +
+				'<span><b>Interleaved clicking up</b> step ' + rep.step + ' of ' + it.chunks + ' · ' + within + ' of ' + steps.length + '</span>' +
+				'<p class="mp-m-inter-say">Play ' + what + ' at <b>' + rep.tempo + '</b></p>' +
+				'<div class="mp-m-inter-boxes" aria-hidden="true">' + boxes + '</div>' +
+				'<button type="button" class="mp-btn sm" data-met="inter-play">' + (metUi.inter ? 'Stop' : 'Play it') + '</button>' +
+				'<button type="button" class="mp-btn-ghost sm" data-met="inter-back"' + (at ? '' : ' disabled') + '>Back</button>' +
+				'<button type="button" class="mp-btn-ghost sm" data-met="inter-next"' + (at < sched.length - 1 ? '' : ' disabled') + '>Next</button>' +
+				'<button type="button" class="mp-x" data-met="inter-off" aria-label="Leave interleaved clicking up">Done</button>' +
+				'<details class="mp-m-inter-set"' + (metUi.interSet ? ' open' : '') + '><summary>The passage</summary>' +
+					'<div class="mp-m-two">' + metNumField('inter.chunks', 'Chunks', 'in the passage', 1) + metNumField('inter.beats', 'Each chunk is', 'beats', 1, [1, 2, 4, 8]) + '</div>' +
+					'<div class="mp-m-two">' + metNumField('inter.start', 'Start at', 'bpm', 5) + metNumField('inter.goal', 'Goal', 'bpm', 5) + '</div>' +
+					metNumField('inter.by', 'Change by', 'bpm', 1, [3, 5, 10]) +
+					metSwitch('inter.back', it.back, 'Build from the end', 'Start with the last chunk and add the ones before it. For a passage whose end is the hard part.') +
+					'<p class="mp-note">Cut the passage into chunks: a beat, a bar, two bars. Each step adds a chunk and takes it from the start tempo to the goal, sometimes alone and sometimes with the chunks before it. Play each one once. A count of one bar, then the click runs for the chunks and one beat more, so you can land. If it goes wrong, start slower or use smaller chunks. After Molly Gebrian, Learn Faster, Perform Better.</p>' +
+				'</details></div>';
+		}
+		if (o.up.on && o.up.ready) {
+			var cur = o.bpm, stop = MET.upStop(o.up), nx = MET.upNext(cur, o.up, false), there = stop != null && cur === stop;
+			h += '<div class="mp-m-guide" role="group" aria-label="Click up, a step at a time"><span><b>Click up</b> ' + (there ? 'at the ' + (o.up.past ? 'tempo past the goal' : 'goal') : 'next ' + nx + ' bpm' + (stop != null ? ' · heading for ' + stop : '')) + '</span>' +
+				'<button type="button" class="mp-btn-ghost sm" data-met="up-back">Back</button>' +
+				'<button type="button" class="mp-btn-ghost sm" data-met="up-next"' + (there ? ' disabled' : '') + '>Next</button></div>';
+		}
+		return h;
 	}
 	function metFnRow(key, body) {
 		var on = !!metOpts[key].on, open = metUi.fn === key;
@@ -1414,6 +1508,7 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 					var lv = o.accents[i] || 'normal';
 					return '<button type="button" class="lv-' + lv + '" data-met-cell="' + i + '" aria-label="Beat ' + (i + 1) + ', ' + LEVEL_NAME[lv] + '"><span class="n">' + (i + 1) + '</span><span class="lv">' + (lv === 'mute' ? 'Silent' : lv === 'soft' ? 'Soft' : lv === 'accent' ? 'Accent' : '') + '</span></button>';
 				}).join('') + '</div>' +
+				metGuideRow(n) +
 				'<p class="mp-m-status" data-met-status aria-live="off">' + esc(metStatus()) + '</p>' +
 				(metUi.reached && !run ? '<div class="mp-m-keep"><span>Click up got to <b>' + metUi.reached + ' bpm</b>. The tempo is back where it started.</span><button type="button" class="mp-btn-ghost sm" data-met-keep="' + metUi.reached + '">Keep ' + metUi.reached + '</button></div>' : '') +
 				(metUi.last && !run && tempoLog ? '<div class="mp-met-log"><span>Log <b>' + metUi.last + ' bpm</b> for ' + esc((list('tempo').filter(function (x) { return x.id === ui.ex; })[0] || list('tempo')[0]).name) + '?</span><span class="mp-item-acts">' + Object.keys(QUALITY).map(function (k) { return '<button type="button" class="mp-x" data-met-log="' + k + '">' + QUALITY[k] + '</button>'; }).join('') + '<button type="button" class="mp-x" data-met-log="">Not now</button></span></div>' : '') +
@@ -1461,11 +1556,12 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 		if (key === 'setups') {
 			return '<form class="mp-m-save" data-form="met-setup" novalidate><div class="field"><label for="mp-m-setup-name">Save what is set now as</label><input id="mp-m-setup-name" type="text" maxlength="40" data-f="m-setup-name" placeholder="e.g. Scales, 2 and 4"></div><button class="mp-btn-ghost sm" type="submit">Save</button></form>' +
 				(o.setups.length ? '<ul class="mp-m-mine">' + o.setups.map(function (su, i) { return '<li><span>' + esc(su.name) + '</span><button type="button" class="mp-x" data-met-setup-del="' + i + '" aria-label="Delete the setup ' + esc(su.name) + '">Delete</button></li>'; }).join('') + '</ul>' : '') +
-				'<p class="mp-note">A setup keeps everything on this screen: tempo, time signature, sound, the lot. Tap its name above to bring it back. The ones that come with the metronome leave your tempo and sound alone.</p>';
+				'<p class="mp-m-share"><button type="button" class="mp-btn-ghost sm" data-met="link">Copy a link to what is set now</button></p>' +
+				'<p class="mp-note">A link opens the metronome with this tempo and everything the click is doing, for anyone you send it to. A setup keeps everything on this screen: tempo, time signature, sound, the lot. Tap its name above to bring it back. The ones that come with the metronome leave your tempo and sound alone.</p>';
 		}
 		if (key === 'place') {
 			var n = met.opts.beats.length, w = metWhere(mi);
-			return '<div><span class="mp-lbl">Which beats</span>' + metSeg('which', [['all', 'Every beat'], ['backbeat', backbeatName(n)], ['one', 'Beat one']], o.which, 'Which beats') + '</div>' +
+			return '<div><span class="mp-lbl">Which beats</span>' + metSeg('which', [['all', 'Every beat'], ['alt', altName(n)], ['backbeat', backbeatName(n)], ['one', 'Beat one']], o.which, 'Which beats', true) + '</div>' +
 				(o.which === 'one' ? '<div><span class="mp-lbl">How often</span>' + metSeg('every', MET_EVERY, o.every, 'How often') + '</div>' : '') +
 				(mi.kind === 'odd' ? '<p class="mp-note">In an odd time signature the click stays on the beat.</p>' :
 					'<div><span class="mp-lbl">Where in the beat</span>' + metSeg('where', MET_WHERE[mi.kind], w, 'Where in the beat', true) + '</div>' +
@@ -1548,9 +1644,28 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 		for (i = 0; i < keys.length; i++) { if (a.hasAttribute(keys[i])) { return '[' + keys[i] + '="' + a.getAttribute(keys[i]) + '"]'; } }
 		return null;
 	}
+	// Count it off: a tempo drawn between the two set, to the nearest 2, and not the one just had.
+	function countTarget(not) {
+		var c = metOpts.count, lo = Math.min(c.from, c.to), hi = Math.max(c.from, c.to), t, n = 0;
+		do { t = Math.round((lo + Math.random() * (hi - lo)) / 2) * 2; } while (t === not && hi - lo > 2 && ++n < 20);
+		return Math.max(MET.BOTTOM, Math.min(MET.TOP, t));
+	}
+	// One go of interleaved clicking up: a bar's count, then the click for the chunks and a beat to land on, then it stops.
+	function interPlay() {
+		if (!met) { return; }
+		var it = metOpts.inter, sched = MET.interleave(it), rep = sched[Math.min(it.at, sched.length - 1)];
+		if (met.running) { stopMet(); }
+		setBpm(rep.tempo, true);
+		metUi.inter = { left: (rep.to - rep.from + 1) * it.beats + 1 };
+		metUi.interSet = false;
+		startMet();
+		renderModule('metronome', { focus: '[data-met="inter-play"]' });
+	}
 	function startMet() {
 		if (!met) { return; }
 		var eo = engineOpts();
+		// (a go of interleaved clicking up is a plain click on every beat, counted in, whatever else is set)
+		if (metUi.inter) { eo.countIn = 1; eo.mute = null; eo.clickUp = null; eo.gap = null; eo.which = 'all'; eo.where = 'on'; eo.groove = null; }
 		if (eo.groove && eo.groove.kind === 'kit') { met.kitUrls = shelf.data.kit; }
 		met.set(eo);
 		metUi.last = 0; metUi.reached = 0; metUi.played = ''; metUi.now = metOpts.bpm; metUi.bars = 0;
@@ -1558,6 +1673,7 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 		met.start().catch(function () { toast('Sound isn\'t available in this browser.'); });
 	}
 	function stopMet() {
+		metUi.inter = null;
 		if (!met || !met.running) { return; }
 		var played = Date.now() - metUi.startedAt;
 		var bpm = met.currentBpm();
@@ -1585,6 +1701,11 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 		met.onbeat = function (ev) {
 			var mod = room && room.querySelector('[data-mod="metronome"]');
 			metUi.now = ev.bpm; if (!ev.countIn && ev.sub === 0) { metUi.bars = ev.bar + 1; }
+			// a go of interleaved clicking up stops itself once the landing beat has sounded
+			if (metUi.inter && !ev.countIn && ev.sub === 0 && --metUi.inter.left <= 0) {
+				metUi.inter = null;
+				window.setTimeout(function () { if (met.running) { stopMet(); } renderModule('metronome', { focus: '[data-met="inter-next"]' }); }, Math.max(120, 30000 / ev.bpm));
+			}
 			if (ev.sub === 0 && ev.audible && metOpts.vibrate && navigator.vibrate) { navigator.vibrate(ev.level === 'accent' ? 35 : 18); }
 			if (!mod) { return; }
 			var cells = mod.querySelectorAll('[data-met-cell]'), i;
@@ -1676,6 +1797,9 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 		else if (isNaN(v) || (path === 'up.by' && !v)) { v = grp[p[1]] === '' || !+grp[p[1]] ? lim[2] : grp[p[1]]; }
 		else { v = Math.max(lim[0], Math.min(lim[1], v)); }
 		grp[p[1]] = v;
+		// (a change to the passage starts its schedule again, and keeps its settings open)
+		if (p[0] === 'count') { metUi.count = null; metUi.countSet = true; }
+		if (p[0] === 'inter') { grp.at = 0; if (grp.goal < grp.start) { grp[p[1] === 'start' ? 'goal' : 'start'] = v; } metUi.interSet = true; }
 		var patch = {}; patch[p[0]] = grp;
 		metSave(patch, false);
 		// the field shows what was taken (a typed 500 becomes 100), so its half typed text is dropped
@@ -1691,6 +1815,8 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 			toast(MET_FN[other] + ' is off now. The two take turns.');
 		}
 		if (patch[key].on && !metUi.fn) { metUi.fn = key; }
+		// Eyes keep time too: with beats being taken away, nothing lights on a silent one unless the player asks for it back.
+		if (patch[key].on && other && !metOpts.hideSilent) { patch.hideSilent = true; toast('The screen goes still on silent beats now: your eyes keep time too. It is under More.'); }
 		metSave(patch, false);
 		renderModule('metronome', { focus: '[data-fn-sw="' + key + '"]' });
 	}
@@ -1701,6 +1827,7 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 		if (mine) { metOpts = MET.upgrade(JSON.parse(JSON.stringify(su.s))); }
 		else { metOpts = MET.upgrade(Object.assign({ v: 2, bpm: metOpts.bpm, sound: metOpts.sound, vol: metOpts.vol, offsetMs: metOpts.offsetMs, flash: metOpts.flash, vibrate: metOpts.vibrate, hideSilent: metOpts.hideSilent }, JSON.parse(JSON.stringify(su[1])))); }
 		metOpts.setups = keep;
+		metUi.interSet = !!(metOpts.inter && metOpts.inter.on);   // a fresh passage opens on its settings
 		metUi.reached = 0; metUi.fn = metOpts.up.on ? 'up' : metOpts.random.on ? 'random' : metOpts.gradual.on ? 'gradual' : '';
 		metSave({ groove: metOpts.groove }, false);
 		renderModule('metronome', { focus: '[data-met-setup="' + code + '"]' });
@@ -2737,6 +2864,37 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 				if (mk === 'double') { setBpm(metNowBpm() * 2); }
 				if (mk === 'go') { if (met.running) { stopMet(); } else { startMet(); } }
 				if (mk === 'tap') { tapTempo(); }
+				if (mk === 'link') {
+					var url = metLink();
+					try { navigator.clipboard.writeText(url).then(function () { toast('The link is copied.'); }, function () { window.prompt('Copy this link', url); }); } catch (e) { window.prompt('Copy this link', url); }
+				}
+				if (mk === 'up-next' || mk === 'up-back') { setBpm(MET.upNext(metOpts.bpm, metOpts.up, mk === 'up-back')); renderModule('metronome', { focus: '[data-met="' + mk + '"]' }); }
+				if (mk === 'up-half' && +metOpts.up.stopAt) { setBpm(Math.round(+metOpts.up.stopAt / 2)); renderModule('metronome', { focus: '[data-met="up-half"]' }); }
+				if (mk === 'count-tap') {
+					var cst = metUi.count; if (!cst) { return; }
+					if (met.running) { stopMet(); }
+					var nowT = window.performance && performance.now ? performance.now() : Date.now();
+					// (a pause of more than three seconds starts the four again)
+					if (cst.got || (cst.taps.length && nowT - cst.taps[cst.taps.length - 1] > 3000)) { cst.taps = []; cst.got = null; }
+					cst.taps.push(nowT);
+					if (cst.taps.length === 4) { cst.got = MET.counted(cst.taps, cst.target); }
+					renderModule('metronome', { focus: '[data-met="count-tap"]' });
+				}
+				if (mk === 'count-hear' && metUi.count) { setBpm(metUi.count.target, true); if (!met.running) { startMet(); } renderModule('metronome', { focus: '[data-met="count-hear"]' }); }
+				if (mk === 'count-next' && metUi.count) { if (met.running) { stopMet(); } metUi.count = { target: countTarget(metUi.count.target), taps: [], got: null }; renderModule('metronome', { focus: '[data-met="count-tap"]' }); }
+				if (mk === 'count-off') { metUi.count = null; metSave({ count: Object.assign({}, metOpts.count, { on: false }) }, false); renderModule('metronome', { focus: '[data-met="go"]' }); }
+				if (mk === 'inter-play') { if (metUi.inter) { stopMet(); } else { interPlay(); } }
+				if (mk === 'inter-next' || mk === 'inter-back' || mk === 'inter-off') {
+					if (metUi.inter) { stopMet(); }
+					var il = MET.interleave(metOpts.inter).length, ia = Math.max(0, Math.min(il - 1, Math.min(metOpts.inter.at, il - 1) + (mk === 'inter-next' ? 1 : mk === 'inter-back' ? -1 : 0)));
+					metSave({ inter: Object.assign({}, metOpts.inter, mk === 'inter-off' ? { on: false } : { at: ia }) }, false);
+					renderModule('metronome', { focus: '[data-met="' + (mk === 'inter-off' ? 'go' : mk === 'inter-next' && ia === il - 1 ? 'inter-play' : mk) + '"]' });
+				}
+				if (mk === 'thin-next' || mk === 'thin-back' || mk === 'thin-off') {
+					var ts = Math.max(0, Math.min(MET.THIN.length - 1, metOpts.thin.stage + (mk === 'thin-next' ? 1 : mk === 'thin-back' ? -1 : 0))), tt = MET.THIN[ts];
+					metSave(mk === 'thin-off' ? { thin: { on: false, stage: 0 } } : { thin: { on: true, stage: ts }, which: tt.which, every: tt.every }, false);
+					renderModule('metronome', { focus: '[data-met="' + (mk === 'thin-off' ? 'go' : mk) + '"]' });
+				}
 				return;
 			}
 			var fo = t.closest('[data-fn-open]');
@@ -2751,6 +2909,7 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 			if (msw) {
 				var sk = msw.getAttribute('data-m-sw').split('.'), sp = {};
 				if (sk.length === 2) { sp[sk[0]] = Object.assign({}, metOpts[sk[0]]); sp[sk[0]][sk[1]] = !metOpts[sk[0]][sk[1]]; }
+				if (sk[0] === 'inter') { sp.inter.at = 0; metUi.interSet = true; }
 				else { sp[sk[0]] = sk[0] === 'countIn' ? (metOpts.countIn ? 0 : 1) : !metOpts[sk[0]]; }
 				metSave(sp, false);
 				renderModule('metronome', { focus: '[data-m-sw="' + msw.getAttribute('data-m-sw') + '"]' });

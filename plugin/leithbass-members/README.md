@@ -281,6 +281,43 @@ Bring the walking line at 70 bpm.
 
 ## Changelog
 
+### 1.13.0 (in progress: not for installing yet)
+
+One release for the whole programme agreed on 11 Nov 2026 (`claude/leith-bass-space-review-2026-11-11.md`). Built so far: Harmonic Elements, and the metronome's new ways of practising.
+
+**The metronome** (after Molly Gebrian, *Learn Faster, Perform Better*, chapters 14 and 16):
+
+- **Thin the click**, a setup that walks the click away a stage at a time at one tempo: every beat, 1 and 3, beat one, then beat one every 2, 3, 4, 8 and 16 bars. Back, Next and Done on the face.
+- **1 and 3** (every other beat from beat one) beside the backbeat under Where the click falls, and **beat one every 8 or 16 bars**.
+- **Click up, a step at a time.** "Step when ready" moves the tempo when you tap Next, not by the clock. The Stop at field is now the **Goal**, with "Start at half the goal" and "Go 5% past the goal". Quick picks of 3, 5 and 10 for the step, and a note when the step is too small to feel. The Build speed setup now works this way.
+- **Interleaved clicking up**, a guide to Gebrian's own method. Say how many chunks the passage has, how long a chunk is, the start, the goal and the step. The face then says what to play ("Play chunks 2 to 4 at 80"), counts a bar, clicks for exactly those chunks and one beat more to land on, and stops. Next, Back, and where you are in the schedule is kept. It can build from the end of the passage.
+- **Offbeat click** and **Beat one only** as named setups.
+- **The screen goes still on silent beats** when Random mute or Gradual mute is switched on, and in Thin the click: eyes keep time too. It can be switched back under More.
+- **Count it off** (a setup). No click: a tempo is named, you tap four beats as if counting a band in, and it says what you tapped and how far off. Within 3% counts as there. Hear the tempo, or draw another, between two tempos you set.
+- **A setup as a link.** "Copy a link to what is set now" (under Setups) gives an address that opens the metronome with the same tempo and everything the click is doing: `…/metronome/?m=…`. The sound, the volumes and saved setups stay the reader's own, and a member's own Shelf loop does not travel. The theme says where the free metronome is (`lbs_tool_url`); without one the link opens the page it was made on.
+
+**Harmonic Elements:**
+
+- **Home is established, then heard.** The Dojo asks one thing at a time. **Name it**: the band gives you home, and you name the element. **Find home**: nothing is given, and you find the key. Where a loop has two homes Find home says so, and either counts.
+- **Four ways for the band to establish home** in Name it (The mix → Home): **Cue** (two bars of the home chord, the default), **Pedal** (a low home note under the loop), **Bass** (the band's bass on each chord's root) and **Loop only**. Pedal and Bass are the house band's: a recorded loop gets the cue.
+- **Home hit.** While a loop is going round in Name it, one bar of the home chord is laid over it from the next bar line.
+- **Hear it from each home.** After any answer, the same chords with the band's bass on the roots, phrased from each home the loop has.
+- **Cadences have one home.** Elements defined by where they arrive (ii V I, the minor cadence, the backdoor cadence, the V of IV and others) are marked `shape: 'cadence'`: no second hearing, and never another loop's hearing. A ii V I in C is no longer accepted as G major in the expanded voicing.
+- **Name it is marked strictly.** With home on C, C to F is I IV and not "I V".
+- **The nineteen further molecules sorted.** Eleven stay, folded into Stages 6 to 9 with draft wording; five are merged into the element that is the same sound or idea; three are dropped. Merged and dropped elements keep their ids and are still known by name. "More molecules" is gone from the mix, the presets and the Guide.
+- **Steps, not shifts.** The six "shift" elements are steps (the Mixolydian step). Their ids and their recordings' file names are unchanged, and a recording filed under the new name is read too.
+- **A Guide page, "12. Whose home is it?"**, linked from every two homes card. Draft wording.
+- **The room opens on the Dojo**, and on a phone a question and its Check fit one screen.
+- **Hear it from each home on the Guide's pages too**, at the key, tempo and feel the page's player is set to. A card's "Key" row now reads "Home, as the course hears it".
+- **The Guide is in reading order for the app.** Start here (About the course, The idea, The relationships, Whose home is it?), then The Elements, then the rest of The Method, then Reference, where "How this document is organised" and Conventions now sit. Every page keeps its address and its words; the document's section numbers are left off the titles.
+- **Links into the Dojo**: `#dojo/name/major-lean+major-pull`, `#dojo/home/dorian-loop`, `#dojo/pair`. A link sets what is asked and the mix's elements. "Copy a link to this mix" is under The mix. This is how a set from Jack reaches a pupil.
+- **The record** gains `ask` (`element` or `home`). Find home is counted on its own and does not count towards an element being recognised.
+
+**Ear Training and Read, on a phone:**
+
+- Ear Training's strands are one row that scrolls sideways, with their names whole ("Chord flavours" and "Progressions" were cut off).
+- Read's Guide and Dojo switch, strands and drills are 44 px tall to tap (they were 34 to 36). Write it's Check still clears the bottom bar.
+
 ### 1.12.1
 
 - **Tapping the neck works again in Read** (Find it, Play it). The taps never reached the page in 1.11.0 and 1.12.0, on any device: the page only listened for buttons, and the neck's places are drawn shapes.

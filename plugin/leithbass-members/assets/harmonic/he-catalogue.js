@@ -2,10 +2,10 @@
  * Leith Bass Space: Harmonic Elements catalogue.
  *
  * Every element the ear trainer can play, taken from the Harmonic Elements
- * course: homes, bonds and molecules (stages 1 to 9), the compounds that are
- * whole forms (stage 10: the blues and its relatives, rhythm changes), and
- * three further groups of common progressions the course doesn't have cards
- * for yet ("More molecules": minor and modal, pop and soul, jazz).
+ * course: homes, bonds and molecules (stages 1 to 9), and the compounds that are
+ * whole forms (stage 10: the blues and its relatives, rhythm changes). Eleven
+ * further molecules the course has no cards for yet sit in the stages they
+ * belong to, marked as drafts.
  *
  * Each element lists its chords as scale degrees from home, so the same entry
  * works in all twelve keys. "tri" is the course's base voicing and "sev" its
@@ -96,10 +96,11 @@
 		{ n: 9, name: 'Applied', about: 'Pulls aimed at chords other than home' },
 		// Stage 10 is in the course, but out of the app for now (Oct 2026): see SHOW_FORMS below.
 		{ n: 10, name: 'Compounds', about: 'Molecules joined into forms', retired: true },
-		// Not stages of the course: more loops of the same kinds, grouped by where they turn up.
-		{ n: 11, name: 'Minor and modal', about: 'More molecules from minor homes and the modes', more: true },
-		{ n: 12, name: 'Pop and soul', about: 'More molecules that songs are written on', more: true },
-		{ n: 13, name: 'Jazz', about: 'More molecules: turnarounds and passing chords', more: true }
+		// Three groups of further molecules that were in the app in 1.8.0 to 1.12.1. In Nov 2026 eleven of them were
+		// folded into the stages above and the rest merged or dropped (see "out" below); the groups are kept for the names.
+		{ n: 11, name: 'Minor and modal', about: 'More molecules from minor homes and the modes', was: true, retired: true },
+		{ n: 12, name: 'Pop and soul', about: 'More molecules that songs are written on', was: true, retired: true },
+		{ n: 13, name: 'Jazz', about: 'More molecules: turnarounds and passing chords', was: true, retired: true }
 	];
 
 	function parseChords(text) {
@@ -137,16 +138,24 @@
 	// stage, roman numerals, course name, built from, base voicing, expanded voicing, listen-for line
 	function E(stage, roman, name, rel, tri, sev, tip, extra) {
 		var el = {
-			id: slug(fileToken(name)), stage: stage, roman: roman, name: name, rel: rel, file: fileToken(name),
+			// (an id, and the name a recording is filed under, outlive a change of name: Ear Training's records and links hold the id)
+			id: (extra && extra.id) || slug(fileToken(name)), stage: stage, roman: roman, name: name, rel: rel, file: (extra && extra.file) || fileToken(name),
 			kind: stage === 1 ? 'home' : stage === 10 ? 'form' : (tri.split(' ').length === 2 ? 'bond' : 'molecule'),
 			tri: parseChords(tri), sev: sev ? parseChords(sev) : null, tip: tip, optional: !!(extra && extra.optional),
 			// other names a loop file may use for this element
-			aliases: (extra && extra.aliases) || [],
+			aliases: ((extra && extra.aliases) || []).concat(extra && extra.file && extra.file !== fileToken(name) ? [fileToken(name)] : []),   // (a renamed element's new name is read too)
 			// one numeral per chord, where the loop has more chords than the element's name (I IV V is played I IV V IV)
 			romans: ((extra && extra.romans) || roman).split(' '),
 			// how a recording longer than the written loop fills its bars, unless the file says otherwise:
 			// the changes come round again ('repeat'), or every chord lasts longer ('stretch')
-			long: (extra && extra.long) || 'repeat'
+			long: (extra && extra.long) || 'repeat',
+			// 'loop': it goes round, and may be heard from more than one home. 'cadence': it is defined by where it
+			// is going, so it has the one home it arrives at, and is never another loop heard from elsewhere.
+			shape: (extra && extra.shape) || 'loop',
+			// taken out of the app by name (Nov 2026): 'merged' into the element named in "into", or 'dropped'
+			out: (extra && extra.out) || '', into: (extra && extra.into) || '',
+			// the name and the lines are a draft for Jack to rewrite
+			draft: !!(extra && extra.draft)
 		};
 		if (el.romans.length !== el.tri.length || (el.sev && el.sev.length !== el.tri.length)) { throw new Error('Roman numerals and chords disagree: ' + name); }
 		// The key the course hears it in: home, and whether home is major or minor (from the chord on
@@ -154,7 +163,7 @@
 		var homeChord = el.tri.filter(function (c) { return c.deg === '1'; })[0];
 		el.homeAbsent = !homeChord;
 		el.mode = homeChord && MINORISH[homeChord.qual] ? 'minor' : 'major';
-		el.retired = (stage === 10 && !SHOW_FORMS) || (EXTRA_HOMES.indexOf(roman) !== -1 && !SHOW_EXTRA_HOMES);
+		el.retired = (stage === 10 && !SHOW_FORMS) || (EXTRA_HOMES.indexOf(roman) !== -1 && !SHOW_EXTRA_HOMES) || !!el.out;
 		el.hear = extra && extra.hear !== undefined ? extra.hear : true;   // false: no hearings worked out beyond the course's own
 		ALL.push(el);
 		if (!el.retired) { ELEMENTS.push(el); }
@@ -192,9 +201,9 @@
 	E(4, 'V IV I', 'The backwards cadence', 'Home, lean, pull', '5.M.1 4.M.1 1.M.2', '5.7.1 4.7.1 1.7.2', 'V to IV is a falling step. Nothing resolves until IV leans home.', { long: 'stretch' });
 	E(4, 'i iv v', 'The modal minor molecule', 'Home, lean, pull', '1.m.1 4.m.1 5.m.1 1.m.1', '1.m7.1 4.m7.1 5.m7.1 1.m7.1', 'The v arriving without any pull.', { romans: 'i iv v i', long: 'stretch' });
 	E(4, 'i iv V', 'The functional minor molecule', 'Home, lean, pull', '1.m.1 4.m.1 5.M.1 1.m.1', '1.m7.1 4.m7.1 5.7.1 1.m7.1', 'The {7}. Play this back to back with i iv v in the same key until the difference stops being a concept.', { romans: 'i iv V i', long: 'stretch' });
-	E(4, 'ii V I', 'The cadential cell', 'Home, pull, shadow (ii for IV)', '2.m.1 5.M.1 1.M.2', '2.m7.1 5.7.1 1.M7.2', 'Two falling fifths in a row. Then the guide tones on their own.', { long: 'stretch' });
+	E(4, 'ii V I', 'The cadential cell', 'Home, pull, shadow (ii for IV)', '2.m.1 5.M.1 1.M.2', '2.m7.1 5.7.1 1.M7.2', 'Two falling fifths in a row. Then the guide tones on their own.', { long: 'stretch', shape: 'cadence' });
 	E(4, 'ii V I IV', 'The cadence as a comma', 'Home, lean, pull, shadow (ii for IV)', '2.m.1 5.M.1 1.M.1 4.M.1', '2.m7.1 5.7.1 1.M7.1 4.M7.1', 'The lean after the arrival, and the way it sets up the next ii.');
-	E(4, 'iiø7 V7 i', 'The minor cadence', 'Home, pull, shadow (iiø for iv)', '2.h7.1 5.7.1 1.m.2', '2.h7.1 5.7.1 1.m7.2', '{b6} in the approach chord, {7} in the dominant, {b3} in the arrival.');
+	E(4, 'iiø7 V7 i', 'The minor cadence', 'Home, pull, shadow (iiø for iv)', '2.h7.1 5.7.1 1.m.2', '2.h7.1 5.7.1 1.m7.2', '{b6} in the approach chord, {7} in the dominant, {b3} in the arrival.', { shape: 'cadence' });
 
 	// Stage 5. Shadow
 	E(5, 'I vi', 'The relative shadow', 'Home, shadow (vi for I)', '1.M.2 6.m.2', '1.M7.2 6.m7.2', 'The root falling a third while the upper notes stay put.', { aliases: ['Relative minor'] });
@@ -208,40 +217,40 @@
 	E(6, 'I iii IV V', 'The rising line', 'Home, lean, pull, shadow (iii for I)', '1.M.1 3.m.1 4.M.1 5.M.1', '1.M7.1 3.m7.1 4.M7.1 5.7.1', 'The bass rising {1}, {3}, {4}, {5}.');
 	E(6, 'I IV iii V', 'The surprise shadow', 'Home, lean, pull, shadow (iii for I)', '1.M.1 4.M.1 3.m.1 5.M.1', '1.M7.1 4.M7.1 3.m7.1 5.7.1', 'The bass stepping down from {4} to {3}.');
 	E(6, 'IV V iii vi', 'The ascending soul cell', 'Lean, pull, shadow (iii, vi) (home absent)', '4.M.1 5.M.1 3.m.1 6.m.1', '4.M7.1 5.7.1 3.m7.1 6.m7.1', 'V moving to iii before vi. It avoids a direct V to I arrival.');
-	E(6, 'iii vi ii V I', 'The long cycle', 'Home, pull, shadow (iii, vi, ii)', '3.m.1 6.m.1 2.m.1 5.M.1 1.M.4', '3.m7.1 6.m7.1 2.m7.1 5.7.1 1.M7.4', 'Each root falling a fifth, and the sense of the chain gathering speed.');
+	E(6, 'iii vi ii V I', 'The long cycle', 'Home, pull, shadow (iii, vi, ii)', '3.m.1 6.m.1 2.m.1 5.M.1 1.M.4', '3.m7.1 6.m7.1 2.m7.1 5.7.1 1.M7.4', 'Each root falling a fifth, and the sense of the chain gathering speed.', { shape: 'cadence' });
 	E(6, 'I V vi IV', 'The pop axis', 'Home, lean, pull, shadow (vi for I)', '1.M.1 5.M.1 6.m.1 4.M.1', '1.M7.1 5.M.1 6.m7.1 4.M7.1', 'V moving up a step to vi, where the fifties progression would have gone home.');
 	E(6, 'vi IV I V', 'The axis, minor view', 'Home, lean, pull, shadow (vi for I)', '6.m.1 4.M.1 1.M.1 5.M.1', '6.m7.1 4.M7.1 1.M7.1 5.M.1', 'Where the loop seems to begin, and which chord you feel as home.');
 
-	// Stage 7. Shift
-	E(7, 'I ♭VII', 'The Mixolydian shift', 'Home, colour (♭VII brings ♭7: Mixolydian)', '1.M.2 b7.M.2', '1.M.2 b7.M7.2', 'Every note falling a step at once.');
-	E(5, 'i ♭VII', 'The minor shift', 'Home, shadow (♭VII for v)', '1.m.2 b7.M.2', '1.m7.2 b7.M.2', 'The parallel step, and then whichever 6 the melody chooses.');
-	E(5, 'I ii', 'The neo soul shift', 'Home, shadow (ii for IV)', '1.M.2 2.m.2', '1.M7.2 2.m7.2', 'The root rising a step with the texture moving in parallel.');
-	E(7, 'I II', 'The Lydian shift', 'Home, colour (II brings ♯4: Lydian)', '1.M.2 2.M.2', '1.M7.2 2.7.2', '{#4} in the second chord, heard against the home that stays major.', { optional: true });
-	E(7, 'i ♭II', 'The Phrygian shift', 'Home, colour (♭II brings ♭2: Phrygian)', '1.m.2 b2.M.2', '1.m7.2 b2.M7.2', 'The semitone rise in the bass.', { optional: true });
+	// Stage 7. Colour (with two of Stage 5's shadows that sit a step from home)
+	E(7, 'I ♭VII', 'The Mixolydian step', 'Home, colour (♭VII brings ♭7: Mixolydian)', '1.M.2 b7.M.2', '1.M.2 b7.M7.2', 'Every note falling a step at once.', { id: 'mixolydian-shift', file: 'Mixolydian shift', aliases: ['The Mixolydian shift'] });
+	E(5, 'i ♭VII', 'The minor step', 'Home, shadow (♭VII for v)', '1.m.2 b7.M.2', '1.m7.2 b7.M.2', 'The parallel step, and then whichever 6 the melody chooses.', { id: 'minor-shift', file: 'Minor shift', aliases: ['The minor shift'] });
+	E(5, 'I ii', 'The neo soul step', 'Home, shadow (ii for IV)', '1.M.2 2.m.2', '1.M7.2 2.m7.2', 'The root rising a step with the texture moving in parallel.', { id: 'neo-soul-shift', file: 'Neo soul shift', aliases: ['The neo soul shift'] });
+	E(7, 'I II', 'The Lydian step', 'Home, colour (II brings ♯4: Lydian)', '1.M.2 2.M.2', '1.M7.2 2.7.2', '{#4} in the second chord, heard against the home that stays major.', { optional: true, id: 'lydian-shift', file: 'Lydian shift', aliases: ['The Lydian shift'] });
+	E(7, 'i ♭II', 'The Phrygian step', 'Home, colour (♭II brings ♭2: Phrygian)', '1.m.2 b2.M.2', '1.m7.2 b2.M7.2', 'The semitone rise in the bass.', { optional: true, id: 'phrygian-shift', file: 'Phrygian shift', aliases: ['The Phrygian shift'] });
 
-	// Stage 8. Modal molecules
+	// Stage 8. Colour molecules
 	E(8, 'i ♭VII ♭VI ♭VII', 'The modal descent', 'Home, shadow (♭VII for v, ♭VI for iv)', '1.m.1 b7.M.1 b6.M.1 b7.M.1', '1.m7.1 b7.M.1 b6.M7.1 b7.M.1', 'The bass turning back up where a cadence might have been.');
 	E(8, 'i ♭VII ♭VI V', 'The Andalusian cadence', 'Home, shadow (♭VII, ♭VI), pull', '1.m.1 b7.M.1 b6.M.1 5.M.1', '1.m7.1 b7.M.1 b6.M7.1 5.7.1', 'The moment {b7} becomes {7}.');
 	E(8, 'I ♭VII IV', 'The Mixolydian cadence', 'Home, colour (♭VII), lean', '1.M.1 b7.M.1 4.M.2', null, 'The IV to I lean where you might expect V to I.');
-	E(8, '♭VI ♭VII I', 'The lift', 'Colour (♭VI, ♭VII, from minor), home', 'b6.M.1 b7.M.1 1.M.2', 'b6.M7.1 b7.M.1 1.M.2', 'The {3} arriving on the last chord.');
+	E(8, '♭VI ♭VII I', 'The lift', 'Colour (♭VI, ♭VII, from minor), home', 'b6.M.1 b7.M.1 1.M.2', 'b6.M7.1 b7.M.1 1.M.2', 'The {3} arriving on the last chord.', { shape: 'cadence' });
 
-	// Stage 9. Transformations (the ones that are loops in their own right). The expanded voicings are the
+	// Stage 9. Applied, with the borrowed and mediant colours that were Stage 9's in the first draft. The expanded voicings are the
 	// ones the Guide's pages give; the four with none there (the V of V detour, the Creep progression, the
 	// altered dominant and the tritone substitution) have none here.
 	E(9, 'I VI7 ii V', 'The turnaround', 'Home, applied (VI7, the V of ii), shadow (ii), pull', '1.M.1 6.7.1 2.m.1 5.7.1', '1.M7.1 6.7.1 2.m7.1 5.7.1', 'vi made dominant to pull into ii. The first chromatic note: {#1}.');
 	E(9, 'I II7 IV I', 'The V of V detour', 'Home, applied (II7, the V of V), lean', '1.M.1 2.7.1 4.M.1 1.M.1', null, 'A secondary dominant that does not go where it points.');
 	E(9, 'IV III7 vi', 'The descending soul cycle', 'Lean, applied (III7, the V of vi), shadow (vi)', '4.M.1 3.7.1 6.m.2', '4.M7.1 3.7.1 6.m7.2', 'III7 pulling into vi. {#5} enters.');
-	E(9, 'III7 VI7 II7 V7 I', 'The chain of dominants', 'Home, applied (III7, VI7 and II7, each the V of the next), pull', '3.7.1 6.7.1 2.7.1 5.7.1 1.M.4', '3.7.1 6.7.1 2.7.1 5.7.1 1.M7.4', 'The long cycle with dominant-seventh approach chords. Guide tones fall by semitone.');
-	E(9, 'I I7 IV', 'The V of IV', 'Home, applied (I7, the V of IV), lean', '1.M.1 1.7.1 4.M.2', '1.M7.1 1.7.1 4.M7.2', 'The home chord gains {b7} and becomes a dominant, pulling into IV.');
+	E(9, 'III7 VI7 II7 V7 I', 'The chain of dominants', 'Home, applied (III7, VI7 and II7, each the V of the next), pull', '3.7.1 6.7.1 2.7.1 5.7.1 1.M.4', '3.7.1 6.7.1 2.7.1 5.7.1 1.M7.4', 'The long cycle with dominant-seventh approach chords. Guide tones fall by semitone.', { shape: 'cadence' });
+	E(9, 'I I7 IV', 'The V of IV', 'Home, applied (I7, the V of IV), lean', '1.M.1 1.7.1 4.M.2', '1.M7.1 1.7.1 4.M7.2', 'The home chord gains {b7} and becomes a dominant, pulling into IV.', { shape: 'cadence' });
 	E(7, 'I iv', 'The borrowed minor lean', 'Home, lean, colour (iv brings ♭6, from minor)', '1.M.2 4.m.2', '1.M7.2 4.m7.2', 'The minor iv imported into a major key. {b6} enters.');
-	E(8, 'IV iv I', 'The minor plagal cadence', 'Home, lean, colour (iv brings ♭6, from minor)', '4.M.1 4.m.1 1.M.2', '4.M7.1 4.m7.1 1.M7.2', '{6} falls to {b6}, then to {5}. The amen with a tear in it.');
+	E(8, 'IV iv I', 'The minor plagal cadence', 'Home, lean, colour (iv brings ♭6, from minor)', '4.M.1 4.m.1 1.M.2', '4.M7.1 4.m7.1 1.M7.2', '{6} falls to {b6}, then to {5}. The amen with a tear in it.', { shape: 'cadence' });
 	E(8, 'I III IV iv', 'The Creep progression', 'Home, lean, colour (III brings ♯5, iv brings ♭6)', '1.M.1 3.M.1 4.M.1 4.m.1', null, 'A chromatic mediant and a borrowed iv in one loop.');
-	E(8, 'iv7 ♭VII7 I', 'The backdoor cadence', 'Home, colour (iv7 and ♭VII7, from minor)', '4.m.1 b7.7.1 1.M.2', '4.m7.1 b7.7.1 1.M7.2', 'Arriving home from below, without the dominant.');
+	E(8, 'iv7 ♭VII7 I', 'The backdoor cadence', 'Home, colour (iv7 and ♭VII7, from minor)', '4.m.1 b7.7.1 1.M.2', '4.m7.1 b7.7.1 1.M7.2', 'Arriving home from below, without the dominant.', { shape: 'cadence' });
 	E(7, 'I ♭III', 'The flat mediant', 'Home, colour (♭III, a chromatic mediant)', '1.M.2 b3.M.2', '1.M7.2 b3.M7.2', 'Roots a third apart without shared key. Sideways, cinematic.');
 	E(7, 'I III', 'The major mediant', 'Home, colour (III, a chromatic mediant)', '1.M.2 3.M.2', '1.M7.2 3.7.2', 'A bright chromatic lift. {#5} enters.');
 	E(7, 'I ♭VI', 'The flat submediant', 'Home, colour (♭VI, a chromatic mediant)', '1.M.2 b6.M.2', '1.M7.2 b6.M7.2', 'Dark shadow borrowed into major. {1} shared.');
-	E(9, 'ii V7alt I', 'The altered dominant', 'Home, shadow (ii), pull (altered)', '2.m7.1 5.alt.1 1.M7.2', null, 'Maximum tension on the dominant. Every altered tension resolves by step.');
-	E(9, 'ii ♭II7 I', 'The tritone substitution', 'Home, shadow (ii), applied (♭II7 for V)', '2.m7.1 b2.7.1 1.M7.2', null, 'The V replaced by the dominant a tritone away. The bass falls by semitone.');
+	E(9, 'ii V7alt I', 'The altered dominant', 'Home, shadow (ii), pull (altered)', '2.m7.1 5.alt.1 1.M7.2', null, 'Maximum tension on the dominant. Every altered tension resolves by step.', { shape: 'cadence' });
+	E(9, 'ii ♭II7 I', 'The tritone substitution', 'Home, shadow (ii), applied (♭II7 for V)', '2.m7.1 b2.7.1 1.M7.2', null, 'The V replaced by the dominant a tritone away. The bass falls by semitone.', { shape: 'cadence' });
 
 	// Stage 10. Compounds: the ones that are whole forms. Their chords and their listen-for lines are the
 	// Guide's own. ("roman" is a short tag here, since the numerals of a whole form won't fit on a button.)
@@ -272,30 +281,40 @@
 		'The III7, and the moment the ear accepts the sixth degree as home.',
 		{ romans: 'ii7 V7 I IV iiø7 V7 i', aliases: ['Two homes'] });
 
-	// More molecules. These nineteen are not in the course yet: the names, the "built from" lines and
-	// the listen-for lines are placeholders for Jack to rewrite (Oct 2026).
-	// Minor and modal
-	E(11, '♭VI ♭VII i', 'The Aeolian cadence', 'Home, shadow (♭VI, ♭VII)', 'b6.M.1 b7.M.1 1.m.2', 'b6.M7.1 b7.M.1 1.m7.2', 'Two whole steps up into a minor home. The same climb as the lift, with {b3} arriving where {3} would be.');
-	E(11, 'i ♭III ♭VII IV', 'The Dorian loop', 'Home, shadow (♭III, ♭VII), colour (IV brings ♮6: Dorian)', '1.m.1 b3.M.1 b7.M.1 4.M.1', '1.m7.1 b3.M7.1 b7.M.1 4.7.1', 'The {6} in the last chord. It is what makes this Dorian, and brighter than the modal descent.');
-	E(11, 'i ♭III IV', 'The minor rock cell', 'Home, shadow (♭III), colour (IV brings ♮6)', '1.m.1 b3.M.1 4.M.2', '1.m7.1 b3.M7.1 4.7.2', 'The roots climbing {1}, {b3}, {4}, the bottom of the minor pentatonic, and the {6} that arrives with the IV.');
-	E(11, 'i ii', 'The Dorian shift', 'Home, colour (ii brings ♮6: Dorian)', '1.m.2 2.m.2', '1.m7.2 2.m7.2', 'Two minor chords a step apart. The {6} in the second chord says Dorian.');
-	E(11, 'i ♭VI iv V', 'The fifties, in minor', 'Home, shadow (♭VI for iv), lean, pull', '1.m.1 b6.M.1 4.m.1 5.M.1', '1.m7.1 b6.M7.1 4.m7.1 5.7.1', 'The root motion of the fifties progression, from a minor home. {7} arrives in the last chord and pulls back to {1}.');
-	E(11, 'I ♭III IV', 'The rock cell', 'Home, colour (♭III, from minor), lean', '1.M.1 b3.M.1 4.M.2', null, 'A major home with roots from the minor pentatonic: {3} in the first chord, then {b3} as the root of the second.');
-	E(11, 'I IV ♭VII IV', 'The Mixolydian sway', 'Home, lean, colour (♭VII brings ♭7)', '1.M.1 4.M.1 b7.M.1 4.M.1', null, 'IV leans on to ♭VII, a fourth away again, and comes back the same way. {b7} where a V chord would have had {7}.');
-	// Pop and soul
-	E(12, 'I IV vi V', 'The axis, lean first', 'Home, lean, shadow (vi for I), pull', '1.M.1 4.M.1 6.m.1 5.M.1', '1.M7.1 4.M7.1 6.m7.1 5.7.1', 'The four chords of the pop axis in another order. Home leans to IV first, and V comes last to pull round again.');
-	E(12, 'I iii vi IV', 'The falling shadows', 'Home, shadow (iii, vi), lean', '1.M.1 3.m.1 6.m.1 4.M.1', '1.M7.1 3.m7.1 6.m7.1 4.M7.1', 'No V anywhere. {1} falls to {7} in the second chord, and the IV at the end leans home.');
-	E(12, 'I V ii IV', 'The axis with ii', 'Home, pull, shadow (ii for IV), lean', '1.M.1 5.M.1 2.m.1 4.M.1', '1.M7.1 5.7.1 2.m7.1 4.M7.1', 'The pop axis with ii where vi would be. The third chord shares two notes with the IV that follows, so the last change is soft.');
-	E(12, 'I ii iii IV', 'The climb', 'Home, shadow (ii, iii), lean', '1.M.1 2.m.1 3.m.1 4.M.1', '1.M7.1 2.m7.1 3.m7.1 4.M7.1', 'The roots walking up the scale: {1}, {2}, {3}, {4}. Every change is a step.');
-	E(12, 'IV iii ii I', 'The walk down', 'Home, shadow (ii, iii), lean', '4.M.1 3.m.1 2.m.1 1.M.1', '4.M7.1 3.m7.1 2.m7.1 1.M7.1', 'The climb in reverse: {4}, {3}, {2}, {1}. It arrives home by step, with no pull.');
-	E(12, 'IV V vi', 'The deceptive lift', 'Lean, pull, shadow (vi) (home absent)', '4.M.1 5.M.1 6.m.2', '4.M7.1 5.7.1 6.m7.2', 'V rising a step to vi where it would have gone home. Then ask whose home the vi is.');
-	E(12, 'I III7 vi IV', 'The gospel turn', 'Home, applied (III7, the V of vi), shadow (vi), lean', '1.M.1 3.7.1 6.m.1 4.M.1', '1.M7.1 3.7.1 6.m7.1 4.M7.1', 'III7 pulling into vi. {#5} is the note that does it.');
-	// Jazz
-	E(13, 'iii VI7 ii V', 'The three six two five', 'Shadow (iii, ii), applied (VI7), pull (home absent)', '3.m.1 6.7.1 2.m.1 5.7.1', '3.m7.1 6.7.1 2.m7.1 5.7.1', 'The turnaround with iii standing in for I. {#1} in the VI7 pulls into ii, and home never quite arrives.');
-	E(13, 'v7 I7 IV', 'The ii V into IV', 'Home, applied (v7 I7, a ii V aimed at IV), lean', '5.m7.1 1.7.1 4.M.2', '5.m7.1 1.7.1 4.M7.2', 'A ii V aimed at IV. {b7} sits in both of the first two chords, and falls to {6} as the IV arrives.');
-	E(13, 'I ♯i°7 ii V', 'The diminished passing chord', 'Home, applied (♯i°7 in place of VI7), shadow (ii), pull', '1.M.1 #1.dim7.1 2.m.1 5.7.1', '1.M7.1 #1.dim7.1 2.m7.1 5.7.1', 'The roots climbing by semitone: {1}, {#1}, {2}. The diminished chord does the job VI7 does in the turnaround.');
-	E(13, 'i ♭VI7 V7', 'The minor blues turn', 'Home, colour (♭VI7), pull', '1.m.2 b6.7.1 5.7.1', '1.m7.2 b6.7.1 5.7.1', 'Two dominant chords a semitone apart, sliding down into the pull. Bars nine and ten of the minor blues.');
-	E(13, 'i i(maj7) i7 i6', 'The line cliché', 'Home alone, with one voice moving', '1.m.1 1.mM7.1 1.m7.1 1.m6.1', null, 'One note walking down inside a minor home: {1}, {7}, {b7}, {6}. Nothing else moves.');
+	/*
+	 * The nineteen further molecules of 1.8.0 (minor and modal, pop and soul, jazz), sorted in Nov 2026 by
+	 * one test: an element stays if it brings a new sound (not the same chords in another order), is common
+	 * in the music pupils play, and has a clear home once home is cued, or is one of the few loops taught on
+	 * purpose as having two homes. Eleven stay, in the stages they belong to. Their names and lines are still
+	 * drafts for Jack ("draft"). Five are merged into the element that is the same sound or the same idea,
+	 * and three are dropped: those keep their ids and are known by name, like the forms, and nothing offers them.
+	 */
+	// Kept. Stage 6
+	E(6, 'I ii iii IV', 'The climb', 'Home, shadow (ii, iii), lean', '1.M.1 2.m.1 3.m.1 4.M.1', '1.M7.1 2.m7.1 3.m7.1 4.M7.1', 'The bass walking up the scale: {1}, {2}, {3}, {4}. Every change is a step and nothing pulls: the IV at the top leans back home.', { draft: true });
+	// Kept. Stage 7
+	E(7, 'i ii', 'The Dorian step', 'Home, colour (ii brings ♮6: Dorian)', '1.m.2 2.m.2', '1.m7.2 2.m7.2', 'Two minor chords a tone apart. The top of the second chord is {6}, a semitone above where a plain minor key would put it.', { draft: true, id: 'dorian-shift', file: 'Dorian shift', aliases: ['The Dorian shift'] });
+	// Kept. Stage 8
+	E(8, '♭VI ♭VII i', 'The Aeolian cadence', 'Shadow (♭VI for iv, ♭VII for v), home', 'b6.M.1 b7.M.1 1.m.2', 'b6.M7.1 b7.M.1 1.m7.2', 'Two whole steps up in the bass, landing on a minor home. No leading note: {b7} rises to {1} by a tone. Compare the lift, where the same climb lands on a major chord.', { draft: true, shape: 'cadence' });
+	E(8, 'i ♭III ♭VII IV', 'The Dorian loop', 'Home, shadow (♭III, ♭VII), colour (IV brings ♮6: Dorian)', '1.m.1 b3.M.1 b7.M.1 4.M.1', '1.m7.1 b3.M7.1 b7.M.1 4.7.1', 'The {6} when the last chord arrives. Then ask whose home it is: the same four chords can sit on the third chord’s root. Put a bass under each and hear the loop change.', { draft: true });
+	E(8, 'i ♭III IV', 'The minor rock cell', 'Home, shadow (♭III), colour (IV brings ♮6)', '1.m.1 b3.M.1 4.M.2', '1.m7.1 b3.M7.1 4.7.2', 'The bass climbing {1}, {b3}, {4}, then the brightness of {6} inside the last chord against a minor home.', { draft: true });
+	E(8, 'I ♭III IV', 'The rock cell', 'Home, colour (♭III, from minor), lean', '1.M.1 b3.M.1 4.M.2', null, 'The same bass climb over a major home. {3} sounds in the first chord, then {b3} is the root of the second: the rub is the point.', { draft: true });
+	E(8, 'i ♭VI iv V', 'The fifties, in minor', 'Home, shadow (♭VI for iv), lean, pull', '1.m.1 b6.M.1 4.m.1 5.M.1', '1.m7.1 b6.M7.1 4.m7.1 5.7.1', 'The fifties progression’s bass from a minor home. Wait for {7} in the last chord: it is the only note from outside the natural minor, and it pulls home.', { draft: true });
+	E(8, 'i i(maj7) i7 i6', 'The line cliché', 'Home alone, with one voice moving', '1.m.1 1.mM7.1 1.m7.1 1.m6.1', null, 'One note falling by semitone inside a minor chord: {1}, {7}, {b7}, {6}, while the bass can stay put. Sing the moving voice.', { draft: true });
+	// Kept. Stage 9. (The ii V into IV is played as a phrase: home, the ii V aimed at IV, IV, and home again. Going round as
+	// three chords it was simply ii V I in the key a fourth up, which is how it came to be accepted as a hearing of that.)
+	E(9, 'v7 I7 IV', 'The ii V into IV', 'Home, applied (v7 I7, a ii V aimed at IV), lean', '1.M.2 5.m7.1 1.7.1 4.M.2 1.M.2', '1.M7.2 5.m7.1 1.7.1 4.M7.2 1.M7.2', 'Home turning dominant. {b7} appears while the bass is still on {1}, and falls to {6} as the IV arrives.', { draft: true, shape: 'cadence', romans: 'I v7 I7 IV I' });
+	E(9, 'I ♯i°7 ii V', 'The diminished passing chord', 'Home, applied (♯i°7, in place of VI7), shadow (ii), pull', '1.M.1 #1.dim7.1 2.m.1 5.7.1', '1.M7.1 #1.dim7.1 2.m7.1 5.7.1', 'The bass rising by semitone: {1}, {#1}, {2}. The diminished chord does the turnaround’s job with a smoother bass.', { draft: true });
+	E(9, 'i ♭VI7 V7', 'The minor blues turn', 'Home, colour (♭VI7), pull', '1.m.2 b6.7.1 5.7.1', '1.m7.2 b6.7.1 5.7.1', 'Two dominant chords a semitone apart, sliding down into home. The bass falls {b6}, {5}, {1}.', { draft: true });
+	// Merged: the same sound, or the same idea, as an element that stays.
+	E(12, 'I V ii IV', 'The axis with ii', 'Home, pull, shadow (ii for IV), lean', '1.M.1 5.M.1 2.m.1 4.M.1', '1.M7.1 5.7.1 2.m7.1 4.M7.1', 'The Dorian loop heard from its other home.', { out: 'merged', into: 'dorian-loop' });
+	E(12, 'IV V vi', 'The deceptive lift', 'Lean, pull, shadow (vi) (home absent)', '4.M.1 5.M.1 6.m.2', '4.M7.1 5.7.1 6.m7.2', 'The Aeolian cadence heard from the relative major, whose home never sounds.', { out: 'merged', into: 'aeolian-cadence' });
+	E(11, 'I IV ♭VII IV', 'The Mixolydian sway', 'Home, lean, colour (♭VII brings ♭7)', '1.M.1 4.M.1 b7.M.1 4.M.1', null, 'The Mixolydian cadence’s chords, going out and back.', { out: 'merged', into: 'mixolydian-cadence' });
+	E(12, 'I III7 vi IV', 'The gospel turn', 'Home, applied (III7, the V of vi), shadow (vi), lean', '1.M.1 3.7.1 6.m.1 4.M.1', '1.M7.1 3.7.1 6.m7.1 4.M7.1', 'The descending soul cycle’s applied chord, from home.', { out: 'merged', into: 'descending-soul-cycle' });
+	E(13, 'iii VI7 ii V', 'The three six two five', 'Shadow (iii, ii), applied (VI7), pull (home absent)', '3.m.1 6.7.1 2.m.1 5.7.1', '3.m7.1 6.7.1 2.m7.1 5.7.1', 'The turnaround with iii standing in for I.', { out: 'merged', into: 'turnaround' });
+	// Dropped for now: the same chords as something else in another order.
+	E(12, 'I IV vi V', 'The axis, lean first', 'Home, lean, shadow (vi for I), pull', '1.M.1 4.M.1 6.m.1 5.M.1', '1.M7.1 4.M7.1 6.m7.1 5.7.1', 'The four chords of the pop axis in another order.', { out: 'dropped' });
+	E(12, 'I iii vi IV', 'The falling shadows', 'Home, shadow (iii, vi), lean', '1.M.1 3.m.1 6.m.1 4.M.1', '1.M7.1 3.m7.1 6.m7.1 4.M7.1', 'No V anywhere.', { out: 'dropped' });
+	E(12, 'IV iii ii I', 'The walk down', 'Home, shadow (ii, iii), lean', '4.M.1 3.m.1 2.m.1 1.M.1', '4.M7.1 3.m7.1 2.m7.1 1.M7.1', 'The climb in reverse.', { out: 'dropped' });
 
 	var BY_ID = {};
 	ALL.forEach(function (el) {
@@ -426,8 +445,10 @@
 			if (out.some(function (x) { return x.offset === h.offset && x.mode === h.mode; })) { return; }
 			out.push(h);
 		}
+		// a cadence is defined by where it arrives: one home, the course's own
+		if (el.shape === 'cadence') { HEARD[k] = out; return out; }
 		hearings(el, 0, v).forEach(function (h) {
-			if (h.el.homeAbsent) { return; }
+			if (h.el.homeAbsent || h.el.shape === 'cadence') { return; }
 			add({ offset: h.tonicPc, mode: h.el.mode, own: false, label: h.el.roman, romans: h.el.romans.slice(), chords: chords(h.el, v), via: h.el.id });
 		});
 		if (el.hear) {
@@ -448,7 +469,8 @@
 	// The ids of the elements that are this sound (itself among them), leaving out any with home absent.
 	function sameSound(el, voicing) {
 		var out = [el.id];
-		hearings(el, 0, voicingFor(el, voicing)).forEach(function (h) { if (!h.el.homeAbsent && out.indexOf(h.el.id) === -1) { out.push(h.el.id); } });
+		if (el.shape === 'cadence') { return out; }
+		hearings(el, 0, voicingFor(el, voicing)).forEach(function (h) { if (!h.el.homeAbsent && h.el.shape !== 'cadence' && out.indexOf(h.el.id) === -1) { out.push(h.el.id); } });
 		return out;
 	}
 	// Something spell() and tip() can be given for a hearing: the element itself, or the loop as heard from elsewhere.
@@ -552,7 +574,7 @@
 
 	function stageLabel(n) {
 		var st = STAGES[n - 1];
-		return !st ? '' : st.more ? 'More molecules. ' + st.name : 'Stage ' + n + '. ' + st.name;
+		return !st ? '' : (st.more || st.was) ? 'More molecules. ' + st.name : 'Stage ' + n + '. ' + st.name;
 	}
 
 	/*
@@ -616,6 +638,8 @@
 		} else { c.before = BY_ID[c.before]; }
 		c.after = BY_ID[c.after];
 	});
+	// (a pair with an element that is out of the app is out too)
+	PAIRS = PAIRS.filter(function (p) { return !BY_ID[p[0]].retired && !BY_ID[p[1]].retired || BY_ID[p[0]].kind === 'form' || BY_ID[p[1]].kind === 'form'; });
 	// The pairs and the transformations a mix allows: both of a pair's elements have to be in it; a
 	// transformation only has to be in it itself (what it was made from is given, not asked).
 	function pairsFor(ids) {
@@ -649,6 +673,8 @@
 	HE.degrees = degrees;
 	HE.chordDegrees = chordDegrees;
 	HE.stageLabel = stageLabel;
+	// How an element is spoken of: its numerals first, then the words. "I IV, the major lean".
+	HE.label = function (el) { return el.roman + ', ' + el.name.charAt(0).toLowerCase() + el.name.slice(1); };
 	HE.PAIRS = PAIRS;
 	HE.CHANGES = CHANGES;
 	HE.pairsFor = pairsFor;
