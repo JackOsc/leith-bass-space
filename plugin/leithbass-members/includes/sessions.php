@@ -168,6 +168,8 @@ function lbs_box_notes( $post ) {
 		<textarea class="widefat" rows="5" id="lbs-summary" name="lbs_summary" placeholder="What you worked on and what to listen for."><?php echo esc_textarea( $s['summary'] ); ?></textarea></p>
 	<p><label for="lbs-objectives"><strong>Objectives</strong> <span class="description">One per line. These become "This week's objectives" on their Overview. Edit freely: ticks stay with the right objective.</span></label>
 		<textarea class="widefat" rows="4" id="lbs-objectives" name="lbs_objectives"><?php echo esc_textarea( implode( "\n", $s['objectives'] ) ); ?></textarea></p>
+	<p><label for="lbs-sets"><strong>Sets</strong> <span class="description">Links into the app, one per line as <code>Label | address</code>. Use "Copy a link" in the Elements Dojo, Ear Training or the metronome. They show as buttons on the member's Home until the next session's notes. Addresses on this site only.</span></label>
+		<textarea class="widefat" rows="3" id="lbs-sets" name="lbs_sets" placeholder="This week's metronome | https://leithbass.space/metronome/?m=..."><?php echo esc_textarea( implode( "\n", array_map( function ( $x ) { return $x['label'] . ' | ' . $x['url']; }, $s['sets'] ) ) ); ?></textarea></p>
 	<p><label for="lbs-next"><strong>For next time</strong> <span class="description">Shown on their next booking.</span></label>
 		<input type="text" class="widefat" id="lbs-next" name="lbs_next" value=""></p>
 	<p class="lbs-check"><label><input type="checkbox" id="lbs-notify" name="lbs_notify" value="1" <?php checked( ! $notified ); ?>> Email the member that their notes are ready (when published and Done)</label>
@@ -314,6 +316,7 @@ function lbs_save_session( $post_id, $post ) {
 	update_post_meta( $post_id, '_lbs_prep', sanitize_text_field( isset( $in['lbs_prep'] ) ? $in['lbs_prep'] : '' ) );
 	update_post_meta( $post_id, '_lbs_summary', sanitize_textarea_field( isset( $in['lbs_summary'] ) ? $in['lbs_summary'] : '' ) );
 	lbs_save_objectives( $post_id, lbs_lines( sanitize_textarea_field( isset( $in['lbs_objectives'] ) ? $in['lbs_objectives'] : '' ) ) );
+	update_post_meta( $post_id, '_lbs_sets', lbs_session_sets( sanitize_textarea_field( isset( $in['lbs_sets'] ) ? $in['lbs_sets'] : '' ) ) );
 	update_post_meta( $post_id, '_lbs_files', $files );
 	update_post_meta( $post_id, '_lbs_last_status', $post->post_status );
 	$after = lbs_session( $post_id );

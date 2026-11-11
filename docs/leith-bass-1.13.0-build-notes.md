@@ -231,6 +231,28 @@ Plugin 1.13.0-alpha.6 with theme 3.20.0-alpha.1 (the theme's first change in thi
 
 - Today on Home on a real dashboard (needs WordPress). Read's `#dojo/today` was read in the code, not driven. A full set of twelve played through to "Today's set is done". Ear Training's and Read's Node suites are still to be updated and rerun.
 
+## alpha.8: sets from Jack, one measured delay, Ear Training's suite
+
+- **Sets from Jack.** `lbs_session_sets()` in `includes/core.php` reads and cleans the lines; the field is in the session's notes box (`includes/sessions.php`), saved as `_lbs_sets`; the latest session's sets go to the dashboard as `LBS.sets`; `renderHome()` draws them as a "From Jack" row. An address must be on the site's own host (a path starting `/` is made into one). Others are dropped without a message.
+- **One measured delay.** `read.js` writes its calibration to `localStorage['lbs-latency']` and clears it on "uncalibrate". `portal.js` (`metMeasuredMs()`, `metMeasured()`) offers it in More, rounded to 10 ms, when it is 60 ms or more. Smaller values are a finger's delay, not a speaker's, and are not offered.
+- **Ear Training's suite** is in the repository as `tests/ear-training-rules-test.js`, taking the assets folder as its argument, with checks added for the elements that are out. **16,852 checks, all passing.** Progressions has 54 elements.
+
+**Decisions taken on Jack's behalf (to confirm)**
+
+- Sets belong to a session and the latest session's are shown, like objectives. There is no standing list per member.
+- The two delay settings stay two settings with one measurement behind them. They are not the same quantity: Read's includes the finger, the metronome's is the speaker alone. That is why only a large value is offered across.
+- One engraver for Elements and Ear Training is **not done and is now proposed for after this release**. It changes how every answer in two rooms is drawn, cannot be judged without eyes on real phones, and nothing else in the programme depends on it.
+
+**Checked**
+
+- The address rule, run in PHP with WordPress's functions stubbed: this site kept (with or without a label, and as a bare path); another site, `javascript:` and `//host` dropped; a second pass keeps the same four.
+- Headless Chromium: the metronome offering 180 ms from a stored 184, setting it, and not offering 25.
+- `php -l` on the three changed PHP files. All three Node suites pass (Elements 58,858; metronome 1,076; Ear Training 16,852).
+
+**Not checked**
+
+- The Sets field in wp-admin and the row on a real Home (WordPress). Read's Node suite was not rerun: Read's scripts changed by two lines (the delay being kept), and its stylesheet.
+
 ## Audition page
 
 "Elements: audition page" (https://claude.ai/artifact/XzXJTLxZryKzfSfYM2wV1H), private to Jack. Built on 1.12.1's catalogue, so it still lists the 19 as they were. Jack's first reactions (11 Nov): Cue, Pedal and Bass are all useful; he suggested the Home hit; "step" is good; numerals should lead the names. His tick and cross answers per home are still to come.

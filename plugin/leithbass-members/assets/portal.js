@@ -1691,7 +1691,7 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 				'<p class="mp-note">Every sound is equally loud at the same setting, so changing the sound never changes the balance.</p>';
 		}
 		return metSwitch('countIn', o.countIn, 'Count in', 'One bar of plain clicks before it starts.') +
-			'<div class="field"><label for="mp-met-offset">Wireless headphones delay <span class="mp-small" data-offset-val>' + (+o.offsetMs ? o.offsetMs + ' ms' : 'Off') + '</span></label><input id="mp-met-offset" type="range" min="0" max="300" step="10" value="' + o.offsetMs + '" data-met-offset><span class="hint">Bluetooth makes the sound arrive late. If the display looks early, nudge this until they line up.</span></div>' +
+			'<div class="field"><label for="mp-met-offset">Wireless headphones delay <span class="mp-small" data-offset-val>' + (+o.offsetMs ? o.offsetMs + ' ms' : 'Off') + '</span></label><input id="mp-met-offset" type="range" min="0" max="300" step="10" value="' + o.offsetMs + '" data-met-offset><span class="hint">Bluetooth makes the sound arrive late. If the display looks early, nudge this until they line up.</span>' + metMeasured(o) + '</div>' +
 			metSwitch('flash', o.flash, 'Flash on the beat', 'The whole readout flashes, for when the phone is across the room.') +
 			(navigator.vibrate ? metSwitch('vibrate', o.vibrate, 'Vibrate on the beat', 'A short buzz on each beat. It is rougher than the click: feel the beat with it, judge your time by the sound.') : '') +
 			metSwitch('hideSilent', o.hideSilent, 'Hide silent beats', 'Nothing lights or moves while the click is silent, for testing yourself without the screen.') +
@@ -1926,6 +1926,17 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 		metOpts = MET.upgrade(JSON.parse(JSON.stringify(su.s))); metOpts.setups = keep;
 		metUi.set = i; metUi.reached = 0; metUi.fn = '';
 		metSave({ groove: metOpts.groove }, false);
+	}
+	// One measurement for the whole app: Read's "Line up your taps" times this device and its speaker. If that found
+	// a real delay (60 ms or more, which is Bluetooth and not a finger) and none is set here, offer it.
+	function metMeasuredMs() {
+		var m = null; try { m = JSON.parse(window.localStorage.getItem('lbs-latency')); } catch (e) { m = null; }
+		var ms = m && +m.ms >= 60 ? Math.min(300, Math.round(+m.ms / 10) * 10) : 0;
+		return L.demo ? 0 : ms;
+	}
+	function metMeasured(o) {
+		var ms = metMeasuredMs();
+		return ms && +o.offsetMs !== ms ? '<button type="button" class="mp-btn-ghost sm" data-met="use-measured">Use ' + ms + ' ms, as measured in Read</button>' : '';
 	}
 	/* Bring a setup back: a saved one is the whole screen, a starter leaves the tempo, sound and volumes alone. */
 	function metRecall(code) {
@@ -2521,6 +2532,8 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 			slab +
 			// Today: each room's own short set, chosen from the record it keeps. One tap from Home.
 			(!RO && (L.todays || []).length ? '<div class="mp-todays" role="group" aria-label="Today’s sets"><span class="mp-kick">Today</span>' + L.todays.map(function (t) { return '<a class="mp-today" href="' + esc(t.url) + '">' + esc(t.name) + '</a>'; }).join('') + '</div>' : '') +
+			// Sets from Jack: links he put on the latest session's notes (a drill with chosen things in play, a metronome setup)
+			((L.sets || []).length ? '<div class="mp-todays" role="group" aria-label="Sets from Jack"><span class="mp-kick">From Jack</span>' + L.sets.map(function (t) { return '<a class="mp-today" href="' + esc(t.url) + '">' + esc(t.label) + '</a>'; }).join('') + '</div>' : '') +
 			(on.length ? '<div class="mp-tiles">' + on.map(tileHtml).join('') + '</div>' : '<p class="mp-empty">No tools switched on yet.' + (RO ? '' : ' Choose some below.') + '</p>') +
 			(RO ? '' : '<div class="mp-shed-foot"><button type="button" class="mp-link" data-chooser aria-expanded="' + ui.chooser + '" aria-controls="mp-chooser">Choose your tools (' + on.length + ' of ' + ORDER.length + ')</button><span class="mp-small">Every tool says whether Jack can see it.</span></div>') +
 			renderChooser() + '</div>';
@@ -3013,6 +3026,7 @@ metTypeHtml(bpmNow) : '<b class="mp-num" data-bpm-val>' + bpmNow + '</b>') + '<s
 				if (mk === 'set-on') { ui.metPanel = ''; setGo(0); renderModule('metronome', { focus: '[data-met="go"]' }); }
 				if (mk === 'set-next' || mk === 'set-back') { setGo(Math.max(0, Math.min(metOpts.setups.length - 1, (metUi.set || 0) + (mk === 'set-next' ? 1 : -1)))); renderModule('metronome', { focus: '[data-met="go"]' }); }
 				if (mk === 'set-off') { metUi.set = null; renderModule('metronome', { focus: '[data-met="go"]' }); }
+				if (mk === 'use-measured' && metMeasuredMs()) { metSave({ offsetMs: metMeasuredMs() }, false); renderModule('metronome', { focus: '#mp-met-offset' }); }
 				if (mk === 'blind-off') { metSave({ blind: { on: false } }, false); renderModule('metronome', { focus: '[data-met="go"]' }); }
 				if (mk === 'inter-play') { if (metUi.inter) { stopMet(); } else { interPlay(); } }
 				if (mk === 'inter-next' || mk === 'inter-back' || mk === 'inter-off') {

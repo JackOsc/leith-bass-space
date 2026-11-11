@@ -330,6 +330,36 @@ function lbs_save_objectives( $post_id, $lines ) {
 	update_post_meta( $post_id, '_lbs_obj_ids', $ids );
 }
 
+/**
+ * Sets from Jack (1.13.0): links into the app's rooms and tools, written on a session, one per line as
+ * "Label | address". A set is how a drill with chosen things in play, or a metronome setup, reaches a member:
+ * it shows on their Home as a button.
+ *
+ * Only addresses on this site are kept, so a set can never send a member somewhere else. A line with no
+ * label takes the address's last part as its name. At most eight.
+ */
+function lbs_session_sets( $lines ) {
+	$out  = array();
+	$host = wp_parse_url( home_url(), PHP_URL_HOST );
+	foreach ( (array) ( is_string( $lines ) ? lbs_lines( $lines ) : $lines ) as $line ) {
+		if ( is_array( $line ) ) { $label = (string) ( $line['label'] ?? '' ); $url = (string) ( $line['url'] ?? '' ); }
+		else {
+			$cut   = strrpos( (string) $line, '|' );
+			$label = false === $cut ? '' : trim( substr( $line, 0, $cut ) );
+			$url   = trim( false === $cut ? $line : substr( $line, $cut + 1 ) );
+		}
+		if ( 0 === strpos( $url, '/' ) && 0 !== strpos( $url, '//' ) ) { $url = home_url( $url ); }
+		$url   = esc_url_raw( $url, array( 'http', 'https' ) );
+		$parts = $url ? wp_parse_url( $url ) : null;
+		if ( ! $parts || empty( $parts['host'] ) || strtolower( $parts['host'] ) !== strtolower( (string) $host ) ) { continue; }
+		$label = sanitize_text_field( $label );
+		if ( '' === $label ) { $label = trim( (string) ( $parts['path'] ?? '' ), '/' ); $label = ucfirst( str_replace( '-', ' ', basename( $label ) ) ) ?: 'Open'; }
+		$out[] = array( 'label' => mb_substr( $label, 0, 60 ), 'url' => $url );
+		if ( count( $out ) >= 8 ) { break; }
+	}
+	return $out;
+}
+
 function lbs_session( $post_id ) {
 	$post_id = (int) $post_id;
 	$files   = get_post_meta( $post_id, '_lbs_files', true );
@@ -349,6 +379,7 @@ function lbs_session( $post_id ) {
 		'paid'       => '1' === (string) get_post_meta( $post_id, '_lbs_paid', true ),
 		'title'      => ( $title && __( '(no title)' ) !== $title && 'Auto Draft' !== $title ) ? $title : '',
 		'summary'    => (string) get_post_meta( $post_id, '_lbs_summary', true ),
+		'sets'       => lbs_session_sets( get_post_meta( $post_id, '_lbs_sets', true ) ),
 		'objectives' => wp_list_pluck( $objs, 'text' ),
 		'obj'        => $objs,
 		'files'      => is_array( $files ) ? array_values( $files ) : array(),

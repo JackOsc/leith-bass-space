@@ -304,6 +304,8 @@ One release for the whole programme agreed on 11 Nov 2026 (`claude/leith-bass-sp
 **One app:**
 
 - **Today on Home.** A row on the Shed's Home opens each room's own Today's set: Ear, Elements, Read. Only rooms the member can use are shown.
+- **Sets from Jack.** A session's notes have a new field, Sets: links into the app, one per line as `Label | address`. They show as buttons on the member's Home ("From Jack") until the next session's notes. Only addresses on this site are kept. Stored as `_lbs_sets` on the session.
+- **One measured delay.** Read's "Line up your taps" result is kept for the whole app (`lbs-latency` on the device). When it is 60 ms or more, the metronome's More panel offers it as the wireless headphones delay.
 - **Links into Ear Training**: `#drill/deg/1+3+5` (a drill and what is in play), `#drill/chord`, `#today`, `#jam`. "Copy a link to this" is under In play.
 - **Fixed:** the Elements "Copy a link to this mix" button (new in this release) shared an id with the "Change the mix" link, so the wrong one answered the tap.
 

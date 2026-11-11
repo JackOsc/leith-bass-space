@@ -1423,7 +1423,7 @@
 		else if (a === 'weak') { var cells = RD.map(REC.log, { strings: SET.strings, maxFret: SET.maxFret, drills: SET.map === 'all' ? ['name', 'find', 'write', 'play'] : [SET.map] }); var weak = RD.weakest(cells.filter(function (c) { return c.level > 0; }), 6); var drill = SET.map === 'all' ? 'find' : SET.map; S.plan = { kind: 'today', parts: [{ drill: drill, count: 12, only: weak.map(function (c) { return c.names[0] || c.written; }), why: 'the slowest notes on your Map', done: 0 }], i: 0 }; S.strand = 'today'; renderPlan(); newQuestion(); }
 		else if (a === 'sweep') { startSweep(); }
 		else if (a === 'calibrate') { calibrate(); }
-		else if (a === 'uncalibrate') { SET.latency = 0; save(); renderSide(); }
+		else if (a === 'uncalibrate') { SET.latency = 0; try { window.localStorage.removeItem('lbs-latency'); } catch (e) { /* nothing kept */ } save(); renderSide(); }
 		else if (a === 'diary') { addToDiary(); }
 		else if (a === 'clear') { if (window.confirm ? true : true) { clearRecord(b); } }
 	});
@@ -1485,6 +1485,8 @@
 			offs.sort(function (x, y) { return x - y; });
 			SET.latency = Math.max(-150, Math.min(250, Math.round(offs[offs.length >> 1] * 1000)));
 			save(); renderSide();
+			// (kept for the rest of the app too: the Shed's metronome offers it as its headphones delay)
+			try { window.localStorage.setItem('lbs-latency', JSON.stringify({ ms: SET.latency, t: Date.now() })); } catch (e) { /* private browsing: Read still has it */ }
 			$('status').textContent = 'Lined up: your taps are allowed ' + SET.latency + ' ms.';
 		} }).then(function (res) { start = res; });
 	}
