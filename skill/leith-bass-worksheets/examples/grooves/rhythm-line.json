@@ -1,0 +1,6 @@
+{ "title": "Reading rhythm: quavers and rests", "show": "rhythm", "frame": "plain", "theme": "print", "tempo": 72,
+  "panels": [ { "heading": "Line 1", "barsPerLine": 4, "end": "final", "measures": [
+    { "events": [ {"duration":"4"}, {"duration":"8"}, {"duration":"8"}, {"duration":"4"}, {"rest":true,"duration":"4"} ] },
+    { "events": [ {"duration":"8"}, {"duration":"8"}, {"duration":"4","accent":true}, {"rest":true,"duration":"8"}, {"duration":"8","tie":true}, {"duration":"4"} ] },
+    { "events": [ {"duration":"8t"}, {"duration":"8t"}, {"duration":"8t"}, {"duration":"4"}, {"duration":"2"} ] },
+    { "events": [ {"duration":"4."}, {"duration":"8"}, {"duration":"2"} ] } ] } ] }

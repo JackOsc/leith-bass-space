@@ -29,7 +29,15 @@ python3 -c "import PIL" 2>/dev/null && echo "pillow: ok" || { pip install pillow
 if [[ "${1:-}" == "--lilypond" ]] || command -v lilypond >/dev/null; then
   if command -v lilypond >/dev/null; then echo "lilypond: ok ($(lilypond --version | head -1))"
   else (apt-get install -y -qq lilypond >/dev/null 2>&1 || (apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq lilypond >/dev/null 2>&1)) \
-       && echo "lilypond: installed" || echo "lilypond: FAILED (grooves unavailable; scales, pitch studies and diagrams still work)"; fi
+       && echo "lilypond: installed" \
+       || { # No apt here (3.2): the Python package index carries LilyPond's own binaries. 2.24.3 is the stable
+            # release the skill is tested against; 2.25 engraves TAB digits differently and fails a test.
+            pip install --break-system-packages -q "lilypond==2.24.3" >/dev/null 2>&1 || pip install -q "lilypond==2.24.3" >/dev/null 2>&1
+            LILY="$(python3 -c 'import lilypond; print(lilypond.executable())' 2>/dev/null || true)"
+            if [[ -n "$LILY" && -x "$LILY" ]]; then
+              for d in /usr/local/bin "$HOME/.local/bin"; do mkdir -p "$d" 2>/dev/null && ln -sf "$LILY" "$d/lilypond" 2>/dev/null && break; done
+              echo "lilypond: installed from the Python package index ($("$LILY" --version | head -1))"
+            else echo "lilypond: FAILED (grooves, charts and rhythm lines unavailable; scales, pitch studies and diagrams still work)"; fi; }; fi
 else
   echo "lilypond: not installed (only needed for rhythmic grooves; run setup.sh --lilypond)"
 fi

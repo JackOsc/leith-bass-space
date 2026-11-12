@@ -1,5 +1,37 @@
 # Changelog
 
+## 3.2.0 · 12 November 2026
+
+The rest of the list from the review of 11 Nov 2026 (section 7), at Jack's request: "continue to improve style guide and worksheet skill".
+
+### Added
+- **Chord charts** (`show: "chart"` in a groove): slashes with chord symbols, `chords` shared across a bar, written rhythms for kicks, `simile` bars (engraved as LilyPond's own percent repeat), boxed rehearsal `mark`s, repeats.
+- **Rhythm lines** (`show: "rhythm"`): one line, no pitch, an event needs only a duration.
+- **`end: "final"`** on a groove panel: a final double bar.
+- **Element cards** (`scripts/element.js`): a one page card for any of the 65 elements of the Harmonic Elements course, in any key: the loop as a chart, numerals over chords, what it is built from, the listening line, the notes the chords fix on a five fret neck, the other homes, three practice steps, and a code to its page in the Guide. The music is read from `assets/elements.json`, a copy of the app's catalogue, so card and app cannot disagree.
+- **Steps beside a link**: `steps` on a `link` block.
+- **Page flow warnings** for a page that stops well short with more to come, and for a last page that is barely used (measured from the PDF itself).
+- **setup.sh installs LilyPond without apt** where there is none, from the Python package index (2.24.3), and the engraver finds it there.
+
+### Fixed
+- **A label with a flat in it changed typeface.** 3.1 put the three signs in fonts of their own. The figure renderer sets a whole label in one font, so "Home (B♭)" and "B♭maj7" came out in DejaVu Sans Mono. The signs are now inside the bundled Inter and Oswald themselves (`tools/add-signs-to-fonts.py` in the site repository; outlines from DejaVu Sans, whose own additions are public domain; Inter and Oswald are OFL with no reserved name). Documents still set each sign in "LBS Signs", so a copy of Inter already installed on a machine cannot lose them.
+- **A blank last page after a table or a link.** The empty paragraph a table must be followed by was full height and could fall alone onto a new page. It is now 2 pt tall.
+- **A tempo word ("Shuffle") was set in the TAB digits' typeface** and ran into the metronome mark. It is set in Inter.
+- **A fretboard's orientation note ran off the edge** of a narrow figure. It now says as much as fits.
+
+### Changed
+- A link's code is 24 mm across (was 30) for a short address. Read back from a PDF at 150 dpi.
+
+### Checked
+- 63 acceptance tests pass with LilyPond 2.24.3 (11 new). LilyPond 2.25 from the package index fails one existing test (TAB digits are engraved differently), which is why setup pins 2.24.3.
+- **All 65 element cards were built to PDF, each in a different key: every one is a single page, with no errors.** Eight were looked at.
+- A chart sheet (twelve bar blues with marks and simile bars, a rhythm line, a link) was built and looked at.
+
+### Not done
+- Printing on paper and scanning a code with a phone.
+- Chord symbols in a chart are not checked against anything.
+- An element's twelve bar forms have no card (they are not in the catalogue copy).
+
 ## 3.1.0 · 11 November 2026
 
 Part of the programme agreed with Jack on 11 Nov 2026 (the review in the Project, section on the worksheets skill).

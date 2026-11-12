@@ -9,7 +9,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
-const { HOUSE, parsePitch, pitchName, slugify, rasterise, embedFonts, show } = require('./render.js');
+const { HOUSE, parsePitch, pitchName, slugify, rasterise, embedFonts, show, signs } = require('./render.js');
 
 const DEFAULT_INSTRUMENT = {
   name: 'standard four-string bass', writtenOctaveOffset: 12,
@@ -113,9 +113,51 @@ function validateNote(n, at, ctx) {
   };
 }
 
-const EVENT_KEYS = ['string', 'fret', 'notes', 'duration', 'rest', 'tie', 'finger', 'spelling', 'muted', 'ghost', 'accent', 'staccato', 'slide', 'hammer', 'pull', 'label'];
+const EVENT_KEYS = ['string', 'fret', 'notes', 'duration', 'rest', 'tie', 'finger', 'spelling', 'muted', 'ghost', 'accent', 'staccato', 'slide', 'hammer', 'pull', 'label', 'slash'];
 
-function validateGroove(input) {
+/*
+ * Two kinds of figure with no pitches in them (3.2), written in a shorter form and turned into ordinary events
+ * here, so every rule below (bars that add up, triplets in threes, ties) checks them as it checks a groove.
+ *
+ *   show: "rhythm"  one line, for reading rhythm away from pitch. An event needs only a duration (and rest, tie,
+ *                   accent, staccato). It is given the lowest open string, which the single line never shows.
+ *   show: "chart"   a chord chart: slashes on the stave with chord symbols above. A bar is { "chords": ["Cm7", "F7"] }
+ *                   and the chords share the bar's beats equally (one, two or four chords in four four). A bar may
+ *                   also give "events" for a written rhythm (kicks), each with a "label" where the chord changes,
+ *                   or { "simile": true } for a repeat-the-bar sign. "mark" puts a boxed rehearsal letter over a bar.
+ */
+function expandShorthand(input) {
+  if (!input || !Array.isArray(input.panels) || !['rhythm', 'chart'].includes(input.show)) return input;
+  const strings = (input.instrument && input.instrument.strings) || DEFAULT_INSTRUMENT.strings;
+  const low = strings[0] && strings[0].name;
+  const ts = Array.isArray(input.timeSignature) ? input.timeSignature : [4, 4];
+  const pitched = (ev) => (ev && !ev.rest && ev.string === undefined && ev.notes === undefined ? { ...ev, string: low, fret: 0, ...(input.show === 'chart' ? { slash: true } : {}) } : ev);
+  return { ...input, panels: input.panels.map((panel, p) => (!panel || !Array.isArray(panel.measures) ? panel : { ...panel, measures: panel.measures.map((measure, m) => {
+    const where = `panels[${p}].measures[${m}]`;
+    if (!measure || typeof measure !== 'object') return measure;
+    if (input.show === 'chart' && (measure.chords !== undefined || measure.simile)) {
+      if (measure.events !== undefined) fail(`${where}: give chords (or simile) or events, not both.`);
+      const { chords, simile, ...rest } = measure;
+      if (simile) {
+        if (chords !== undefined) fail(`${where}: a simile bar repeats the bar before, so it has no chords of its own.`);
+        if (m === 0) fail(`${where}: the first bar of a panel cannot be a simile bar.`);
+        // a whole bar's rest carries the bar's length through the checks; toLily draws the sign in its place
+        const whole = ts[0] * (4 / ts[1]);
+        const dur = { 4: '1', 3: '2.', 2: '2', 1: '4', 6: '1.', 1.5: '4.' }[whole];
+        if (!dur) fail(`${where}: a simile bar is not available in ${ts[0]}/${ts[1]}.`);
+        return { ...rest, simile: true, events: [{ rest: true, duration: dur }] };
+      }
+      if (!Array.isArray(chords) || !chords.length || chords.some((c) => typeof c !== 'string' || !c.trim())) fail(`${where}.chords must list one or more chord symbols.`);
+      if (ts[0] % chords.length !== 0) fail(`${where}: ${chords.length} chords cannot share ${ts[0]} beats equally. Write the bar as events with a label where each chord falls.`);
+      const each = ts[0] / chords.length;
+      return { ...rest, events: Array.from({ length: ts[0] }, (_, beat) => ({ string: low, fret: 0, duration: String(ts[1]), slash: true, ...(beat % each === 0 ? { label: chords[beat / each].trim() } : {}) })) };
+    }
+    return Array.isArray(measure.events) ? { ...measure, events: measure.events.map(pitched) } : measure;
+  }) })) };
+}
+
+function validateGroove(raw) {
+  const input = expandShorthand(raw);
   keys(input, ['$schema', 'title', 'slug', 'instrument', 'timeSignature', 'key', 'tempo', 'accidentalPreference', 'theme', 'frame', 'show', 'width', 'maxWidth', 'panels'], 'groove');
   if (typeof input.title !== 'string' || !input.title.trim()) fail('title is required.');
   const slug = slugify(input.slug || input.title);
@@ -129,7 +171,7 @@ function validateGroove(input) {
   const frame = input.frame || 'panel';
   if (!['panel', 'plain'].includes(frame)) fail('frame must be panel or plain.');
   const show = input.show || 'both';
-  if (!['both', 'notation', 'tab'].includes(show)) fail('show must be both, notation or tab.');
+  if (!['both', 'notation', 'tab', 'rhythm', 'chart'].includes(show)) fail('show must be both, notation, tab, rhythm or chart.');
   const pref = input.accidentalPreference || 'sharp';
   if (!['sharp', 'flat'].includes(pref)) fail('accidentalPreference must be sharp or flat.');
   if (input.timeSignature === null) fail('Grooves are always metered; use render.js with timeSignature null for pitch studies.');
@@ -147,7 +189,9 @@ function validateGroove(input) {
   const slugs = new Set();
 
   const panels = input.panels.map((panel, p) => {
-    keys(panel, ['heading', 'slug', 'altText', 'description', 'measures', 'repeat', 'barsPerLine'], `panels[${p}]`);
+    keys(panel, ['heading', 'slug', 'altText', 'description', 'measures', 'repeat', 'barsPerLine', 'end'], `panels[${p}]`);
+    if (panel.end !== undefined && !['bar', 'final'].includes(panel.end)) fail(`panels[${p}].end must be "bar" or "final" (a final double bar).`);
+    if (panel.end === 'final' && panel.repeat) fail(`panels[${p}]: a repeated panel ends with its repeat sign, not a final bar.`);
     if (typeof panel.heading !== 'string' || !panel.heading.trim()) fail(`panels[${p}].heading is required.`);
     const pslug = slugify(panel.slug || panel.heading);
     if (!pslug || slugs.has(pslug)) fail(`panels[${p}] needs a unique slug.`);
@@ -160,7 +204,9 @@ function validateGroove(input) {
     const events = [];
     const measures = panel.measures.map((measure, m) => {
       const where = `panels[${p}].measures[${m}]`;
-      keys(measure, ['label', 'events', 'incomplete'], where);
+      keys(measure, ['label', 'events', 'incomplete', 'mark', 'simile'], where);
+      if (measure.mark !== undefined && (typeof measure.mark !== 'string' || !/^[A-Za-z0-9 ]{1,12}$/.test(measure.mark))) fail(`${where}.mark must be a short rehearsal mark (letters and numbers).`);
+      if ((measure.mark !== undefined || measure.simile) && show !== 'chart') fail(`${where}: mark and simile are for charts (show: "chart").`);
       if (measure.label !== undefined && typeof measure.label !== 'string') fail(`${where}.label must be text.`);
       if (measure.incomplete !== undefined && typeof measure.incomplete !== 'boolean') fail(`${where}.incomplete must be boolean.`);
       if (measure.incomplete && m !== 0) fail(`${where}: only the first bar of a panel can be an incomplete pickup.`);
@@ -175,7 +221,8 @@ function validateGroove(input) {
         for (const k of ['tie', 'muted', 'ghost', 'accent', 'staccato', 'slide', 'hammer', 'pull']) {
           if (ev[k] !== undefined && typeof ev[k] !== 'boolean') fail(`${at}.${k} must be true or false.`);
         }
-        const base = { duration: dur, measure: m + 1, index: e + 1, label: ev.label || '' };
+        if (ev.slash !== undefined && (ev.slash !== true || show !== 'chart')) fail(`${at}.slash is set by charts and cannot be written by hand.`);
+        const base = { duration: dur, measure: m + 1, index: e + 1, label: ev.label || '', slash: ev.slash === true };
         if (ev.rest) {
           for (const k of EVENT_KEYS.filter((x) => !['duration', 'rest', 'label'].includes(x))) if (ev[k] !== undefined) fail(`${at}: a rest cannot have ${k}.`);
           return { ...base, rest: true };
@@ -214,7 +261,7 @@ function validateGroove(input) {
       }
       flush();
       events.push(...list);
-      return { label: measure.label || '', incomplete: measure.incomplete === true, total, events: list };
+      return { label: measure.label || '', incomplete: measure.incomplete === true, total, events: list, mark: measure.mark || '', simile: measure.simile === true };
     });
     events.forEach((ev, i) => {
       if (ev.rest) return;
@@ -237,8 +284,8 @@ function validateGroove(input) {
       }
     });
     return {
-      slug: pslug, heading: panel.heading.trim(), measures, repeat: panel.repeat === true, barsPerLine,
-      altText: panel.altText || `${panel.heading.trim()}: ${input.title.trim()}, bass groove in ${ts[0]}/${ts[1]}, ${show === 'tab' ? 'TAB with rhythm' : show === 'notation' ? 'notation' : 'notation and TAB'}.`,
+      slug: pslug, heading: panel.heading.trim(), measures, repeat: panel.repeat === true, barsPerLine, end: panel.end || 'bar',
+      altText: panel.altText || `${panel.heading.trim()}: ${input.title.trim()}, bass groove in ${ts[0]}/${ts[1]}, ${show === 'tab' ? 'TAB with rhythm' : show === 'notation' ? 'notation' : show === 'rhythm' ? 'rhythm on one line' : show === 'chart' ? 'chord chart' : 'notation and TAB'}.`.replace('bass groove', show === 'rhythm' ? 'rhythm' : show === 'chart' ? 'chart' : 'bass groove'),
       description: panel.description || panel.altText || '',
     };
   });
@@ -261,11 +308,24 @@ function toLily(spec, panel, layout) {
   panel.measures.forEach((measure, m) => {
     if (m === 0 && measure.incomplete) music += `\\partial ${measure.total[1]}*${measure.total[0]} `;
     if (m === 0 && panel.repeat) music += '\\bar ".|:" ';
+    if (measure.mark) music += `\\mark \\markup { \\box \\sans \\bold ${JSON.stringify(measure.mark)} } `;
+    // A simile bar is engraved as LilyPond's own percent repeat of the bar before it: that bar is wrapped, and
+    // the simile bars themselves add nothing but their place in the count.
+    let similes = 0;
+    while (panel.measures[m + 1 + similes] && panel.measures[m + 1 + similes].simile) similes += 1;
+    if (similes && !measure.simile) music += `\\repeat percent ${similes + 1} { `;
+    if (!measure.simile)
     measure.events.forEach((ev, e) => {
       let token;
       if (ev.tupletStart) music += `\\tuplet 3/2 { `;
       if (ev.rest) token = `r${ev.duration.lily}`;
-      else {
+      else if (ev.slash || spec.show === 'rhythm') {
+        // no pitch is shown: the middle line for a chart's slashes, the one line of a rhythm stave
+        token = `d${ev.duration.lily}`;
+        if (ev.accent) token += '->';
+        if (ev.staccato) token += '-.';
+        if (ev.tie) token += '~';
+      } else {
         const prefix = ev.muted ? '\\deadNote ' : ev.ghost ? '\\parenthesize ' : '';
         token = ev.chord
           ? `${prefix}<${ev.notes.map((n) => noteToken(n)).join(' ')}>${ev.duration.lily}`
@@ -278,28 +338,35 @@ function toLily(spec, panel, layout) {
         if (ev.hammer || ev.pull) { token += `(^\\markup { \\sans \\fontsize #-3 "${ev.hammer ? 'H' : 'P'}" }`; pendingSlurClose = true; }
       }
       const label = (e === 0 && measure.label) || ev.label;
-      if (label) token += `^\\markup { \\with-color #${rgb(acc)} \\sans \\bold ${JSON.stringify(label)} }`;
+      if (label) token += `^\\markup { \\with-color #${rgb(acc)} \\sans \\bold ${JSON.stringify(signs(label))} }`;
       music += `${token} `;
       if (ev.tupletEnd) music += '} ';
     });
+    if (similes && !measure.simile) music += '} ';
     barCount += measure.incomplete ? 0 : 1;
     const last = m === panel.measures.length - 1;
-    if (last) music += panel.repeat ? '\\bar ":|." ' : '\\bar "|" ';
+    if (last) music += panel.repeat ? '\\bar ":|." ' : panel.end === 'final' ? '\\bar "|." ' : '\\bar "|" ';
     else {
       music += '| ';
-      if (!measure.incomplete && barCount % panel.barsPerLine === 0) music += '\\break ';
+      // (a chart's line breaks are in a voice of their own, because a break cannot be written inside a percent repeat)
+      if (spec.show !== 'chart' && !measure.incomplete && barCount % panel.barsPerLine === 0) music += '\\break ';
     }
   });
   const lineMm = (layout.lineSpaces * LILY_SPACE_MM).toFixed(2);
   const ragged = layout.ragged ? '##t' : '##f';
-  const tempo = spec.tempo ? `\\tempo ${spec.tempo.text ? `${JSON.stringify(spec.tempo.text)} ` : ''}${spec.tempo.beat} = ${spec.tempo.bpm} ` : '';
+  // (the word is set in sans: left in LilyPond's bold serif, the house font swap below took it for TAB digits)
+  const tempo = spec.tempo ? `\\tempo ${spec.tempo.text ? `\\markup { \\sans \\bold ${JSON.stringify(signs(spec.tempo.text))} } ` : ''}${spec.tempo.beat} = ${spec.tempo.bpm} ` : '';
   const key = spec.key ? `${spec.key.lily} ` : '';
   const staff = `\\new Staff \\with { \\omit StringNumber fingeringOrientations = #'(down) \\override Fingering.color = #${rgb(acc)} \\override Fingering.font-size = #${LILY_FONT.finger} \\override Fingering.padding = #0.7 \\override Fingering.font-encoding = #'latin1 \\override Fingering.font-family = #'sans \\override Fingering.font-series = #'bold \\override TextScript.font-size = #${LILY_FONT.label} } { \\clef bass \\music }`;
   const tabWith = `stringTunings = \\stringTuning <${tuning}> \\override StaffSymbol.staff-space = #1.75 \\override TabNoteHead.font-size = #${LILY_FONT.tab}`;
   const tabStaff = spec.show === 'tab'
     ? `\\new TabStaff \\with { ${tabWith} \\consists "Fingering_engraver" \\override Fingering.padding = #0.7 \\override Fingering.font-encoding = #'latin1 \\override Fingering.font-family = #'sans \\override Fingering.font-series = #'bold \\override Fingering.color = #${rgb(acc)} \\override Fingering.font-size = #${LILY_FONT.finger} \\override TextScript.font-size = #${LILY_FONT.label} } { \\tabFullNotation \\stemUp \\clef moderntab \\music }`
     : `\\new TabStaff \\with { ${tabWith} } { \\clef moderntab \\music }`;
-  const staves = spec.show === 'both'
+  const rhythmStaff = `\\new RhythmicStaff \\with { \\omit StringNumber \\omit Fingering } { \\music }`;
+  const bar = `s${spec.timeSignature[1]}*${spec.timeSignature[0]}`;
+  const chartBreaks = panel.measures.map((_, i) => `${bar}${(i + 1) % panel.barsPerLine === 0 && i < panel.measures.length - 1 ? ' \\break' : ''}`).join(' ');
+  const chartStaff = `\\new Staff \\with { \\omit StringNumber \\omit Fingering } << { \\clef bass \\improvisationOn \\music } { ${chartBreaks} } >>`;
+  const staves = spec.show === 'rhythm' ? rhythmStaff : spec.show === 'chart' ? chartStaff : spec.show === 'both'
     ? `\\new StaffGroup \\with { systemStartDelimiter = #'SystemStartBar } << ${staff} ${tabStaff} >>`
     : spec.show === 'notation' ? staff : tabStaff;
   return `\\version "2.24.0"
@@ -322,11 +389,21 @@ music = { \\numericTimeSignature ${key}${tempo}\\time ${spec.timeSignature[0]}/$
 `;
 }
 
+// Where LilyPond is: on the PATH, or inside the Python package setup.sh falls back to where there is no apt.
+let lilyPath = null;
+function lilypond() {
+  if (lilyPath) return lilyPath;
+  if (!spawnSync('lilypond', ['--version']).error) { lilyPath = 'lilypond'; return lilyPath; }
+  const py = spawnSync('python3', ['-c', 'import lilypond; print(lilypond.executable())'], { encoding: 'utf8' });
+  lilyPath = py.status === 0 && py.stdout.trim() ? py.stdout.trim() : 'lilypond';
+  return lilyPath;
+}
+
 function engrave(ly) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lbs-ly-'));
   const file = path.join(dir, 'g.ly');
   fs.writeFileSync(file, ly);
-  const r = spawnSync('lilypond', ['-dbackend=svg', '-dcrop', '-dno-point-and-click', '-o', path.join(dir, 'g'), file], { encoding: 'utf8' });
+  const r = spawnSync(lilypond(), ['-dbackend=svg', '-dcrop', '-dno-point-and-click', '-o', path.join(dir, 'g'), file], { encoding: 'utf8' });
   if (r.error && r.error.code === 'ENOENT') fail('LilyPond is not installed. Run scripts/setup.sh --lilypond (or apt-get install lilypond).');
   const out = path.join(dir, 'g.cropped.svg');
   if (r.status !== 0 || !fs.existsSync(out)) fail(`LilyPond failed:\n${(r.stderr || '').trim()}`);
@@ -374,7 +451,7 @@ function panelSvg(spec, panel, lilySvg) {
   <title id="${id}-title">${esc(panel.altText)}</title>
   <desc id="${id}-desc">${esc(panel.description)}</desc>
   <style>
-    .heading { font-family: 'Oswald', 'LBS Signs SemiBold', 'Inter', Arial, sans-serif; font-weight: 700; font-size: ${HOUSE.type.heading}px; fill: ${HOUSE.charcoal}; letter-spacing: .4px; }
+    .heading { font-family: 'Oswald', 'Inter', Arial, sans-serif; font-weight: 700; font-size: ${HOUSE.type.heading}px; fill: ${HOUSE.charcoal}; letter-spacing: .4px; }
   </style>
   ${frame}
   <svg x="${f.side}" y="${f.top}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" viewBox="${vx} ${vy} ${vw} ${vh}" color="${HOUSE.charcoal}" style="color:${HOUSE.charcoal}">
@@ -400,7 +477,8 @@ function renderGroove(spec, panel, keepLy) {
     svg = engrave(ly);
     const natural = viewBox(svg)[2] + 0.5;
     if (natural > spacesFor(spec.maxWidth)) {
-      if (spacesFor(spec.maxWidth) / natural < 0.85) {
+      // (a rhythm line or a chart has no TAB digits or fingers to collide, so it can be closed up further)
+      if (spacesFor(spec.maxWidth) / natural < (spec.show === 'rhythm' || spec.show === 'chart' ? 0.6 : 0.85)) {
         fail(`Panel "${panel.slug}" needs ${Math.round(natural * UNIT + 2 * f.side)} units at natural spacing, more than maxWidth ${spec.maxWidth}. Set barsPerLine, split the panel, or allow a wider figure.`);
       }
       layout = { lineSpaces: spacesFor(spec.maxWidth), ragged: false };

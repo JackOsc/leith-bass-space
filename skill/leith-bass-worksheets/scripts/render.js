@@ -57,7 +57,9 @@ function signs(value) {
     .replace(/(^|[^A-Za-z])([A-G])(bb|b)(?=$|[^a-z#b]|m(?:aj|in|\d|[^a-z]|$)|dim|sus|aug|add)/g, (m, pre, letter, acc) => pre + letter + acc.replace(/b/g, '\u266D'))
     .replace(/(^|[^A-Za-z])([A-G])(##|#)/g, (m, pre, letter, acc) => pre + letter + acc.replace(/#/g, '\u266F'));
 }
-// text for the page: signs first, then made safe for SVG
+// Text for the page: signs first, then made safe for SVG. The bundled Inter and Oswald carry the three signs
+// themselves (tools/add-signs-to-fonts.py in the site repository), because the renderer sets a whole label in one
+// font: with the signs in a font of their own, "Home (B♭)" came out in DejaVu Sans Mono from end to end.
 function show(value) { return esc(signs(value)); }
 
 function esc(value) {
@@ -514,13 +516,13 @@ function renderPanel(spec, panel) {
     ? `<rect x="0" y="0" width="${width}" height="${layout.height}" fill="${paper}"/>`
     : `<rect x="${HOUSE.borderWidth / 2 + 1}" y="${HOUSE.borderWidth / 2 + 1}" width="${width - HOUSE.borderWidth - 2}" height="${layout.height - HOUSE.borderWidth - 2}" rx="${HOUSE.borderRadius}" fill="${paper}" stroke="${HOUSE.orange}" stroke-width="${HOUSE.borderWidth}"/>`}
   <style>
-    .heading { font-family: 'Oswald', 'LBS Signs SemiBold', 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 700; font-size: ${T.heading}px; fill: ${HOUSE.charcoal}; letter-spacing: .4px; }
-    .measure-label { font-family: 'Inter', 'LBS Signs SemiBold', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.label}px; fill: ${HOUSE.accentInk}; }
-    .note-name { font-family: 'Inter', 'LBS Signs SemiBold', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.name}px; fill: ${HOUSE.charcoal}; }
-    .finger { font-family: 'Inter', 'LBS Signs SemiBold', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.finger}px; fill: ${HOUSE.accentInk}; }
+    .heading { font-family: 'Oswald', 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 700; font-size: ${T.heading}px; fill: ${HOUSE.charcoal}; letter-spacing: .4px; }
+    .measure-label { font-family: 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.label}px; fill: ${HOUSE.accentInk}; }
+    .note-name { font-family: 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.name}px; fill: ${HOUSE.charcoal}; }
+    .finger { font-family: 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.finger}px; fill: ${HOUSE.accentInk}; }
     .tab-number { font-family: 'DejaVu Sans Mono', monospace; font-weight: 700; font-size: ${T.tab}px; fill: ${HOUSE.charcoal}; }
-    .tab-label { font-family: 'Inter', 'LBS Signs SemiBold', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.tabClef}px; fill: ${HOUSE.charcoal}; }
-    .section-label { font-family: 'Inter', 'LBS Signs SemiBold', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.rowLabel}px; fill: ${HOUSE.muted}; letter-spacing: 1px; }
+    .tab-label { font-family: 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.tabClef}px; fill: ${HOUSE.charcoal}; }
+    .section-label { font-family: 'Inter', 'DejaVu Sans', Arial, sans-serif; font-weight: 600; font-size: ${T.rowLabel}px; fill: ${HOUSE.muted}; letter-spacing: 1px; }
     .music-line { stroke: ${HOUSE.charcoal}; stroke-width: 2.4; }
     .ledger { stroke: ${HOUSE.charcoal}; stroke-width: 2.8; }
     .stem { stroke: ${HOUSE.charcoal}; stroke-width: 2.8; }
@@ -725,8 +727,6 @@ function embedFonts(svg) {
     face('Inter', 400, FONT_FILES.inter400),
     face('Inter', 600, FONT_FILES.inter600),
     face('DejaVu Sans Mono', 700, FONT_FILES.mono700),
-    // (only when a sign is on the page: an empty subset would be dead weight)
-    ...(/[\u266D-\u266F]/.test(characters) ? [face('LBS Signs', 400, FONT_FILES.signs400), face('LBS Signs SemiBold', 400, FONT_FILES.signs600)] : []),
   ].join('\n    ');
   return svg.replace('<style>', `<style>\n    ${faces}`);
 }

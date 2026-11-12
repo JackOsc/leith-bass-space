@@ -1,0 +1,5 @@
+{ "title": "Blues in Bb: the chart", "show": "chart", "frame": "plain", "theme": "print", "tempo": {"bpm": 96, "text": "Shuffle"},
+  "panels": [ { "heading": "Twelve bars", "barsPerLine": 4, "end": "final", "measures": [
+    { "mark": "A", "chords": ["Bb7"] }, { "chords": ["Eb7"] }, { "chords": ["Bb7"] }, { "simile": true },
+    { "chords": ["Eb7"] }, { "simile": true }, { "chords": ["Bb7"] }, { "chords": ["G7"] },
+    { "mark": "B", "chords": ["Cm7"] }, { "chords": ["F7"] }, { "chords": ["Bb7", "G7"] }, { "chords": ["Cm7", "F7"] } ] } ] }

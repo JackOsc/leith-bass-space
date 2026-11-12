@@ -138,10 +138,13 @@ test('flats and sharps are shown as real signs in labels, and words are left alo
     'Abbey Road': 'Abbey Road', 'Absolutely': 'Absolutely', 'Ebony': 'Ebony', 'TAB': 'TAB', 'Add9': 'Add9', 'Bbb': 'B\u266D\u266D', 'Eb/G': 'E\u266D/G', 'B\u266D already': 'B\u266D already' };
   for (const [from, to] of Object.entries(cases)) assert.strictEqual(signs(from), to, from);
   const svg = svgOf(spec([{ label: 'Gbmaj7', notes: [{ string: 'E', fret: 2, spelling: 'Gb2' }] }], { noteNames: true }));
-  assert.match(svg, />G\u266Dmaj7</); assert.match(svg, /class="note-name">G\u266D</); assert.match(svg, /LBS Signs/);
+  assert.match(svg, />G\u266Dmaj7</); assert.match(svg, /class="note-name">G\u266D</);
   // the two sign fonts hold the three signs and nothing that could stand in for a letter
   const out = require('child_process').spawnSync('python3', ['-c', "from fontTools.ttLib import TTFont;import sys;print([sorted(TTFont(f).getBestCmap()) for f in sys.argv[1:]])", path.join(__dirname, '../assets/fonts/lbs-signs-400.ttf'), path.join(__dirname, '../assets/fonts/lbs-signs-600.ttf')], { encoding: 'utf8' });
   if (out.status === 0) assert.strictEqual(out.stdout.trim(), '[[32, 9837, 9838, 9839], [32, 9837, 9838, 9839]]');
+  // and the figure fonts carry the signs themselves, so a label with a flat stays in its own typeface
+  const own = require('child_process').spawnSync('python3', ['-c', "from fontTools.ttLib import TTFont;import sys;print(all(c in TTFont(f).getBestCmap() for f in sys.argv[1:] for c in (0x266D,0x266E,0x266F)))", ...['inter-latin-400-normal.ttf', 'inter-latin-600-normal.ttf', 'oswald-latin-700-normal.ttf'].map((f) => path.join(__dirname, '../assets/fonts', f))], { encoding: 'utf8' });
+  if (own.status === 0) assert.strictEqual(own.stdout.trim(), 'True');
 });
 test('XML characters in titles and headings are escaped', () => {
   const svg = svgOf({ title: 'Rock & <Roll>', timeSignature: null, panels: [{ heading: 'A & B "quote"', measures: [{ notes: [{ string: 'E', fret: 0 }] }] }] });
@@ -375,6 +378,125 @@ test(hasLily ? 'engraved TAB digits match the input frets exactly' : 'engraved T
   assert.ok(svg.includes('Em'), 'chord label case lost');
 });
 
+process.stdout.write('Rhythm lines and charts (3.2)\n');
+{
+  const { validateGroove, toLily, renderGroove } = require('./groove.js');
+  const rhythm = (measures, extra = {}) => ({ title: 'R', show: 'rhythm', frame: 'plain', panels: [{ heading: 'L', measures, ...extra }] });
+  const chart = (measures, extra = {}, top = {}) => ({ title: 'C', show: 'chart', frame: 'plain', ...top, panels: [{ heading: 'L', measures, ...extra }] });
+  const layout = { lineSpaces: 100, ragged: true };
+  test('a rhythm line needs only durations, and its bars must still add up', () => {
+    const spec = validateGroove(rhythm([{ events: [{ duration: '4' }, { duration: '8' }, { duration: '8', tie: true }, { duration: '4' }, { rest: true, duration: '4' }] }]));
+    assert.strictEqual(spec.panels[0].measures[0].events.length, 5);
+    const ly = toLily(spec, spec.panels[0], layout);
+    assert.match(ly, /\\new RhythmicStaff/); assert.match(ly, /d4 d8 d8~ d4 r4/); assert.doesNotMatch(ly, /TabStaff/);
+    assert.throws(() => validateGroove(rhythm([{ events: [{ duration: '4' }, { duration: '4' }] }])), /is short/);
+    assert.throws(() => validateGroove(rhythm([{ events: [{ duration: '8t' }, { duration: '8t' }, { duration: '4t' }, { duration: '4t' }, { duration: '4t' }, { duration: '4' }, { duration: '8t' }] }])), /groups of three|is short|overfull/);
+    assert.match(spec.panels[0].altText, /rhythm on one line/);
+  });
+  test('a panel can end with a final double bar, but not if it repeats', () => {
+    const spec = validateGroove(rhythm([{ events: [{ duration: '1' }] }], { end: 'final' }));
+    assert.match(toLily(spec, spec.panels[0], layout), /\\bar "\|\." /);
+    assert.throws(() => validateGroove(rhythm([{ events: [{ duration: '1' }] }], { end: 'final', repeat: true })), /repeat sign/);
+    assert.throws(() => validateGroove(rhythm([{ events: [{ duration: '1' }] }], { end: 'double' })), /"bar" or "final"/);
+  });
+  test('a chart turns chords into slashes: one, two and four chords to the bar, with real flat signs', () => {
+    const spec = validateGroove(chart([{ mark: 'A', chords: ['Bb7'] }, { chords: ['Cm7', 'F7'] }, { chords: ['C', 'Am', 'Dm', 'G7'] }]));
+    const [a, b, c] = spec.panels[0].measures;
+    assert.deepStrictEqual(a.events.map((e) => e.label), ['Bb7', '', '', '']);
+    assert.deepStrictEqual(b.events.map((e) => e.label), ['Cm7', '', 'F7', '']);
+    assert.deepStrictEqual(c.events.map((e) => e.label), ['C', 'Am', 'Dm', 'G7']);
+    assert.ok(a.events.every((e) => e.slash));
+    const ly = toLily(spec, spec.panels[0], layout);
+    assert.match(ly, /\\improvisationOn/); assert.match(ly, /"B♭7"/); assert.match(ly, /\\mark \\markup \{ \\box \\sans \\bold "A" \}/);
+    assert.doesNotMatch(ly, /TabStaff|RhythmicStaff/);
+  });
+  test('a chart in three four, and chords that cannot share a bar equally', () => {
+    const spec = validateGroove(chart([{ chords: ['Dm'] }, { chords: ['G7', 'G7', 'C'] }], {}, { timeSignature: [3, 4] }));
+    assert.strictEqual(spec.panels[0].measures[0].events.length, 3);
+    assert.throws(() => validateGroove(chart([{ chords: ['Dm', 'G7'] }], {}, { timeSignature: [3, 4] })), /cannot share 3 beats equally/);
+    assert.throws(() => validateGroove(chart([{ chords: ['C', 'F', 'G'] }])), /cannot share 4 beats equally/);
+    assert.throws(() => validateGroove(chart([{ chords: [] }])), /one or more chord symbols/);
+  });
+  test('simile bars become a percent repeat of the bar before; line breaks sit in their own voice', () => {
+    const spec = validateGroove(chart([{ chords: ['Eb7'] }, { simile: true }, { simile: true }, { chords: ['Bb7'] }, { chords: ['F7'] }, { simile: true }], { barsPerLine: 4 }));
+    const ly = toLily(spec, spec.panels[0], layout);
+    assert.match(ly, /\\repeat percent 3 \{ d4\^\\markup[^}]*\} d4 d4 d4 \}/); assert.match(ly, /\\repeat percent 2 \{/);
+    assert.match(ly, /s4\*4 s4\*4 s4\*4 s4\*4 \\break s4\*4 s4\*4 \}/);
+    assert.throws(() => validateGroove(chart([{ simile: true }, { chords: ['C'] }])), /first bar of a panel cannot be a simile/);
+    assert.throws(() => validateGroove(chart([{ chords: ['C'] }, { simile: true, chords: ['F'] }])), /no chords of its own/);
+  });
+  test('a chart bar can be written out as a rhythm with chords as labels (kicks); marks and slashes are for charts only', () => {
+    const spec = validateGroove(chart([{ events: [{ duration: '4.', label: 'Cm7' }, { duration: '8', label: 'F7', tie: true }, { duration: '2' }] }]));
+    assert.match(toLily(spec, spec.panels[0], layout), /d4\.\^\\markup[^}]*"Cm7" \} d8~\^\\markup[^}]*"F7" \} d2/);
+    const pitched = { title: 'G', panels: [{ heading: 'L', measures: [{ mark: 'A', events: [{ string: 'E', fret: 0, duration: '1' }] }] }] };
+    assert.throws(() => validateGroove(pitched), /mark and simile are for charts/);
+    pitched.panels[0].measures[0] = { events: [{ string: 'E', fret: 0, duration: '1', slash: true }] };
+    assert.throws(() => validateGroove(pitched), /cannot be written by hand/);
+  });
+  const hasLily = require('child_process').spawnSync('lilypond', ['--version']).status === 0;
+  if (hasLily) {
+    test('engraved: a twelve bar chart and a rhythm line come out as SVG with their labels, at a width that fits a page', () => {
+      const blues = validateGroove(chart([{ mark: 'A', chords: ['Bb7'] }, { chords: ['Eb7'] }, { chords: ['Bb7'] }, { simile: true }, { chords: ['Eb7'] }, { simile: true }, { chords: ['Bb7'] }, { chords: ['G7'] },
+        { chords: ['Cm7'] }, { chords: ['F7'] }, { chords: ['Bb7', 'G7'] }, { chords: ['Cm7', 'F7'] }], { barsPerLine: 4, end: 'final' }, { tempo: { bpm: 96, text: 'Shuffle' } }));
+      const r = renderGroove(blues, blues.panels[0]);
+      assert.ok(r.width <= 2400 + 60 && r.width > 1200);
+      assert.strictEqual((r.svg.match(/B♭7/g) || []).length, 4); assert.match(r.svg, /Shuffle/);
+      assert.doesNotMatch(r.svg, /DejaVu Sans Mono[^>]*>\s*(<tspan>)?Shuffle/);
+      const line = validateGroove(rhythm([{ events: [{ duration: '8' }, { duration: '8' }, { duration: '4' }, { rest: true, duration: '2' }] }], { end: 'final' }));
+      assert.match(renderGroove(line, line.panels[0]).svg, /<svg/);
+    });
+  }
+}
+
+process.stdout.write('Element cards (3.2)\n');
+{
+  const { card, find, load, box } = require('./element.js');
+  const { validateGroove } = require('./groove.js');
+  const data = load();
+  test('the catalogue copy holds every element with its chords in twelve keys', () => {
+    assert.ok(data.elements.length >= 60);
+    for (const el of data.elements) {
+      assert.strictEqual(Object.keys(el.keys).length, 12, el.id);
+      assert.ok(el.roman && el.name && el.stage >= 1 && Array.isArray(el.fixed) && el.homes.some((h) => h.own), el.id);
+    }
+  });
+  test('an element is found by id, by its numerals as written, or by name; i is not I', () => {
+    assert.strictEqual(find(data, 'dorian-loop').id, 'dorian-loop');
+    assert.strictEqual(find(data, 'I IV').id, 'major-lean');
+    assert.strictEqual(find(data, 'i iv').id, find(data, 'i iv').id);
+    assert.notStrictEqual(find(data, 'i iv').id, 'major-lean');
+    assert.strictEqual(find(data, 'the dorian loop').id, 'dorian-loop');
+    assert.strictEqual(find(data, 'i bIII bVII IV').id, 'dorian-loop');
+    assert.throws(() => find(data, 'nonsense'), /No element/);
+  });
+  test('every card, in three keys: its chart is a valid chart, its neck has notes inside the box, and it links to its Guide page', () => {
+    for (const el of data.elements) for (const key of ['C', 'F#', 'Bb']) for (const sevenths of [false, true]) {
+      const sheet = card(el, key, { data, sevenths });
+      const chart = sheet.blocks.find((b) => b.type === 'groove');
+      assert.ok(chart, `${el.id} has a chart`);
+      const spec = validateGroove(chart.groove);
+      assert.strictEqual(spec.show, 'chart');
+      const neck = sheet.blocks.find((b) => b.type === 'diagram').diagram;
+      assert.ok(neck.markers.length >= 3 && neck.markers.every((m) => m.fret >= neck.frets[0] && m.fret <= neck.frets[1]), `${el.id} ${key} neck`);
+      assert.ok(neck.frets[1] - neck.frets[0] === 4 && neck.frets[0] >= 1);
+      const link = sheet.blocks.find((b) => b.type === 'link');
+      assert.strictEqual(link.url, `https://leithbass.space/members/elements/#guide/${el.id}`); assert.strictEqual(link.steps.length, 3);
+      assert.ok(sheet.title.startsWith(el.roman), 'numerals lead the title');
+    }
+  });
+  test('the card says what the app says: chords, the listening line and the homes come from the catalogue', () => {
+    const el = find(data, 'dorian-loop'), sheet = card(el, 'Bb', { data });
+    assert.deepStrictEqual(sheet.blocks.find((b) => b.type === 'table').rows[0], ['B♭m', 'D♭', 'A♭', 'E♭']);
+    assert.match(sheet.blocks.find((b) => b.label === 'Listen for').text, /^The G when the last chord arrives/);
+    assert.match(sheet.blocks.find((b) => b.label === 'Two homes').text, /I V ii IV in A♭ major/);
+    assert.ok(!card(find(data, 'fifties-progression'), 'C', { data }).blocks.some((b) => /home/i.test(b.label || '') && b.type === 'callout' && b.label !== 'Listen for' && b.label !== 'Built from'), 'the fifties progression has one home');
+    const root = sheet.blocks.find((b) => b.type === 'diagram').diagram.markers.filter((m) => m.role === 'root');
+    assert.ok(root.some((m) => m.string === 'E' && m.fret === 6));
+    assert.deepStrictEqual(box(4), { root: { string: 'A', fret: 7 }, frets: [6, 10] });
+    assert.throws(() => card(el, 'H', { data }), /not a note name/);
+  });
+}
+
 process.stdout.write('Worksheets\n');
 const { portalText, build } = require('./worksheet.js');
 test('portal text follows the session notes template and lists the PDF first', () => {
@@ -403,6 +525,13 @@ asyncTests.push(['a link block holds a QR code and the address in words; signs i
   assert.strictEqual(media.length, 1);
   const png = await zip.file(media[0]).async('nodebuffer');
   assert.strictEqual(png.readUInt32BE(0), 0x89504e47); assert.ok(png.readUInt32BE(16) === png.readUInt32BE(20) && png.readUInt32BE(16) >= 29 * 8);
+  // steps beside the code: one row of three cells, numbered, and no table inside a table
+  fs.writeFileSync(file, JSON.stringify({ title: 'T', blocks: [{ type: 'link', url: 'https://leithbass.space/metronome/', label: 'Go', steps: ['One.', 'Two.'] }] }));
+  const withSteps = await build(file, dir, {});
+  const xml2 = await (await JSZip.loadAsync(fs.readFileSync(withSteps.docxPath))).file('word/document.xml').async('string');
+  assert.strictEqual((xml2.match(/<w:tbl>/g) || []).length, 1); assert.strictEqual((xml2.match(/<w:tc>/g) || []).length, 3); assert.match(xml2, /<w:numPr>/);
+  fs.writeFileSync(file, JSON.stringify({ title: 'T', blocks: [{ type: 'link', url: 'https://leithbass.space/', steps: [] }] }));
+  await assert.rejects(() => build(file, dir, {}), /one to six lines/);
   for (const bad of ['http://leithbass.space/', 'leithbass.space', 'https://x y']) {
     fs.writeFileSync(file, JSON.stringify({ title: 'T', blocks: [{ type: 'link', url: bad }] }));
     await assert.rejects(() => build(file, dir, {}), /https address/);

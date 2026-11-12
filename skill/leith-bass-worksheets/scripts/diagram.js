@@ -29,12 +29,12 @@ function keys(value, allowed, where) {
 
 function style(paper, frame) {
   return `<style>
-    .heading { font-family: 'Oswald', 'LBS Signs SemiBold', 'Inter', Arial, sans-serif; font-weight: 700; font-size: 34px; fill: ${HOUSE.charcoal}; letter-spacing: .4px; }
-    .note-line { font-family: 'Inter', 'LBS Signs', Arial, sans-serif; font-weight: 400; font-size: 20px; fill: ${HOUSE.muted}; }
-    .string-name { font-family: 'Inter', 'LBS Signs SemiBold', Arial, sans-serif; font-weight: 600; font-size: 21px; fill: ${HOUSE.charcoal}; }
-    .fret-number { font-family: 'Inter', 'LBS Signs SemiBold', Arial, sans-serif; font-weight: 600; font-size: 20px; fill: ${HOUSE.accentInk}; }
-    .marker-label { font-family: 'Inter', 'LBS Signs SemiBold', Arial, sans-serif; font-weight: 600; font-size: 20px; }
-    .legend { font-family: 'Inter', 'LBS Signs', Arial, sans-serif; font-weight: 400; font-size: 20px; fill: ${HOUSE.charcoal}; }
+    .heading { font-family: 'Oswald', 'Inter', Arial, sans-serif; font-weight: 700; font-size: 34px; fill: ${HOUSE.charcoal}; letter-spacing: .4px; }
+    .note-line { font-family: 'Inter', Arial, sans-serif; font-weight: 400; font-size: 20px; fill: ${HOUSE.muted}; }
+    .string-name { font-family: 'Inter', Arial, sans-serif; font-weight: 600; font-size: 21px; fill: ${HOUSE.charcoal}; }
+    .fret-number { font-family: 'Inter', Arial, sans-serif; font-weight: 600; font-size: 20px; fill: ${HOUSE.accentInk}; }
+    .marker-label { font-family: 'Inter', Arial, sans-serif; font-weight: 600; font-size: 20px; }
+    .legend { font-family: 'Inter', Arial, sans-serif; font-weight: 400; font-size: 20px; fill: ${HOUSE.charcoal}; }
     .string { stroke: ${HOUSE.charcoal}; }
     .fret { stroke: ${HOUSE.muted}; stroke-width: 2.4; }
     .nut { stroke: ${HOUSE.charcoal}; stroke-width: 9; }
@@ -148,7 +148,12 @@ function renderFretboard(input) {
   let body = frame === 'plain' ? '' : `<text x="${left}" y="67" class="heading">${show(heading)}</text>`;
   if (input.showOrientation !== false) {
     const tuning = strings.map((s) => s.name).join(' ');
-    body += `<text x="${left}" y="${104 + shift}" class="note-line">Player's view, as in TAB: highest string at the top. Tuning ${show(tuning)}.</text>`;
+    // The note is one line and the figure may be narrow (a five fret box), where the full sentence ran off the
+    // edge (3.2). About 10.4 units a character at this size: say as much as fits.
+    const room = (width - left - 24) / 10.4;
+    const full = `Player's view, as in TAB: highest string at the top. Tuning ${tuning}.`;
+    const note = full.length <= room ? full : `Highest string at the top. Tuning ${tuning}.`.length <= room ? `Highest string at the top. Tuning ${tuning}.` : `Tuning ${tuning}.`;
+    body += `<text x="${left}" y="${104 + shift}" class="note-line">${show(note)}</text>`;
   }
   // side markers under the board, as on the edge of a real neck, so they never sit behind a note marker
   for (let f = Math.max(first, 1); f <= last; f += 1) {

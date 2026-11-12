@@ -5,6 +5,7 @@
 // a contact sheet, an audit of every note, optional portal session-notes text, and a figures/
 // folder holding every figure's JSON, SVG, PNG and manifest.
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { execSync, spawnSync } = require('child_process');
 const { HOUSE, validateSpec, renderFiles, signs } = require('./render.js');
@@ -247,34 +248,48 @@ class Builder {
     return this.figure(p, mm, block.alt, block.caption, block.title, block.align || 'center');
   }
 
+  // (The paragraph after a table, here and in table(): a table must be followed by one, and a full height empty
+  // paragraph could fall alone onto a new page when the table ended near the foot. 3.2 makes it 2 pt tall.)
   // A link to open on a phone: a QR code beside a label, a line of text and the address in words.
   // For a drill in the app with chosen things in play, a metronome setup, a backing track.
   link(block, index) {
-    keys(block, ['type', 'url', 'label', 'text', 'show'], `blocks[${index}]`);
+    keys(block, ['type', 'url', 'label', 'text', 'show', 'steps'], `blocks[${index}]`);
+    if (block.steps !== undefined && (!Array.isArray(block.steps) || !block.steps.length || block.steps.length > 6 || block.steps.some((t) => typeof t !== 'string'))) fail(`blocks[${index}].steps must be one to six lines of text.`);
     if (typeof block.url !== 'string' || !/^https:\/\/[^\s]+$/.test(block.url)) fail(`blocks[${index}].url must be an https address.`);
     if (block.url.length > 600) fail(`blocks[${index}].url is too long for a code that scans easily (600 characters at most).`);
     const qr = qrPng(block.url);
-    // 30 mm across up to 45 modules, then bigger, so a long address still has modules a phone can read
-    const mm = qr.modules <= 45 ? 30 : qr.modules <= 65 ? 38 : 46, px = Math.round(mm * 96 / 25.4);
+    // 24 mm across up to 45 modules (over half a millimetre a module), then bigger, so a long address still scans
+    const mm = qr.modules <= 45 ? 24 : qr.modules <= 65 ? 32 : 42, px = Math.round(mm * 96 / 25.4);
     const contentTwips = Math.round(this.maxMm * MM), left = Math.round((mm + 6) * MM), right = contentTwips - left;
     const none = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }, borders = { top: none, bottom: none, left: none, right: none };
     const shown = block.show || block.url.replace(/^https:\/\//, '').replace(/[?#].*$/, '').replace(/\/$/, '');
     const out = [];
     if (this.breakNext) out.push(this.p({ spacing: { before: 0, after: 0, line: 40, lineRule: LineRuleType.EXACT }, children: [] }));
-    out.push(new Table({
-      width: { size: contentTwips, type: WidthType.DXA }, columnWidths: [left, right],
-      rows: [new TableRow({ cantSplit: true, children: [
-        new TableCell({ width: { size: left, type: WidthType.DXA }, borders, verticalAlign: VerticalAlign.CENTER, margins: { top: 60, bottom: 60, left: 0, right: 120 },
-          children: [new Paragraph({ spacing: { after: 0 }, children: [new ImageRun({ type: 'png', data: qr.data, transformation: { width: px, height: px },
-            altText: { title: 'QR code', description: `QR code for ${shown}`, name: `qr-${index}.png` } })] })] }),
-        new TableCell({ width: { size: right, type: WidthType.DXA }, borders, verticalAlign: VerticalAlign.CENTER, margins: { top: 60, bottom: 60, left: 120, right: 0 },
-          children: [
-            ...(block.label ? [new Paragraph({ spacing: { after: 40 }, children: runs(block.label, { font: 'Inter SemiBold', color: C.accentInk }) })] : []),
-            ...(block.text ? [new Paragraph({ spacing: { after: 60 }, children: runs(block.text) })] : []),
-            new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: shown, size: 18, color: C.muted })] }),
-          ] }),
-      ] })],
-    }), new Paragraph({ spacing: { after: 120 }, children: [] }));
+    const code = (width, align) => new TableCell({ width: { size: width, type: WidthType.DXA }, borders, verticalAlign: VerticalAlign.CENTER, margins: { top: 60, bottom: 60, left: 0, right: 120 },
+      children: [new Paragraph({ spacing: { after: 0 }, alignment: align, children: [new ImageRun({ type: 'png', data: qr.data, transformation: { width: px, height: px },
+        altText: { title: 'QR code', description: `QR code for ${shown}`, name: `qr-${index}.png` } })] })] });
+    const words = (align) => [
+      ...(block.label ? [new Paragraph({ spacing: { after: 40 }, alignment: align, children: runs(block.label, { font: 'Inter SemiBold', color: C.accentInk }) })] : []),
+      ...(block.text ? [new Paragraph({ spacing: { after: 60 }, alignment: align, children: runs(block.text) })] : []),
+      new Paragraph({ spacing: { after: 0 }, alignment: align, children: [new TextRun({ text: shown, size: 18, color: C.muted })] }),
+    ];
+    let row;
+    if (block.steps) {
+      // Practice steps on the left, the code and its words on the right: what to do, and where to do it, side by side.
+      // (three cells in one row, not a table inside a table: LibreOffice sent the nested form to a new page)
+      const codeW = Math.round((mm + 4) * MM), wordsW = Math.round(36 * MM), main = contentTwips - codeW - wordsW;
+      row = { widths: [main, codeW, wordsW], cells: [
+        new TableCell({ width: { size: main, type: WidthType.DXA }, borders, verticalAlign: VerticalAlign.TOP, margins: { top: 60, bottom: 60, left: 0, right: 240 },
+          children: block.steps.map((item) => new Paragraph({ numbering: { reference: `steps-${index}`, level: 0 }, keepLines: true, spacing: { after: 80 }, children: runs(item) })) }),
+        code(codeW),
+        new TableCell({ width: { size: wordsW, type: WidthType.DXA }, borders, verticalAlign: VerticalAlign.CENTER, margins: { top: 60, bottom: 60, left: 60, right: 0 }, children: words() }),
+      ] };
+    } else {
+      row = { widths: [left, right], cells: [code(left),
+        new TableCell({ width: { size: right, type: WidthType.DXA }, borders, verticalAlign: VerticalAlign.CENTER, margins: { top: 60, bottom: 60, left: 120, right: 0 }, children: words() })] };
+    }
+    out.push(new Table({ width: { size: contentTwips, type: WidthType.DXA }, columnWidths: row.widths, rows: [new TableRow({ cantSplit: true, children: row.cells })] }),
+      new Paragraph({ spacing: { before: 0, after: 80, line: 40, lineRule: LineRuleType.EXACT }, children: [] }));
     this.links = (this.links || []).concat([{ url: block.url, label: block.label || '' }]);
     return out;
   }
@@ -311,7 +326,7 @@ class Builder {
           return new TableRow({ cantSplit: true, children: r.map((t, i) => cell(t, i, false)) });
         }),
       ],
-    }), new Paragraph({ spacing: { after: 120 }, children: [] }));
+    }), new Paragraph({ spacing: { before: 0, after: 80, line: 40, lineRule: LineRuleType.EXACT }, children: [] }));
     return out;
   }
 
@@ -403,7 +418,7 @@ class Builder {
     if (!current.children.length) fail('The worksheet ends with a section break and nothing after it.');
     sections.push(current);
 
-    const stepRefs = s.blocks.map((b, i) => (b.type === 'steps' ? i : null)).filter((i) => i !== null);
+    const stepRefs = s.blocks.map((b, i) => (b.type === 'steps' || (b.type === 'link' && b.steps) ? i : null)).filter((i) => i !== null);
     const numbering = {
       config: [
         { reference: 'bullets', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 400, hanging: 260 } }, run: { color: C.orange } } }] },
@@ -542,6 +557,29 @@ sheet.save(sys.argv[1])
 
 // Page-flow check on the finished PDF: a nearly empty last page, or a page that is only a
 // heading, usually means content should be tightened or moved. Advisory, not an error.
+// How far down each page its content reaches, as a fraction of the space above the footer (3.2). The page is
+// rasterised small and grey, and the lowest row with ink in it found. Returns [] if pdftoppm is not there.
+function pageFill(pdfPath) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lbs-flow-'));
+  const r = spawnSync('pdftoppm', ['-r', '20', '-gray', pdfPath, path.join(dir, 'p')]);
+  const out = [];
+  if (!r.error && r.status === 0) {
+    for (const f of fs.readdirSync(dir).sort()) {
+      const buf = fs.readFileSync(path.join(dir, f));
+      const head = buf.toString('latin1', 0, 40).match(/^P5\s+(\d+)\s+(\d+)\s+(\d+)\s/);
+      if (!head) continue;
+      const [w, h] = [Number(head[1]), Number(head[2])];
+      const start = head[0].length;
+      const top = Math.round(h * 0.06), foot = Math.round(h * 0.91);   // the margins; the footer sits below 91%
+      let last = top;
+      for (let y = top; y < foot; y++) { for (let x = 0; x < w; x++) { if (buf[start + y * w + x] < 200) { last = y; break; } } }
+      out.push((last - top) / (foot - top));
+    }
+  }
+  fs.rmSync(dir, { recursive: true, force: true });
+  return out;
+}
+
 function flowWarnings(pdfPath) {
   const info = spawnSync('pdfinfo', [pdfPath], { encoding: 'utf8' });
   const pages = Number(((info.stdout || '').match(/Pages:\s+(\d+)/) || [])[1] || 0);
@@ -557,6 +595,13 @@ function flowWarnings(pdfPath) {
       warnings.push(`Page ${n} (the last page) holds only about ${words} words. Tighten earlier content or move a block so it fits, or add useful material.`);
     }
   }
+  // a page that stops well short, with more to come: something big did not fit and was carried over
+  const fill = pageFill(pdfPath);
+  fill.forEach((f, i) => {
+    const n = i + 1;
+    if (n < fill.length && f < 0.68) warnings.push(`Page ${n} stops ${Math.round((1 - f) * 100)}% short of its foot: the next block did not fit and moved to page ${n + 1}. Shorten or split that block, set a figure's widthMm a little smaller, or reorder so a short block fills the space.`);
+    if (n === fill.length && fill.length > 1 && f < 0.22 && !warnings.some((w) => w.startsWith(`Page ${n} `))) warnings.push(`Page ${n} (the last page) is used for only its top ${Math.round(f * 100)}%. Tighten earlier content so it fits on ${n - 1} page${n - 1 === 1 ? '' : 's'}, or add useful material.`);
+  });
   return warnings;
 }
 

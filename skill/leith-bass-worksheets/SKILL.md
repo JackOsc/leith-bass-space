@@ -1,16 +1,19 @@
 ---
 name: leith-bass-worksheets
-description: Make Leith Bass Space teaching material in the house style. Covers bass notation and TAB (scales, technique drills, chord tones, pitch studies), rhythmic bass grooves (quavers, semiquavers, rests, ties, triplets, slides, hammer-ons, double stops, engraved with LilyPond), TAB-only figures, fretboard and keyboard diagrams, complete A4 worksheets and session notes as DOCX and PDF, and the Members portal session-notes text. Use this skill whenever Jack asks for a bass worksheet, session notes, a practice sheet, exercise, scale, groove, bass line, TAB, notation, fretboard diagram, chord-tone study or teaching graphic, anything for leithbass.space, or a pupil handout, even if he doesn't mention the skill or the house style by name. Never draw notation, TAB or fretboards by hand or with image generation; use these scripts.
+description: Make Leith Bass Space teaching material in the house style. Covers bass notation and TAB (scales, technique drills, chord tones, pitch studies), rhythmic bass grooves (quavers, semiquavers, rests, ties, triplets, slides, hammer-ons, double stops, engraved with LilyPond), TAB-only figures, chord charts with slashes and rehearsal marks, rhythm-only lines, one page element cards for the Harmonic Elements course, fretboard and keyboard diagrams, complete A4 worksheets and session notes as DOCX and PDF, and the Members portal session-notes text. Use this skill whenever Jack asks for a bass worksheet, session notes, a practice sheet, exercise, scale, groove, bass line, TAB, notation, fretboard diagram, chord-tone study, chart, rhythm reading line, element card or teaching graphic, anything for leithbass.space, or a pupil handout, even if he doesn't mention the skill or the house style by name. Never draw notation, TAB or fretboards by hand or with image generation; use these scripts.
 ---
 
 # Leith Bass worksheets
 
-Four deterministic renderers and a document builder, sharing one palette, one set of fonts and one rule: **music is data**. Every pitch, fret and finger comes from JSON you write; the pictures are calculated from it and audited. Never edit a finished image to change the music. Change the JSON and rebuild.
+Four deterministic renderers, a card maker and a document builder, sharing one palette, one set of fonts and one rule: **music is data**. Every pitch, fret and finger comes from JSON you write; the pictures are calculated from it and audited. Never edit a finished image to change the music. Change the JSON and rebuild.
 
 | Script | Makes | Use for |
 |---|---|---|
 | `scripts/render.js` | notation and/or TAB panels (SVG/PNG) | scales, drills, chord tones, unmetered pitch studies (crotchets only) |
 | `scripts/groove.js` | notation and/or TAB via LilyPond | anything rhythmic or with technique: quavers to semiquavers, rests, ties, triplets, slides, hammer-ons, pull-offs, ghost and muted notes, double stops, key and tempo, several lines |
+| `scripts/groove.js` with `show: "chart"` | chord charts: slashes, chord symbols, rehearsal marks, simile bars, repeats | reading a chart; the form of a tune; anything where the notes are the player's choice |
+| `scripts/groove.js` with `show: "rhythm"` | one line of rhythm, no pitch | reading rhythm away from the bass; clapping and counting |
+| `scripts/element.js` | a one page card for an element of the Harmonic Elements course, in any key | "a card for the Dorian loop in B♭"; anything about a named element. The music on it comes from the app's own catalogue, so never write an element's chords or numerals by hand |
 | `scripts/diagram.js` | fretboard and keyboard diagrams | shapes, where notes sit, intervals, semitones |
 | `scripts/worksheet.js` | A4 DOCX (+ PDF, previews, contact sheet, audit, portal text) | handouts and session notes combining text and figures |
 | `scripts/test.js` | acceptance tests | run after any change to the scripts |
@@ -26,7 +29,7 @@ In worksheets and session notes, Jack calls his time with a pupil a **session**.
 ```bash
 SKILL=$(dirname "$(ls -d /mnt/skills/*/leith-bass-worksheets/SKILL.md /root/.claude/skills/*/*/leith-bass-worksheets/SKILL.md 2>/dev/null | head -1)")
 bash $SKILL/scripts/setup.sh              # fonts, PNG rasteriser, docx, jszip, checks
-bash $SKILL/scripts/setup.sh --lilypond   # add this when a groove is needed (about a minute)
+bash $SKILL/scripts/setup.sh --lilypond   # add this when a groove, chart, rhythm line or element card is needed (about a minute)
 ```
 
 Work in `/home/claude/lbs-work/`. The skill folder is read-only, so write JSON and outputs elsewhere and point the scripts at them (paths inside a worksheet are relative to the worksheet file; absolute paths also work). If you have to patch a script for a job, patch a copy, say so in the reply, and list the change so it can go back into the skill.
@@ -79,6 +82,16 @@ Standalone figures default to the web treatment: cream panel, orange border, Osw
 2. **Check the page flow.** The builder prints `Page flow:` warnings for a near-empty last page. Also look for a lone heading or callout at a page end, a figure separated from its title, or a half-empty page before a big figure. Fix by editing content (shorter steps, move a block, add a `pagebreak`, use a landscape section), not by shrinking figures.
 3. **Read the audit** (`<slug>-audit.json` or the manifest) against what you meant to write: every string, fret, written pitch, duration.
 4. Run `node $SKILL/scripts/test.js` if you changed any script.
+
+### Element cards
+
+```bash
+node $SKILL/scripts/element.js --list                                   # every element, by stage
+node $SKILL/scripts/element.js dorian-loop --key Bb --out-dir out --pdf --preview
+node $SKILL/scripts/element.js "I IV" --key E --sevenths --out-dir out --pdf
+```
+
+The card is an ordinary worksheet (`<slug>.card.json` is written beside it), so to add a line to play, a photo or a note for one pupil, edit that file and rebuild it with `worksheet.js`. The numerals, chords, fixed and open notes, listening line and homes are the catalogue's: don't change them on the card. If they look wrong, the catalogue is where to fix it. `assets/elements.json` is a copy made by `tools/export-elements-for-worksheets.js` in the site's repository; if Jack says the app's elements have changed, it needs making again.
 
 ## 5. Deliver
 
