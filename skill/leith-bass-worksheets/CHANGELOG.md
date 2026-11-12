@@ -13,6 +13,9 @@ The rest of the list from the review of 11 Nov 2026 (section 7), at Jack's reque
 - **Page flow warnings** for a page that stops well short with more to come, and for a last page that is barely used (measured from the PDF itself).
 - **setup.sh installs LilyPond without apt** where there is none, from the Python package index (2.24.3), and the engraver finds it there.
 
+### Style guide
+- **`references/house-style.md` is now edition 2.0 of the house style guide**, written out in full (it was a text extract of edition 1.0 with two notes of amendment). New: the app (phone layout, the parts of a room, numerals first, the course's vocabulary, whose home it is, links, privacy, sound); the kinds of figure and when to use each; one page where it can be; plain and short language, few dashes, copy that does not read as machine written; published songs; the rules for building and releasing. The brief for recreating the notation tool has left the guide: this skill is the specification. The guide as a DOCX and PDF, built with this skill, is in the site repository under `docs/`.
+
 ### Fixed
 - **A label with a flat in it changed typeface.** 3.1 put the three signs in fonts of their own. The figure renderer sets a whole label in one font, so "Home (B♭)" and "B♭maj7" came out in DejaVu Sans Mono. The signs are now inside the bundled Inter and Oswald themselves (`tools/add-signs-to-fonts.py` in the site repository; outlines from DejaVu Sans, whose own additions are public domain; Inter and Oswald are OFL with no reserved name). Documents still set each sign in "LBS Signs", so a copy of Inter already installed on a machine cannot lose them.
 - **A blank last page after a table or a link.** The empty paragraph a table must be followed by was full height and could fall alone onto a new page. It is now 2 pt tall.

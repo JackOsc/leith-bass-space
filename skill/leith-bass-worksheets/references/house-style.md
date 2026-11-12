@@ -1,463 +1,251 @@
-# Leith Bass Space house style guide, edition 1.0 (text extract, with skill amendments 1.1 and 1.2)
-
-> **Amendments 1.1 (31 October 2026), made in the worksheet skill at Jack's request (sessions, and less bulky notation):** (a) in worksheets and session notes, Jack's time with a pupil is a *session*, not a lesson (website wording is unchanged); (b) notation is sized by its staff (1.8 mm staff space by default, matching book engraving) rather than by panel width; (c) document figures are plain (no orange box, no heading inside the image), while web panels keep the cream panel and orange border. Changed passages are marked [1.1]. The master PDF/DOCX in the Project has not been updated yet.
-
-> **Amendments 1.2 (11 November 2026), made in the worksheet skill:** (a) flats and sharps are printed with the real signs (B♭, F♯), never as the letters b and #, in every figure and document; the signs come from the bundled "LBS Signs" fonts because Inter and Oswald have none; (b) a worksheet may end with one or two links into the app, each a QR code with a label, a line of text and the address in words. A code is never the only way to reach something: the address is always printed beside it.
->
-> Text extracted from the PDF edition dated 19 September 2026. Tables are flattened; the PDF is the master. Note: the contents list on page 1 names nine sections, but the body has ten (notation colour is its own section 3, so later numbers shift by one).
-
-```text
-Leith Bass Space
-House style guide
-A practical design and editorial system for the website, worksheets, documents and notation.
-Edition 1.0 • 19 September 2026
-
-The character
-Clear, warm and musically serious. A working musician’s teaching practice in Leith: direct enough
-to be useful, thoughtful enough to earn trust, and visually distinctive without distracting from the
-music.
-The core ingredients are condensed Oswald display type, readable Inter text, cream and near-
-black surfaces, orange accents, real studio photography and accurate notation. Every application
-should make the reader’s next action easier: understand an idea, play an exercise, find a lesson or
-contact Jack.
-
-How this guide defines the system
-The established baseline is the saved Leith Bass website theme 3.3.1 and the existing Leith Bass
-Notation assets. Website colour/font values and the notation palette below are taken from those
-sources. Document typography, spacing scales, accessibility pairings and component rules are the
-new standard defined by this guide.
-Where the two existing systems differ, this guide names their roles instead of pretending they were
-identical. Website surfaces retain their tokens; notation retains its warm-paper identity. New work
-should follow the rules here. Existing assets need not be recoloured merely to remove a purposeful
-difference.
-
-Contents
-1.   Identity and hierarchy.
-2.   Colour and contrast.
-3.   Typography and spacing.
-4.   Website components and behaviour.
-5.   Documents and worksheets.
-6.   Voice, language and musical terminology.
-7.   Photography, diagrams and notation.
-8.   Recreating the notation tool.
-9.   Quality checks and governance.
-
-                                                                                  LEITH BASS SPACE /   1
-
-1. Identity and hierarchy
-Names and marks
-Use “Leith Bass Space” in formal document titles and explanatory prose. Use “leithbass.space” for
-the website address and established wordmark. “lb.s” is an informal shorthand in internal notes or
-where the full identity is already clear. Use “Leith Bass Notation” for the notation tool.
-Use the supplied logo artwork from the theme, including its light version on dark backgrounds. Do
-not reconstruct it by typing similar letters. Preserve aspect ratio and a clear area around it of at
-least the height of the lowercase wordmark letters. Do not place it over a busy photographic region
-without a reliable contrast treatment.
-
-Visual priorities
-The reader should encounter one main title, one clear opening statement and one obvious next
-step. On a worksheet, the exercise is the focal point. On a lesson page, the teaching offer and
-contact route take priority. On a technical document, navigation and accurate information take
-priority.
-Use orange to locate attention: a link, a brief cue, an edge or a small highlighted detail. Reserve
-large orange fields and torn edges for editorial moments. Do not use every available brand device
-on every page.
-
-Display language and teaching language
-Display areas may be assertive: large condensed headings, strong cropping, broad dark/light
-contrasts and a restrained torn edge. Teaching areas should settle down: generous margins,
-simple columns, flat paper surfaces and precise musical graphics.
-This is one identity at two levels of intensity. A bass exercise should not inherit a photographic
-knockout headline if it makes the notes harder to read. A website hero can have more atmosphere
-than a practice checklist.
-
-Case rules
-Use uppercase for short generic display titles, navigation and small category labels when it helps
-the hierarchy. Use sentence case for long headings, instructions, captions and prose. Keep one
-convention within each heading level and medium.
-Never uppercase chord symbols, key names or mixed-case music text through a blanket
-transformation. Bb is not BB; Em is not EM; Bbm is not BBM. Apply display styling to a wrapper or
-separate label rather than rewriting musical content.
-
-                                                                                LEITH BASS SPACE /    2
-
-2. Website colour system
-These are the theme 3.3.1 values. Use semantic tokens so text and surfaces switch together.
-
- Role                              Light mode                         Dark mode
- Canvas                            #F3EFE7                            #090909
- Surface                           #F5F2EC                            #0C0E13
- Raised surface                    #FFFDF8                            #12151B
- Primary ink                       #111111                            #F3F1EB
- Secondary ink                     #333333                            #D4D1CA
- Muted text                        #6F6C66                            #ACA89F
- Orange decorative accent          #E87102                            #E87102
- Orange text / action fill         #B05200                            #F49542
- Text on action fill               #FFFFFF                            #090909
-
-The brighter orange is for graphic accents. The darker light-mode orange is for text and action fills
-where contrast matters. Do not substitute the decorative orange everywhere because it appears
-more vivid.
-
-Rules and separators
-Use low-contrast rules sparingly: the existing theme uses dark ink at about 14% opacity in light
-mode and warm light at about 16% in dark mode. A rule divides information; it is not decoration to
-put beneath every heading.
-
-Theme behaviour
-A dark first-visit presentation is the defined brand preference. Preserve a visitor’s explicit choice
-across visits. Apply the theme before the first painted frame where possible. Honour reduced-
-motion preferences for animated transitions.
-Both editorial split sections must respond to the theme together with the rest of the page. Surfaces,
-text, links and rules need a complete mapping. Do not leave one section’s fixed charcoal
-background paired with newly dark text.
-Photographs remain photographs. Notation stays a cream/white inset unless an individually
-checked dark notation variant is deliberately created. Do not use global invert filters on images or
-diagrams.
-
-Colour is never the only cue
-Links in body text should also be underlined. Changed notes need a label, spelling or explanation
-as well as colour. Interactive controls need a visible focus state, meaningful text and a distinct
-selected state.
-
-                                                                                   LEITH BASS SPACE /   3
-
-3. Notation colour and accessibility
- Notation role                     Value                             Use
- Warm paper                        #F5EFE2                           Default notation panel
- Print paper                       #FFFFFF                           Low-ink document output
- Charcoal                          #292724                           Music, TAB and primary text
- Orange                            #D86B25                           Border and decorative emphasis
- Dark orange                       #A84912                           Small finger numbers and labels
- Muted brown-grey                  #6A645C                           Secondary notation labels
-
-The darker accent text is a new readability refinement. Keep the familiar orange border on web panels;
-document figures are plain [1.1]. Notation
-backgrounds intentionally differ from the web canvas; this is a named inset treatment, not an
-accidental mismatch.
-
-Contrast rules
-Use a minimum 4.5:1 contrast for ordinary text and 3:1 for large text, following W3C’s contrast
-guidance. For this design system, treat small notation labels as ordinary text even when their
-source-image dimensions look large. Their final displayed size is what matters.
-Do not assume white text works on every orange. Use the defined action pairings, and recalculate
-contrast if either colour changes. Check muted captions and disabled-looking text as carefully as
-headings. Decorative borders can be subtle, but an essential control boundary or musical mark
-must remain clearly perceivable.
-
-Reading size and alternatives
-Aim for body text of 16–18 CSS px on the website, 11 pt in normal documents and 11–12 pt on
-beginner worksheets. Teaching graphic labels should normally reach at least 16 CSS px on screen
-or 10 pt in print. These are house targets, not claims that one size suits every reader.
-A 24 px TAB digit in a 1600 px image becomes only 9 px when displayed at 600 px wide. Higher
-export resolution cannot fix that proportion. Use fewer bars per panel, a different layout, or an
-accessible zoom/scroll option. Always provide a useful text description or adjacent explanation of
-the exercise.
-
-Accessible structure
-Use actual heading styles, readable link labels and real tables. Add alt text to meaningful images;
-leave decorative textures unannounced. Do not turn paragraphs into screenshots. PDF page
-design should remain legible when printed in greyscale. Preserve an editable document version
-alongside PDF, and check reading order when producing an accessible distribution PDF.
-Source: W3C, Understanding SC 1.4.3 Contrast (Minimum),
-https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html
-
-                                                                                   LEITH BASS SPACE /   4
-
-4. Typography and spacing
-Font system
- Role                              Face and weight                        Guidance
- Display headings                  Oswald 700                             Short, confident; avoid stretched
-                                                                          tracking
- Body                              Inter 400                              Sentence case, comfortable line
-                                                                          length
- Emphasis / labels                 Inter 600                              Prefer selective emphasis over all-
-                                                                          bold paragraphs
- Music symbols                     Bravura outlines                       Real engraving glyphs and anchors
- TAB / code                        DejaVu Sans Mono                       Stable digits; keep separate from
-                                                                          body typography
-
-The theme supplies Oswald 700 and Inter 400/600. The notation package includes licensed
-desktop conversions for document and raster use. If unavailable, use Arial Narrow/Arial for display
-and Arial/Helvetica for body, then review line breaks. A fallback is an explicit compromise, not a
-new brand font.
-
-New document standard
- Style                                                Size / spacing
- Cover title                                          Oswald 30–34 pt, 1.05 line spacing
- Page or major section title                          Oswald 22–24 pt, 12–18 pt space after
- Subheading                                           Oswald 15–17 pt, 12 pt before / 5 pt after
- Body                                                 Inter 11 pt, about 1.25 line spacing, 6–8 pt after
- Caption / footer                                     Inter 9 pt; concise, never essential instructions at this
-                                                      size
- Table                                                Inter 9.5–10.5 pt, adequate cell padding
-
-Use heading styles rather than manual imitation. Keep headings with the next paragraph. Avoid
-widows, isolated list items and captions separated from their figures. Do not justify body text or
-use hard line breaks to shape ordinary prose.
-
-Web standard
-Retain Oswald and Inter. Use a coherent hierarchy rather than reproducing inconsistent historical
-size overrides. A practical new scale is H1 36–64 px, H2 28–44 px, H3 22–28 px, body 16–18 px,
-with responsive sizes and roughly 1.5–1.65 body line height. Keep display line height around 1.0–
-1.15, increasing it if a heading wraps awkwardly.
-
-Spacing tokens
-Use a 4 px base: 4, 8, 12, 16, 24, 32, 48, 64 and 96 px. Prefer a few recurring gaps to many
-almost-identical values. Body copy should usually remain around 60–75 characters per line. The
-existing web maximum content width is 1180 px and reading measure 40 rem; retain these as the
-starting grid.
-
-                                                                                          LEITH BASS SPACE /      5
-
-5. Website layout and components
-Opening and navigation
-State the offer plainly: bass lessons, Leith/Edinburgh, who they are for and the next action. Keep
-the main call to action specific, such as “Book a lesson” or “Ask about lessons”. Navigation labels
-should describe destinations rather than require the reader to decode a slogan.
-Use one H1 per page and a logical sequence of H2/H3 headings. Article titles and image captions
-should remain live text. Put meaningful information early; visual atmosphere supports it.
-
-Editorial split sections
-Use a roughly 40% text / 60% image balance when the image carries genuine context, then adapt
-to the content. On small screens, stack into a coherent reading sequence with the heading and
-explanation close to their action. Preserve the important subject in the crop.
-Torn orange edges may appear on the first and second homepage splits as an established motif.
-Keep their geometry consistent and their contrast deliberate. Do not allow a tear to intrude into text
-or obscure a face, hand or instrument. Use the motif selectively elsewhere.
-
-Cards, buttons and links
-Keep card padding consistent and titles aligned. A card should group one decision or topic, not
-become a border around every paragraph. Use clear primary/secondary button hierarchy; avoid
-several equal primary actions in one viewport.
-Make controls comfortably usable by touch, with a house target around 44 px in each interactive
-dimension. Preserve visible keyboard focus and sensible tab order. Underline text links in prose
-and avoid vague “click here” wording.
-
-Articles and teaching posts
-Open with the practical question or problem, explain the musical idea, then show an example and
-an action the reader can try. Use paragraphs for connected reasoning; use lists for steps or
-genuine comparisons. Avoid a succession of one-line paragraphs that makes a short article feel
-artificially long.
-
-Motion, images and performance
-Use real scroll-linked effects only when they add useful depth. Disable or simplify them for
-reduced motion. Prevent image layout shifts with dimensions/aspect ratios. Deliver appropriately
-sized images; preserve sharp detail in notation. Confirm dark/light behaviour at mobile and desktop
-widths before publishing.
-This guide defines visual and editorial behaviour. It does not claim a completed performance,
-accessibility or SEO audit of the live site.
-
-                                                                                  LEITH BASS SPACE /   6
-
-6. Documents and worksheets
-Page system
-Use A4 portrait by default. Set margins around 18 mm, with a slightly larger lower allowance for
-page numbers. Keep the page white for economical printing; use cream as a restrained panel fill. A
-full charcoal page is a cover or digital presentation choice, not the default pupil worksheet.
-Put the document title, short purpose and relevant date/version at the beginning. Use a quiet
-running identifier and page number for longer references. Keep one-page teaching sheets simpler.
-A large logo and dense footer should not compete with the exercise.
-
-Worksheet sequence
-1.   Title and one-sentence learning aim.
-2.   A short explanation of the idea.
-3.   One or more clearly labelled musical examples.
-4.   A small set of purposeful practice steps.
-5.   A listening cue or suggested musical application.
-This is a sequence, not a requirement to fill five boxes. A short session note [1.1] may need one example and
-three instructions. A longer concept may need two pages rather than reduced type.
-
-Notation placement [1.1]
-Size notation by its staff, as music books do: a 1.8 mm staff space (7.2 mm five-line staff) by
-default, 1.6 mm (compact) for dense reference pages, 2.0 mm (large) for young beginners. At 1.8 mm
-note names, fingers and chord labels print at about 10 pt. Figures take their natural width (about
-35 mm per bar of four crotchets with names), up to the text width; two to four bars per line is
-typical. In documents, figures are plain: no border and no heading inside the image, because the
-figure title above identifies it. Keep space above and below. Use the dedicated NOTE and FINGER
-rows when needed. Use a landscape section when a long line of music needs the width.
-Do not put captions, tempo advice or explanatory paragraphs inside the graphic and then repeat
-them beneath it.
-A figure title identifies the material; its caption adds meaning. “C major ascending” and “Say the
-names as you play” have different jobs. Use each once.
-
-Tables and callouts
-Use tables for parallel information: chord, chord tones, function; band comment and response; task
-and purpose. Keep cells brief and top-aligned. Repeat header rows across pages; prevent short
-rows splitting. Use subtle cream header fills or dark headers with clearly contrasting text. Avoid
-unnecessary vertical rules.
-Use a callout only for a useful distinction, a listening instruction or a key safety/comfort cue. A full
-paragraph does not become more helpful merely because it has an orange border.
-
-Delivery
-Retain an editable DOCX and a visually checked PDF. Inspect every rendered page after layout
-changes. Check all music glyphs, tables, figure sizes, headers and page breaks. Do not describe a
-PDF as fully accessibility-certified merely because it looks correct.
-
-                                                                                     LEITH BASS SPACE /    7
-
-7. Voice, language and musical terms
-The voice
-Write as an experienced working musician explaining something to a capable person. Be direct,
-warm and specific. Connect technique to sound, practice to musical purpose and theory to
-something the reader can hear or play.
-Avoid inflated claims, generic inspiration and an impersonal academic voice. Do not promise
-effortless mastery, instant progress or guaranteed outcomes. Authority comes from accurate
-explanation and useful choices. Speak in the first person where it expresses Jack’s actual
-approach; never invent anecdotes or quotations.
-
-British English
-Use “practise” as the verb and “practice” as the noun: “Practise this slowly”; “a practice routine”;
-“Practice makes permanent.” Use “colour”, “centre”, “organise” and “fretboard”. Preserve the
-spelling of titles, quotations and proper names.
-
-Teaching language
-In worksheets and session notes, Jack's time with a pupil is a session: “session notes”, “Session 4”,
-“in our next session”, not “lesson” [1.1]. Website wording is unchanged. Give an action, a reason and something to notice. “Play the phrase slowly, keeping each note the
-same length. Listen for a steady pulse.” For younger learners, shorten the explanation while
-keeping its musical substance. Avoid patronising praise or implying that a mistake measures their
-ability.
-Frame progress as increasing familiarity and choice. Use “try”, “notice”, “listen” and “return to”.
-Avoid a self-test or exam framing unless it is specifically wanted. A clear technical correction is
-compatible with an encouraging tone.
-
- Avoid                                              Prefer
- Unlock your bass potential                         Build a practice routine you can use
- Master this instantly                              Start slowly enough to hear every note
- Don’t get this wrong                               Keep the note ringing until the next one
- Test yourself                                      Try naming the note before you play it
- This scale works over everything                   This note choice fits this harmony because…
-
-Musical notation in prose
-Use Bb7, Bbm, Em and Cmaj7 consistently; preserve case. Use proper ♭/♯ where the font and
-destination support them, or ASCII b/# consistently in technical data. Write “D natural” when a
-prose explanation benefits from clarity.
-Distinguish key, scale, mode and chord. A borrowed or altered chord does not automatically mean
-a key change. Spell the relative major of Eb minor as Gb major. When explaining Bbm → Bb7,
-identify Db → D natural and preserve the other relevant notes. Verify every specific theoretical
-claim against the musical example.
-
-                                                                                      LEITH BASS SPACE /   8
-
-8. Photography, diagrams and notation
-Photography
-Use original photographs of Jack, instruments, lessons and the studio. Preserve the real basses,
-amplifier controls, hands, rooms and equipment. Crop, straighten, grade and composite authentic
-source images; do not regenerate their details when the purpose is documentary.
-Keep colour treatment natural, with warm neutrals and believable skin tones. Avoid excessive
-clarity, crushed shadows and strong orange overlays. Do not repeat the same image close together
-merely to fill a space. Use the image that supports the section’s meaning.
-For collages, preserve the original pixels of musical equipment and people. Decorative tears can
-frame the photos; they should not replace them. Keep text live and separate wherever practical. Do
-not generate heading text inside an image.
-
-Concept diagrams
-Use clean vector shapes for keyboards, fretboards, ratios, interval relationships and practice
-sequences. Colour should highlight the concept, with a label or shape providing a second cue. Use
-a consistent stroke weight and alignment grid; avoid decorative arrows that do not encode a
-relationship.
-Label every axis, string, unit or ratio needed to understand the figure. A keyboard must accurately
-show the B–C and E–F semitone relationships. A fretboard must state its orientation and tuning. For
-a ratio diagram, identify what is being compared; do not substitute attractive proportions for
-numerical correctness.
-
-Music engraving
-Use deterministic notation software, not image generation. The standard is a real bass clef, correct
-note spelling, literal TAB and the electric bass’s written octave. Treat sound, pitch spelling, string
-location and fingering as distinct but connected information.
-Keep the staff charcoal and use orange for structure or teaching cues. Keep all aligned
-representations of a note on one vertical axis. Note-name labels need their own row, never the
-same space as noteheads. Check natural signs, ledger lines and the clearance around very low or
-high notes.
-
-Captions and descriptions
-A caption explains why the reader should look. Alt text describes the useful visual information.
-They may overlap, but should not both repeat a heading without adding meaning. Provide a text
-equivalent for a complex exercise rather than forcing an entire lesson into one alt attribute.
-
-                                                                                  LEITH BASS SPACE /   9
-
-9. Recreate Leith Bass Notation
-This section is a compact, self-contained brief for another agent. The companion AI Handoff
-expands the schema, geometry and tests.
-
-Build contract
-Create a deterministic renderer in a language available to the receiving platform. Accept JSON with
-a title, optional tuning, meter, accidental preference, noteNames, theme, width and an array of
-panels. Each panel has a heading and 1–6 measures. Each measure contains 1–8 notes identified by
-string name and fret; optional finger and written spelling are supported.
-Default tuning is E1 A1 D2 G2, MIDI 28,33,38,43. Allow 4–6 named strings, ordered low to high.
-Calculate sounding MIDI = open MIDI + fret; written MIDI = sounding MIDI + 12 by default. TAB is
-never transposed. Validate explicit spellings against written MIDI.
-For pitch names, MIDI = 12×(octave+1) + natural-letter pitch class + alteration. C,D,E,F,G,A,B pitch
-classes are 0,2,4,5,7,9,11. Preserve spelling: enharmonic equivalence does not mean identical staff
-position. Use a five-line bass staff, with G2 on the bottom line and A3 on the top.
-
-Rendering rules
-Use Bravura or another properly licensed music font. Reverse the tuning order for visual TAB. Align
-notehead, optional name, optional finger and fret number by x coordinate. Reset accidental state
-each measure; show naturals when cancelling previous alterations.
-Support quarter-note meter [n,4], with each complete bar containing n notes. Permit a shorter bar
-only when explicitly marked incomplete. Support timeSignature:null for deliberately unmetered,
-stemless pitch studies. Reject unsupported fields; route complex rhythm, key signatures and
-polyphony to a full engraving engine.
-Use the notation palette on page 4, 24-unit staff spaces, 42-unit TAB spacing, 46-unit labels,
-84-unit stems, charcoal music, Oswald headings and Inter labels [1.1]. Width is "auto" by default:
-calculated from the music and shared by all panels of one exercise. Web panels have an orange
-border and heading; document figures are plain. Make height depend on register and string count. Separate name/finger
-rows and reject crowding rather than shrinking type.
-
-Outputs and proof
-Produce SVG, optional PNG, editable input JSON and an audit listing every fret, sounding pitch and
-written pitch. Add accessible descriptions and preserve font licences. Inspect outputs at their final
-size.
-Required checks: open E sounds E1/writes E2; A3 sounds C2/writes C3; Bb7 and Em retain case; a
-natural cancels an earlier sharp; accidentals reset at the barline; six strings yield six TAB lines;
-overfull bars and incorrect spellings fail. The receiving agent must demonstrate these, not merely
-describe them.
-
-                                                                                LEITH BASS SPACE /   10
-
-10. Quality control and maintenance
-Before releasing any material
- Area                                              Release check
- Content                                           One clear purpose; specific instructions; accurate
-                                                   claims
- Typography                                        Correct faces, hierarchy, case and readable final sizes
- Colour                                            Semantic tokens; complete theme mapping; suitable
-                                                   contrast
- Layout                                            Enough space; no overlap, clipping or isolated captions
- Photography                                       Authentic source details and appropriate crop
- Music                                             Tuning, octave, spelling, rhythm, TAB and fingering
-                                                   checked
- Accessibility                                     Real text/structure, alt text, focus states where relevant
- Output                                            Editable source retained; every final page/image
-                                                   inspected
-
-Maintenance rules
-Maintain colours as named tokens, document styles as actual styles and notation as data-driven
-output. If a rule changes, update the source tokens, this guide and representative examples
-together. Assign a new version and date; describe whether the change is visual, editorial or
-behavioural.
-A deliberate exception may suit a particular audience or medium. State its reason in production
-notes and retain the musical and accessibility requirements. Do not turn an isolated exception into
-an accidental new default.
-
-Baseline and scope
-The visual baseline for this edition is the saved theme 3.3.1 (style.css, its font assets and logo
-variants) and Leith Bass Notation’s original references and renderer. The updated notation tool is
-version 2.0. New document/spacing rules and darker notation accent text are defined by this
-edition.
-This guide does not change the live website. It is the standard for future design and content work.
-When a later theme changes, inspect its actual assets before claiming that they match this edition.
-
-External references
-W3C contrast guidance: https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html
-Oswald family: https://fonts.google.com/specimen/Oswald
-Inter family: https://fonts.google.com/specimen/Inter
-Bravura source and licence: https://github.com/steinbergmedia/bravura
-Keep copyright and SIL Open Font License notices with redistributed font assets. The notation tool
-includes these notices for its bundled music glyphs and text fonts.
-
-                                                                                     LEITH BASS SPACE /      11
-```
+# Leith Bass Space house style guide
+
+kicker: Edition 2.0 · 12 November 2026
+aim: One system for the website, the app, worksheets, session notes and notation.
+
+## The character
+
+Clear, warm and musically serious. A working musician's teaching practice in Leith: direct enough to be useful, thoughtful enough to earn trust, and distinctive without getting in the way of the music.
+
+The ingredients are condensed Oswald for display, Inter for reading, cream and near black surfaces, orange accents, real studio photography and accurate notation. Every page, screen and sheet should make the reader's next action easier: understand an idea, play an exercise, find a session, contact Jack.
+
+!! What changed in 2.0 :: This edition folds in amendments 1.1 and 1.2, and adds the app (section 5), the kinds of figure (section 6), the rules for building and releasing (section 9), and a fuller section on language. The summary of changes is at the end.
+
+## 1. Identity and hierarchy
+
+**Names.** Use "Leith Bass Space" in titles and prose. Use "leithbass.space" for the address and the wordmark. "lb.s" is shorthand for internal notes. The app's rooms are the Shed, Ear Training (Ear), Read and Harmonic Elements (Elements). Inside each room there is a Guide and a Dojo.
+
+**The logo.** Use the supplied artwork, with its light version on dark backgrounds. Never rebuild it from type. Keep its proportions and leave clear space around it of at least the height of its lowercase letters.
+
+**Priorities.** The reader should meet one main title, one opening statement and one obvious next step. On a worksheet the exercise is the focus. In the app the question and its answer buttons are the focus. On the website the teaching offer and the way to get in touch come first.
+
+**Orange locates attention.** A link, a cue, an edge, a small highlighted detail. Large orange fields and torn edges are for editorial moments on the website. Don't use every brand device on every page.
+
+**Two levels of intensity.** Display areas may be assertive: big condensed headings, strong crops, a torn edge. Teaching areas settle down: generous margins, simple columns, flat paper, precise graphics. An exercise never inherits a headline treatment that makes the notes harder to read.
+
+**Case.** Uppercase for short display titles, navigation and small labels. Sentence case for long headings, instructions, captions and prose. Never uppercase a chord symbol, a key or a roman numeral through a blanket rule: B♭ is not BB, Em is not EM, and i is not I.
+
+## 2. Colour
+
+**Website and app.** These are the theme's values, unchanged since 3.3.1 and checked against theme 3.20.0. Use the named tokens so text and surface switch together.
+
+| Role | Light | Dark |
+| Canvas | #F3EFE7 | #090909 |
+| Surface | #F5F2EC | #0C0E13 |
+| Raised surface | #FFFDF8 | #12151B |
+| Primary ink | #111111 | #F3F1EB |
+| Secondary ink | #333333 | #D4D1CA |
+| Muted text | #6F6C66 | #ACA89F |
+| Orange, decorative | #E87102 | #E87102 |
+| Orange, text and action fill | #B05200 | #F49542 |
+| Text on action fill | #FFFFFF | #090909 |
+
+The brighter orange is for graphic accents. The darker light mode orange is for text and buttons, where contrast matters. In the app, a right answer is green (#2F6A43 light, #7CC495 dark) and always carries a word or a mark as well.
+
+**Notation and documents.**
+
+| Role | Value | Use |
+| Warm paper | #F5EFE2 | Notation panels on the web |
+| Print paper | #FFFFFF | Figures in documents |
+| Charcoal | #292724 | Music, TAB and main text |
+| Orange | #D86B25 | Borders and emphasis on web panels |
+| Dark orange | #A84912 | Finger numbers, chord labels, small labels |
+| Muted brown grey | #6A645C | Secondary labels and captions |
+
+**Rules of use.**
+
+- Ordinary text needs a contrast of at least 4.5 to 1, large text 3 to 1. Small notation labels count as ordinary text.
+- Colour is never the only cue. Links in prose are underlined. A changed note has a label. A selected button looks selected without its colour.
+- Dark is the first visit presentation. Keep a visitor's own choice. Apply the theme before the first paint.
+- Photographs stay photographs. Notation stays a light inset. Never invert an image or a diagram.
+- Rules and separators are faint (ink at about 14% in light mode, warm light at about 16% in dark) and used sparingly.
+
+## 3. Typography and spacing
+
+| Role | Face | Guidance |
+| Display headings | Oswald 700 | Short and confident. No stretched tracking |
+| Body | Inter 400 | Sentence case, comfortable line length |
+| Emphasis and labels | Inter 600 | Selective. Never a whole bold paragraph |
+| Music symbols | Bravura (the app), LilyPond's Emmentaler (documents) | Real engraving glyphs, never drawn by hand |
+| TAB digits | DejaVu Sans Mono Bold | Stable digits, kept apart from body type |
+
+**Flats, sharps and naturals.** Always the real signs: B♭, F♯, D♮, ♭III. Never the letters b and # where a pupil reads. In worksheet data you may type `Bb` and `F#`: the scripts print the signs. The bundled Inter and Oswald carry the three signs, so a label never changes typeface because it has a flat in it.
+
+**Documents.**
+
+| Style | Size and spacing |
+| Title | Oswald 30 to 34 pt |
+| Section heading | Oswald 15 to 17 pt, 12 pt before, 5 pt after |
+| Body | Inter 11 pt, about 1.25 line spacing (11 to 12 pt for young beginners) |
+| Caption and footer | Inter 9 pt. Never an essential instruction at this size |
+| Table | Inter 9.5 to 10.5 pt, with room in the cells |
+
+Use real heading styles. Keep a heading with what follows it. No widows, no caption parted from its figure, no justified text.
+
+**Web and app.** H1 36 to 64 px, H2 28 to 44 px, H3 22 to 28 px, body 16 to 18 px with a line height of about 1.5 to 1.65. Spacing comes from a 4 px base: 4, 8, 12, 16, 24, 32, 48, 64, 96. Content is at most 1180 px wide and prose about 40 rem.
+
+## 4. The website
+
+**Say the offer plainly.** Bass sessions, Leith and Edinburgh, who they are for, and what to do next. Navigation labels name destinations. One H1 a page, then H2 and H3 in order. Titles and captions are live text.
+
+**Editorial splits.** About 40% text to 60% image where the image carries real context. On a phone they stack into one reading order with the heading close to its action. Torn orange edges belong to the first two splits of the home page. A tear never crosses text, a face, a hand or an instrument.
+
+**Cards, buttons and links.** A card groups one decision. One primary action in view at a time. Every control is at least 44 px in each direction, has a visible focus state and says what it does.
+
+**Articles.** Open with the practical question, explain the musical idea, show an example, give something to try. Paragraphs for reasoning, lists for steps.
+
+**Give the tools away.** The metronome, drone and other free tools work without an account. A visitor should be able to use them straight away. They are the best advertisement for the teaching.
+
+**Copy is stored as defaults.** The theme ships default wording and the site's owner can edit any of it. When a release changes a default, it adds a migration that clears saved wording only where it still matches the old default. Wording edited by hand is never overwritten.
+
+## 5. The app
+
+The app is the members' side of the site: the Shed (metronome, drone, practice timer and diary, songs), Ear Training, Read and Harmonic Elements. It is used mostly on a phone, often with a bass on the lap.
+
+**One hand, one screen.** At 390 by 844 the question, the answer buttons and Check fit without scrolling. Controls are 44 px or more. Rows of choices scroll sideways in one line; they do not wrap into a wall of buttons. Settings sit below the work, never above it.
+
+**Every room has the same parts.** A Guide to read and a Dojo to practise in. Today (a short set chosen from the pupil's own record). A map or record showing where they stand. The same words for the same things in every room.
+
+**Numerals lead.** An element is shown as its roman numerals first and its name second: "I IV · The major lean". Lower case numerals are minor chords. Numerals count from home on the major scale, so ♭III is always a minor third above home.
+
+**The course's words.** Use these, with these meanings, and no synonyms.
+
+| Word | Meaning |
+| Home | The note and chord that feel like rest |
+| Key | Home and whether its chord is major or minor |
+| Element | A named loop or cadence of chords, written in numerals |
+| Bond | Two chords: home and one other |
+| Molecule | Three or more chords built from bonds |
+| Lean, pull, shadow, colour | The four relationships a chord can have to home |
+| Step | A chord a tone or semitone from home (once called a shift) |
+| Loop, cadence | A loop goes round. A cadence arrives, and has one home |
+| Fixed, open | Notes the chords settle, and notes left to the player |
+
+**Whose home is it.** Chords suggest a home; the bass decides. So the app never asks a pupil to guess a home it has not established. In Name it the band gives home (a cue, a pedal or its own bass). In Find home nothing is given, and where a loop has two homes both are right. A home must be a chord of the loop.
+
+**How the app talks.** Short, plain and specific. "Play it again", not "Replay audio". "Four of your last five, on two days: recognised", not "Mastery achieved". It never scolds. A wrong answer is followed by what to listen for.
+
+**Records are private.** A pupil's record is seen by the pupil and by Jack. Nothing is shared, ranked or published.
+
+**Links.** A drill with chosen things in play, a metronome setup or a page of a Guide can be a link. Links are how a session note, a worksheet or a message sends a pupil to exactly the right place. Sets from Jack are links on a session, and may only point to this site.
+
+**Sound.** Nobody building the app can hear it. Pitches and timings are measured, then Jack listens. Build notes say which has happened.
+
+## 6. Documents and worksheets
+
+**The page.** A4 portrait, margins of about 18 mm, white paper. Cream is a panel fill, not a page colour. The title is the topic ("Natural minor: building the chords"), not the session's number. The footer carries the address and the page number and nothing else.
+
+**The sequence.** Title and a one sentence aim. A short explanation. One or more labelled examples. A few purposeful practice steps. Something to listen for. This is an order, not five boxes to fill. A session note may need one example and three instructions.
+
+**One page where it can be.** A handout that runs a few lines onto a second page is tightened until it fits. A longer subject takes two full pages before it takes smaller type. The builder warns when a page stops well short or the last page is barely used.
+
+**Kinds of figure.** Choose by what the pupil has to read.
+
+| Figure | Use it for | Made by |
+| Notation with TAB | Grooves, lines, anything with rhythm or technique | groove.js (LilyPond) |
+| Pitch study | Scales, chord tones and drills in even crotchets, with names and fingers | render.js |
+| Chord chart | The form of a tune. Slashes, chord symbols, rehearsal marks, repeat the bar signs | groove.js, show: chart |
+| Rhythm line | Reading rhythm away from pitch | groove.js, show: rhythm |
+| Fretboard, keyboard | Shapes, where notes sit, intervals | diagram.js |
+| Element card | One element of the course on one page, in any key | element.js |
+
+**Figure rules.**
+
+- Size music by its staff: a 1.8 mm staff space by default, 1.6 mm for dense reference pages, 2.0 mm for young beginners.
+- Figures in documents are plain. No border and no heading inside the image, because the figure title above names it.
+- Write music as one continuous figure, two to four bars to the line, with the time signature once. Don't stack two bar panels that each restate the clef.
+- End a whole exercise or piece with a final double bar. Leave an excerpt open.
+- A figure title names the material. Its caption adds meaning. Use each once.
+- Never put instructions inside a graphic and repeat them below it.
+- Keep the whole neck map portrait where twelve frets fit. Landscape is for long lines of music.
+- A fretboard says which way up it is and how it is tuned.
+
+**A way into the app.** A sheet may end with one or two links: a QR code, a label, a line of text and the address in words. The address is always printed, so the code is never the only way in. Practice steps may sit beside the code.
+
+**Tables and callouts.** Tables are for parallel information: chord, notes, function. Short cells, top aligned, no vertical rules. A callout is for one useful distinction or a listening cue. A paragraph does not become more helpful because it has an orange edge.
+
+**Delivery.** An editable DOCX and a PDF that has been looked at, page by page. Session notes also have a plain text version for the portal.
+
+## 7. Voice and language
+
+**The voice.** An experienced working musician explaining something to a capable person. Direct, warm and specific. Technique is tied to sound, practice to purpose, theory to something you can hear or play. No inflated claims, no generic inspiration, no promises of quick mastery. First person where it is Jack's actual approach. Never an invented anecdote or quotation.
+
+**Plain and short.** Short sentences. One idea at a time. Say the thing, then stop. If a sentence could appear on anyone's website, cut it or make it specific.
+
+**Punctuation.** Use few dashes and few hyphens. Where a dash is tempting, use a comma, brackets or a new sentence. Write "two bar loop", "first time answer", "step by step". Keep a hyphen only where the word is spelled with one.
+
+**It should not read as if a machine wrote it.** No triplets of adjectives. No "whether you're a beginner or a seasoned pro". No "unlock", "elevate", "journey", "dive in". No summary sentence restating the paragraph it ends.
+
+**British English.** "Practise" is the verb and "practice" the noun. Colour, centre, organise, fretboard. Titles, quotations and names keep their own spelling.
+
+**Sessions.** In worksheets and session notes, Jack's time with a pupil is a session: "session notes", "Session 4", "before our next session". The website's own wording about lessons is unchanged.
+
+**Teaching language.** Give an action, a reason and something to notice. "Play the phrase slowly, keeping each note the same length. Listen for a steady pulse." Progress is growing familiarity and choice. Use try, notice, listen, return to. A clear correction and an encouraging tone go together.
+
+| Avoid | Prefer |
+| Unlock your bass potential | Build a practice routine you can use |
+| Master this instantly | Start slowly enough to hear every note |
+| Don't get this wrong | Keep the note ringing until the next one |
+| Test yourself | Try naming the note before you play it |
+| This scale works over everything | This note fits this chord because |
+| Lesson 6 (on a worksheet) | The topic as the title; "Session 6" in the notes |
+
+**Music in prose.** B♭7, B♭m, Em, Cmaj7, with their case kept and real signs. "D natural" where the word is clearer than the sign. Keep key, scale, mode and chord distinct: a borrowed chord is not a key change. Spell by function: the relative major of E♭ minor is G♭ major, not F♯. Check every theoretical claim against the example beside it.
+
+**Published songs.** Name a song, an artist and a place in the recording. Never write out a published bass line or a lyric. Listening leads are checked against the recording before a pupil relies on them.
+
+## 8. Photography, diagrams and notation
+
+**Photography.** Real photographs of Jack, the instruments, sessions and the studio. Crop, straighten and grade them. Never regenerate their details. Natural colour, believable skin, no heavy orange wash. Text stays live and outside the image.
+
+**Diagrams.** Clean vector shapes on a grid, one stroke weight. Colour highlights the idea and a label or shape gives the second cue. Label every string, unit and ratio. A keyboard shows the B to C and E to F semitones correctly. Numbers on a neck are scale steps from home unless the figure says otherwise.
+
+**Notation is data.** Every pitch, fret and finger is written as data and the picture is calculated from it and checked. Never draw notation, TAB or a fretboard by hand or with image generation, and never retouch a finished figure. The bass sounds an octave below where it is written; TAB is never transposed.
+
+**Engraving.** A real bass clef, correct spelling, literal TAB. Staff in charcoal, orange for teaching cues. A note, its name, its finger and its fret sit on one vertical line. Names have their own row. Accidentals reset at the bar line and a natural cancels an earlier sharp.
+
+**Three engravers, three jobs.** LilyPond for all metred music in documents. The pitch study renderer for unmetred studies in documents. The app's own engraver (Read's) on screen, which should match LilyPond's proportions. They are not interchangeable, and one sheet should not mix the two document engravers without a reason.
+
+**Captions and descriptions.** A caption says why to look. Alt text says what is there. A complex exercise gets a text equivalent, not a whole session squeezed into one description.
+
+## 9. Building and releasing
+
+These are the rules for anyone, person or AI, changing the site or the app.
+
+- **Jack decides.** Explain a choice simply, act, and list every decision taken on his behalf so he can change it.
+- **Nothing is launched by a build.** Launch tickboxes are Jack's. Installing a release turns nothing on.
+- **No frameworks, no build step, no new dependencies.** Plain PHP, plain scripts, plain stylesheets.
+- **Plugin and theme are versioned together**, each with a changelog entry and build notes.
+- **Build notes say what was checked and what was not.** "Not run on WordPress", "not heard" and "not tried on a phone" are stated in those words when true.
+- **Comments say why**, in plain English.
+- **Ids are stable.** An element's id, a drill's id and a recording's file name never change, because records and links depend on them. Rename the label, keep the id.
+- **Rules have tests.** A list that matters (the homes the course accepts, the elements in a stage) is pinned in a test, so it cannot move by accident.
+- **Member data is private by default.**
+- **Samples and fonts are credited**, with their licences kept beside them.
+- **The Project copy is the source** for briefs, course text and build notes. Code lives in the repository; `main` is what is live.
+- **One finished release** is preferred to many small ones.
+
+## 10. Checks before anything goes out
+
+| Area | Check |
+| Content | One clear purpose. Specific instructions. Accurate claims |
+| Language | Plain, short, British. Sessions. Few dashes. Real flat and sharp signs |
+| Typography | Right faces, hierarchy and case. Readable at its final size |
+| Colour | Named tokens. Both themes. Enough contrast |
+| Layout | Room to breathe. Nothing clipped, overlapping or stranded. One page where it can be |
+| Phone | The task fits one screen. Controls 44 px. Nothing needs two hands |
+| Music | Tuning, octave, spelling, rhythm, TAB and fingering checked against the data |
+| The course | Numerals lead. The course's words. Home established before it is asked for |
+| Access | Real text and structure, alt text, focus states |
+| Output | Editable source kept. Every page and image looked at |
+| Honesty | What was checked and what was not, written down |
+
+**Keeping this guide.** Colours are named tokens, document styles are real styles, notation is data. When a rule changes, change the source, this guide and an example together, and give the guide a new edition and date. An exception for one audience or medium is allowed: say why in the build notes, and do not let it become the default.
+
+## What changed since edition 1.0
+
+- **1.1 (31 October 2026).** Sessions, not lessons, in teaching material. Notation sized by its staff. Plain figures in documents.
+- **1.2 (11 November 2026).** Real flat and sharp signs everywhere. Links with QR codes on worksheets.
+- **2.0 (12 November 2026).** New section 5, the app: phone layout, the parts of a room, numerals first, the course's vocabulary, whose home it is, links, privacy, sound. Section 6 gains the kinds of figure, continuous figures, final bars, one page, and the worksheet's title as its topic. Section 7 gains plain and short, punctuation, machine sounding copy and published songs. New section 9, building and releasing. The brief for recreating the notation tool has moved out of the guide: the worksheets skill and its references are the specification now. Colour and type values are unchanged and were checked against theme 3.20.0.
+
+**Sources.** W3C on contrast: https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html. Oswald and Inter: fonts.google.com. Bravura: github.com/steinbergmedia/bravura. LilyPond: lilypond.org. Fonts are under the SIL Open Font License; their notices travel with them.

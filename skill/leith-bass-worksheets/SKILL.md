@@ -18,7 +18,7 @@ Four deterministic renderers, a card maker and a document builder, sharing one p
 | `scripts/worksheet.js` | A4 DOCX (+ PDF, previews, contact sheet, audit, portal text) | handouts and session notes combining text and figures |
 | `scripts/test.js` | acceptance tests | run after any change to the scripts |
 
-Read `references/formats.md` before writing any JSON: it has every field for all four formats, a table for choosing between exercise and groove, and the print sizes. `references/session-notes.md` covers session notes and the portal text. `references/house-style.md` is the full style guide (with the 1.1 amendments); `references/notation-manual.md` is the manual Jack wrote for requesting material; `references/specification.md` is the original build contract for render.js.
+Read `references/formats.md` before writing any JSON: it has every field for all four formats, a table for choosing between exercise and groove, and the print sizes. `references/session-notes.md` covers session notes and the portal text. `references/house-style.md` is the full style guide (edition 2.0, 12 November 2026: read section 7 before writing any words, section 5 for anything about the app, and section 6 for which figure to use); `references/notation-manual.md` is the manual Jack wrote for requesting material; `references/specification.md` is the original build contract for render.js.
 
 ## Language: sessions, not lessons
 

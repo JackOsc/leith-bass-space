@@ -10,7 +10,8 @@ Built 11 and 12 Nov 2026. One release for the programme in `claude/leith-bass-sp
 | :-- | :-- |
 | `leithbass-members-1.13.0.zip` | The plugin |
 | `leithbass-theme-3.20.0.zip` | The theme |
-| `leith-bass-worksheets-3.1.zip` | The worksheets skill (separate from the site) |
+| `leith-bass-worksheets-3.2.zip` | The worksheets skill (separate from the site). 3.2 replaces 3.1 |
+| `Leith-Bass-Space-House-Style-Guide-2.0.docx` and `.pdf` | The style guide, edition 2.0 |
 
 The source is the repository `JackOsc/leith-bass-space`, branch `release-1.13.0`. `main` is 1.12.1 with 3.19.0, as live. The sections below this one were written checkpoint by checkpoint (alpha.1 to alpha.10) and are kept as the record of what was built and why.
 
@@ -33,11 +34,10 @@ Going back: reinstall 1.12.1 and 3.19.0. Nothing in the database is converted, s
 | One app: Today on Home, sets from Jack on a session, links into Elements, Ear Training and the metronome, one measured delay | Built |
 | Ear Training and Read on a phone | Built (stylesheets only) |
 | Theme: copy for the Elements and metronome pages, two new stills, content migration | Built |
-| Worksheets skill 3.1: real flat and sharp signs, link block with a QR code | Built |
+| Worksheets skill 3.2: real flat and sharp signs, links with QR codes, chord charts, rhythm lines, element cards, page flow warnings | Built (see the skill's CHANGELOG.md) |
+| Style guide edition 2.0 | Built: `claude/leith-bass-space-house-style-guide-2.0.md` in the Project, DOCX and PDF in the repository's `docs/` |
 | One engraver for Elements and Ear Training | **Not in this release** (proposed for the next: see alpha.8) |
 | The course text document brought into line | **Not done.** The app's Guide is right (by patch script). The list of changes is `claude/harmonic-elements-course-text-changes-1.13.0.md` |
-| Style guide 2.0 as a document | **Not done.** The skill's extract carries amendments 1.2 |
-| Skill: chart page, rhythm line, element card, continuous figures | **Not done** |
 | The agent setup brief (Google Doc retired, the Project copy is the source) | **Not updated** |
 
 ## Checked, for the release as a whole (12 Nov)
