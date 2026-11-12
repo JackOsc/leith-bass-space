@@ -7,7 +7,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'LEITHBASS_VERSION', '3.20.0-alpha.2' );
+define( 'LEITHBASS_VERSION', '3.20.0' );
 
 /* -------------------------------------------------------------------------
  * Site-wide constants — edit these in one place.
@@ -1153,12 +1153,33 @@ function leithbass_migrate_ear_training_copy() {
 }
 
 /**
+ * 3.20.0 content migration: the Elements Dojo has Name it, Find home and Today, and the metronome has its
+ * guided ways of practising, a set list and links. Saved wording that still matches the 3.19.0 defaults is
+ * cleared, so the new defaults show; anything edited by hand stays as it is.
+ */
+function leithbass_migrate_dojo_and_metronome_copy() {
+	$retired = array(
+		'harmonic_soon_shot2_caption' => 'A loop plays until you&rsquo;ve found the key and named the element.',
+		'harmonic_soon_shot3_caption' => 'The changes, spelled out, and what to listen for next time.',
+		'harmonic_intro' => 'This course develops two connected skills: hearing familiar chord relationships and choosing notes that make those relationships audible on the bass.' . "\n\n" . 'It comes in two parts. The Guide is the course itself: pick an element, read what it is, play its loop in any key, and see its notes on the neck. The Dojo trains your ear on the same material: a loop of chords and drums plays, with no bass, until you&rsquo;ve found the key and named the element.',
+		'harmonic_points' => 'The Guide: the course, an element at a time. What the chords fix and leave open, what to listen for and where to hear it, with the loop to play along with.' . "\n" . 'Play: under every element in the Guide. The notes the chords fix and leave open, on a fretboard drawn for your bass, and bass lines written in stave and TAB, from roots alone up to sevenths. A reference bass can play the line, or take turns with you.' . "\n" . 'The key: home, the note and chord that feel like rest, and whether that chord is major or minor. Plenty of loops can be heard from more than one home, and every hearing the course allows counts.' . "\n" . 'The element: the chords as roman numerals from home, such as I IV or i &#9837;VII. The numerals count from home on the major scale, so &#9837;III is always a minor third above home.' . "\n" . 'The mix: choose which elements, notes for home, tempos and feels can come up in the Dojo, from a couple of vamps to the whole course and a further set of molecules. A home cue can play the home chord before each loop, as a first step.' . "\n" . 'Show me: stuck on one half? Show the key, or the element, and find the other yourself.' . "\n" . 'Which is which, and Before and after: two more things the Dojo can ask. Tell apart two elements that are easily mixed up, or hear the change when one is altered.' . "\n" . 'The band: every loop can be played by the house band. Pianos, electric pianos, organ, guitars, vibraphone, strings and brass, on their own or a few together, over seven drum kits with three grooves for every feel, so an element doesn&rsquo;t sound the same each time it comes round.' . "\n" . 'Your record: a dot for every loop you answer. Four first-time answers from the last five, on two different days, with nothing shown, and an element counts as recognised.',
+		'tool_metronome_points' => 'Random mute: choose what percentage of beats are skipped, and it leaves them out at random. Keep beat one sounding if you like, or have it mute whole bars.' . "\n" . 'Gradual mute: every beat sounds at first, then more and more of them drop out, over as many bars as you choose.' . "\n" . 'Click up: the tempo climbs by so many bpm every so many bars. You set both numbers, and where it stops.' . "\n" . 'Where the click falls: every beat, 2 and 4, beat one only, or pushed onto the &ldquo;and&rdquo;. Or bars of click followed by bars of silence.' . "\n" . 'A house drummer: play along with a drummer instead of a bare click, in a range of feels and kits. A muted beat mutes the drummer too.' . "\n" . 'Time and sound: simple, compound and odd time signatures, subdivisions and swing, with recorded woodblock, claves, cowbell, cross stick and hi hat.' . "\n" . 'Setups: save what you&rsquo;ve set under a name and bring it back with one tap. There&rsquo;s tap tempo and a count in too.',
+	);
+	foreach ( $retired as $key => $old ) {
+		$mod = get_theme_mod( 'leithbass_' . $key, null );
+		if ( null !== $mod && leithbass_migration_plain( $mod ) === leithbass_migration_plain( $old ) ) {
+			remove_theme_mod( 'leithbass_' . $key );
+		}
+	}
+}
+
+/**
  * Content migrations run in order on the first admin page load after new files
  * are in place. A fresh install has no saved wording, so they are no-ops there.
  */
 add_action( 'admin_init', function () {
 	$done = (string) get_option( 'leithbass_content_migration', '0' );
-	if ( version_compare( $done, '3.17.0', '>=' ) ) { return; }
+	if ( version_compare( $done, '3.20.0', '>=' ) ) { return; }
 
 	if ( version_compare( $done, '3.4.0', '<' ) ) { leithbass_migrate_intro_copy(); }
 	if ( version_compare( $done, '3.5.0', '<' ) ) { leithbass_migrate_single_space(); }
@@ -1170,8 +1191,9 @@ add_action( 'admin_init', function () {
 	if ( version_compare( $done, '3.15.0', '<' ) ) { leithbass_migrate_tools_pages_copy(); }
 	if ( version_compare( $done, '3.16.0', '<' ) ) { leithbass_migrate_harmonic_key_copy(); }
 	if ( version_compare( $done, '3.17.0', '<' ) ) { leithbass_migrate_ear_training_copy(); }
+	if ( version_compare( $done, '3.20.0', '<' ) ) { leithbass_migrate_dojo_and_metronome_copy(); }
 
-	update_option( 'leithbass_content_migration', '3.17.0' );
+	update_option( 'leithbass_content_migration', '3.20.0' );
 }, 5 );
 
 /**

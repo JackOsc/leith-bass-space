@@ -4,7 +4,7 @@ The invite-only member portal for The Leith Bass Space, at **/members/**. Bassis
 
 Everything is stored in WordPress (users, a private Sessions post type and user meta), so it survives theme updates and theme changes. Worksheets and recordings stay in Nextcloud and are streamed through WordPress behind the login, so nothing needs a public share link.
 
-Version 1.12.1. Needs WordPress 6.0+, PHP 7.4+ with the sodium extension (standard since PHP 7.2), and the Leith Bass Space theme 3.6.1 or later for the matching look (3.15.0 for the LBS Ear Trainer's page and the free tool pages, 3.18.0 for Read's Launch tickbox, 3.19.0 for Read's public page).
+Version 1.13.0. Needs WordPress 6.0+, PHP 7.4+ with the sodium extension (standard since PHP 7.2), and the Leith Bass Space theme 3.6.1 or later for the matching look (3.15.0 for the LBS Ear Trainer's page and the free tool pages, 3.18.0 for Read's Launch tickbox, 3.19.0 for Read's public page, 3.20.0 for the copy and stills that match 1.13.0).
 
 ## Upgrading from theme 3.6.0
 
@@ -281,7 +281,14 @@ Bring the walking line at 70 bpm.
 
 ## Changelog
 
-### 1.13.0 (in progress: not for installing yet)
+### 1.13.0
+
+Goes with **theme 3.20.0**. Install the plugin first, then the theme. Nothing is launched by installing: Read and Ear Training keep their Launch tickboxes as they are.
+
+**Before installing, read "Checked" and "Not checked" in the build notes** (`docs/leith-bass-1.13.0-build-notes.md` in the repository, `claude/leith-bass-1.13.0-build-notes.md` in the Project). In short: every rule has a Node test and every screen was driven in a headless phone sized browser from the plugin's own markup, but **none of it has run on WordPress, on a real phone, or been heard**.
+
+Saved data: nothing is converted. Old Harmonic Elements record lines still count as before. New fields: `ask` on an Elements record line; `_lbs_sets` on a session. Metronome settings on a device are read by the new engine and gain their new parts with defaults.
+
 
 One release for the whole programme agreed on 11 Nov 2026 (`claude/leith-bass-space-review-2026-11-11.md`). Built so far: Harmonic Elements, and the metronome's new ways of practising.
 

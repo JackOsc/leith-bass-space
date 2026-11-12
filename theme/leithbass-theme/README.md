@@ -281,3 +281,14 @@ From 3.6.1 the member portal lives in its own plugin, **Leith Bass Members**, so
 - Adds the invite-only member portal: Overview, Session Notes, Practice Room, Bookings and Account.
 - Adds Members, Sessions and Portal settings to wp-admin, with a paste-in session notes template, Nextcloud file picker, session prep and weekly repeat bookings.
 - Adds "Members" to the site navigation (switch off in Portal settings).
+
+## Version 3.20.0
+
+Goes with **Leith Bass Members 1.13.0**. Install the plugin first, then the theme.
+
+- **The Harmonic Elements page** describes the Dojo as it now is: Name it (the band gives you home), Find home, Today, links, and the map in the record. "A further set of molecules" is gone.
+- **The metronome page**'s list covers Click up with a goal, Thin the click, the guided speed work (crediting Molly Gebrian's *Learn Faster, Perform Better*), Blind bars, Count it off, set lists and links, and suggests walking to the click.
+- **Two new Coming Soon stills** for Harmonic Elements (the Dojo and the answer), with new captions. The Guide's still is unchanged. A picture uploaded for either slot in Leith Bass Content still wins over the shipped one.
+- **Content migration 3.20.0**: saved wording for these five fields is cleared only where it still matches the 3.19.0 default, so the new defaults show; anything edited by hand stays. Fields: the Elements page's opening text and parts list, its second and third still captions, and the metronome's list.
+- No template, style or script changed.
+

@@ -1,32 +1,101 @@
-# Leith Bass Members 1.13.0: build notes (in progress)
+# Leith Bass Members 1.13.0 and theme 3.20.0: build notes
 
-Started 11 Nov 2026. One release for the whole programme in `claude/leith-bass-space-review-2026-11-11.md`, as decided in `claude/programme-decisions-2026-11-11.md`. **Nothing here is installed or launched.** Built on plugin 1.12.1 and theme 3.19.0.
+Built 11 and 12 Nov 2026. One release for the programme in `claude/leith-bass-space-review-2026-11-11.md`, as decided in `claude/programme-decisions-2026-11-11.md`. Built on plugin 1.12.1 and theme 3.19.0.
 
-This note is updated as each part is built. The newest checkpoint zip is what to work from: ask Jack to attach it if the working files are gone.
+**Nothing is installed and nothing is launched.** The Launch tickboxes are Jack's.
 
-| Checkpoint | Date | What is in it |
-| :-- | :-- | :-- |
-| `leithbass-members-1.13.0-alpha.1.zip` | 11 Nov | Harmonic Elements (below). The theme is unchanged so far. |
-| `leithbass-members-1.13.0-alpha.2.zip` | 11 Nov | Adds the metronome's new ways of practising (below). The theme is still unchanged. |
-| `leithbass-members-1.13.0-alpha.4.zip` | 11 Nov | Adds the Guide's new order, Count it off, and the phone fixes in Ear Training and Read (below). |
-| Branch `release-1.13.0`, alpha.5 | 11 Nov | Adds Several passages, At tempo in chunks, Blind bars and Strong and weak beats (below). No zip. |
-| `leithbass-members-1.13.0-alpha.3.zip` | 11 Nov | Adds links: a metronome setup as a link, links into the Dojo, and Hear it from each home on the Guide's pages (below). |
+## The files
 
-## Programme status
-
-| Part | Status |
+| File | What |
 | :-- | :-- |
-| Harmonic Elements: home established, the two drills, cadences, the nineteen sorted, steps, Guide page, phone layout | **Built** (alpha.1), on the proposals in `claude/harmonic-elements-placeholders-and-names-proposal-2026-11-11.md` |
-| Harmonic Elements: still to do | Jack's audition answers written in as the list of accepted homes; his names and lines for the eleven drafts; "The axis, minor view" filed as minor; the band landing on home when a round is answered; Hear it from each home on the Guide's cards; Today and a Map; the Guide's own order (it still opens "About the course", "How this document is organised"); the Play panel on Read's engraver; the course text in the Project brought into line (see below); the member card in wp-admin showing Find home |
-| The metronome (Gebrian): Thin the click, 1 and 3, wider gaps, Click up a step at a time with a goal, the interleaved clicking up guide, flash defaults | **Built** (alpha.2) |
-| The metronome and the Shed: still to do | Interleaved clicking up #2 (several passages, growing jumps) and at-tempo chunking; a strong, weak, medium, weak accent shape; the count in with a displaced click (check what it does now); blind bars measured by tapping; count it off; set list; a setup shared by link; five in a row, shuffle my plan and lucky dip in the diary; the free page's copy with a credit to Gebrian's book and the walking suggestion; whether the interleaved guide's progress should be saved to a member's account (it is kept on the device now) |
-| Links (the start of the link scheme) | **Built** (alpha.3) for the metronome and the Elements Dojo. Still to do: links into Ear Training's drills and Read's drills (Read and Elements already have hash routes for pages), a drone link already exists, and "sets from Jack" as lists of links on a member's page |
-| One app: Today on Home, Today and Map in every room, one engraver, one latency setting | Not started |
-| Ear Training: cut off tabs, opens on Today, a short Guide | Not started |
-| Read: touch targets | Not started |
-| Worksheets skill 3.1 and style guide 2.0 | Not started |
-| Theme: copy for the changed Dojo, Coming Soon stills | Not started. Theme 3.19.0's Harmonic Elements copy still describes 1.9.0's Dojo |
-| GitHub repository | Waiting for Jack to connect GitHub |
+| `leithbass-members-1.13.0.zip` | The plugin |
+| `leithbass-theme-3.20.0.zip` | The theme |
+| `leith-bass-worksheets-3.1.zip` | The worksheets skill (separate from the site) |
+
+The source is the repository `JackOsc/leith-bass-space`, branch `release-1.13.0`. `main` is 1.12.1 with 3.19.0, as live. The sections below this one were written checkpoint by checkpoint (alpha.1 to alpha.10) and are kept as the record of what was built and why.
+
+## Installing
+
+1. Take a backup, as before any release.
+2. Install the plugin, then the theme.
+3. Open any wp-admin page once (the theme's content migration runs there).
+4. Work through "First checks on the site" below before telling anyone.
+
+Going back: reinstall 1.12.1 and 3.19.0. Nothing in the database is converted, so going back loses nothing. Record lines written by 1.13.0 carry an extra field (`ask`) that 1.12.1 ignores; its Find home lines would be counted by 1.12.1 as ordinary answers with the element wrong, so going back after pupils have used Find home would make their Elements record look worse than it is.
+
+## What is in the release
+
+| Part | State |
+| :-- | :-- |
+| Harmonic Elements: home established by the band, Name it and Find home, Home hit, Hear it from each home, cadences one home, the nineteen sorted (11 kept with full cards, 5 merged, 3 dropped), steps, "Whose home is it?", Today, the map, links, the Guide's order, phone layout, the admin card | Built |
+| The metronome: Thin the click, 1 and 3, wider gaps, Click up with a goal, three guided methods (interleaved clicking up, several passages, at tempo in chunks), Blind bars, Count it off, Strong and weak beats, set list, setups as links | Built |
+| The practice: five in a row, shuffle, lucky dip | Built |
+| One app: Today on Home, sets from Jack on a session, links into Elements, Ear Training and the metronome, one measured delay | Built |
+| Ear Training and Read on a phone | Built (stylesheets only) |
+| Theme: copy for the Elements and metronome pages, two new stills, content migration | Built |
+| Worksheets skill 3.1: real flat and sharp signs, link block with a QR code | Built |
+| One engraver for Elements and Ear Training | **Not in this release** (proposed for the next: see alpha.8) |
+| The course text document brought into line | **Not done.** The app's Guide is right (by patch script). The list of changes is `claude/harmonic-elements-course-text-changes-1.13.0.md` |
+| Style guide 2.0 as a document | **Not done.** The skill's extract carries amendments 1.2 |
+| Skill: chart page, rhythm line, element card, continuous figures | **Not done** |
+| The agent setup brief (Google Doc retired, the Project copy is the source) | **Not updated** |
+
+## Checked, for the release as a whole (12 Nov)
+
+- **Node suites, all passing**: Harmonic Elements 58,703 checks; the metronome 1,076; Ear Training 16,852. The skill's 52 acceptance tests.
+- **Every PHP file** in the plugin and theme passes `php -l`. **Every script** passes `node --check`.
+- **Twenty browser flows** rerun against the final build in headless Chromium at 390 by 844 (some also at 1280 by 900), from pages built out of the plugin's own PHP markup with WordPress stubbed. No page errors in any.
+- **The theme's migration**, run against stubs: saved wording equal to the 3.19.0 default is cleared; wording with a line added by hand is kept.
+- **The address rule for sets**, run in PHP with stubs.
+
+## Not checked
+
+- **WordPress.** Nothing has run on a real install: activation, the REST saves (the `ask` field, a session's sets), the dashboard's new config (`todays`, `sets`), wp-admin's session box and member card, the theme migration on real saved content.
+- **A real phone**, Safari, Firefox, the installed app, offline.
+- **Sound.** Nobody has heard the pedal, the bass, the home hit, the guided click, or anything else. Pitches and timings were measured.
+- **Read's Node suite** was not rerun. It tests Read's music, engraving and data files, which did not change. `read.js` gained two lines (keeping the measured delay) and `read.css` its phone rules.
+- **The metronome's own 1.8.0 suites** (1,328 engine and 217 screen checks) are not in the Project and were not rerun. The 1.13 suite covers the new behaviour and some of the old.
+- **Listening leads** on the eleven new cards, against the recordings.
+- **Printing** a worksheet and scanning its code with a phone.
+
+## First checks on the site (Jack, signed in as himself)
+
+On a laptop:
+1. wp-admin loads; Plugins shows 1.13.0, Appearance shows 3.20.0.
+2. The Harmonic Elements page and the metronome page read as the new copy (or your own, if you had edited them).
+3. Open a session's notes: the Sets box is there. Add `Test | /metronome/` and save. It shows on that member's Home under "From Jack".
+4. A member's page in wp-admin: the Elements record still draws.
+
+On your phone, in the app:
+1. **Silent switch on, then off.** Does the metronome sound either way? (It should, as before.)
+2. **Elements, Name it.** Press play. Do you hear two bars of home before the loop? Try Pedal and Bass under The mix. Press Home hit. Answer one right and one wrong. After the answer, press each home under "Hear it from each home": does the bass make the home move?
+3. **Elements, Find home**, on a two homes loop (the mix preset "Two homes").
+4. **Elements, Today**, a few rounds. Then Your record: the map, and Practise on a stage.
+5. **Metronome**: Thin the click (Next a few times); Interleaved clicking up (Play it: one bar's count, the chunk, one beat, stop); Blind bars (tap through a gap: is the verdict fair?); Count it off; save two setups and run them as a set list.
+6. **Loop gaps.** Leave any loop running for a minute. Any click or hiccup at the join?
+7. **Lock the phone and come back** with the metronome running, and again with a loop running.
+8. **A link.** Copy a link from the Dojo mix, send it to yourself, open it.
+9. **Practice**: start one with two things picked. Switch, Clean and Slip, Lucky dip.
+10. **Read**, Line up your taps, with Bluetooth headphones if you have them: then the metronome's More panel should offer the measured delay.
+11. **Aeroplane mode**, then open the app: what still works?
+
+Anything odd: the build notes below say which file each part lives in.
+
+## Decisions taken on Jack's behalf, in one list
+
+Each is explained in its checkpoint below. All are his to change.
+
+1. Find home, Home hit, Cue, Pedal, Bass, Loop only as the words. Name it marked strictly. A home must be a chord of the loop.
+2. The keep, merge and drop list for the nineteen. The eleven cards' wording and listening leads. "Whose home is it?" as drafted.
+3. The fifties progression and the fifties, strengthened have one home. 22 loops have more than one.
+4. Today's recipe in Elements (three to work on, two to keep, one new, twelve rounds, none alone of its kind).
+5. The map inside Your record. Today first in the row of modes.
+6. Metronome: a chunk is a number of beats; each interleaved step ends on the whole run at the goal; 25 ms across a gap is steady; 3% is "there" in Count it off; rounds 3 to 5 of Several passages go passage by passage; Blind bars is tapped, not heard.
+7. A set list is the saved setups in order. The lucky dip's patterns. Nothing from the three practice tools goes in the diary but the three in a row tick.
+8. Sets belong to a session. Only addresses on the site are kept.
+9. Two delay settings with one measurement behind them.
+10. Address forms: `?m=`, `#dojo/...`, `#drill/...`, `#today`.
+11. Skill: `m7b5` left as typed; links https only.
 
 ## Harmonic Elements in alpha.1
 
